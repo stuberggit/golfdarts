@@ -133,3 +133,19 @@ function undoHole() {
 window.onbeforeunload = function (e) {
   return "Are you sure you want to leave? Your game progress will be lost.";
 };
+function getScoreLabelAndColor(hits) {
+  const labels = [
+    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg", "Icicle",
+    "Polar Bear", "Frostbite", "Snowman", "Avalanche"
+  ];
+  const colors = [
+    "#c00", "#222", "#3c6", "#08f", "#888", "#0cc",
+    "#06c", "#339", "#446", "#113"
+  ];
+
+  if (hits >= 0 && hits <= 9) {
+    return { label: labels[hits], color: colors[hits] };
+  } else {
+    return { label: "Unknown", color: "#000" };
+  }
+}
