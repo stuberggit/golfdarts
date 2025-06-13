@@ -1,5 +1,6 @@
 let players = [];
 let currentHole = 1;
+let currentPlayerIndex = 0;
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -55,6 +56,7 @@ function startGame() {
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
 
+  currentPlayerIndex = 0;
   showHole();
   updateLeaderboard();
 }
@@ -64,10 +66,9 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   container.innerHTML = "";
 
-  players.forEach((player, idx) => {
-    container.innerHTML += `<label>${player.name} hits: 
-      <input type="number" id="hits-${idx}" min="0" max="9" value="0"></label><br>`;
-  });
+  const player = players[currentPlayerIndex];
+  container.innerHTML = `<label>${player.name} hits: 
+    <input type="number" id="hits" min="0" max="9" value="0"></label><br>`;
 
   const dartboard = document.getElementById("dartboardImage");
   if (dartboard) {
@@ -98,35 +99,32 @@ function getScoreLabelAndColor(hits) {
   }
 }
 
-function showScoreAnimation(message, color = "#0a3") {
-  const el = document.getElementById("scoreAnimation");
-  if (!el) return;
-  el.style.color = color;
-  el.innerText = message;
-  el.style.animation = "none";
-  void el.offsetWidth;
-  el.style.animation = "popIn 0.6s ease-out";
-  setTimeout(() => el.innerText = "", 1200);
-}
+function submitPlayerScore() {
+  const hits = parseInt(document.getElementById("hits").value);
+  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter 0 to 9 darts hit.");
 
-function nextHole() {
-  players.forEach((player, idx) => {
-    const hits = parseInt(document.getElementById(`hits-${idx}`).value);
-    if (isNaN(hits) || hits < 0 || hits > 9) return;
+  const score = getScore(hits);
+  const player = players[currentPlayerIndex];
+  player.scores.push(score);
 
-    const score = getScore(hits);
-    player.scores.push(score);
+  const { label, color } = getScoreLabelAndColor(hits);
+  showScoreAnimation(`${player.name}: ${label}!`, color);
 
-    const { label, color } = getScoreLabelAndColor(hits);
-    showScoreAnimation(`${player.name}: ${label}!`, color);
-  });
+  currentPlayerIndex++;
 
-  if (currentHole < 18) {
-    currentHole++;
-    showHole();
-    updateLeaderboard();
+  if (currentPlayerIndex >= players.length) {
+    // End of hole, move to next
+    if (currentHole < 18) {
+      currentHole++;
+      currentPlayerIndex = 0;
+      showHole();
+      updateLeaderboard();
+    } else {
+      updateLeaderboard(true);
+      document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+    }
   } else {
-    updateLeaderboard(true);
+    showHole();
   }
 }
 
@@ -147,19 +145,4 @@ function updateLeaderboard(final = false) {
   });
 
   table += "</table>";
-
-  const board = document.getElementById("leaderboard");
-  board.innerHTML = final ? `<h2>🏆 Final Leaderboard</h2>${table}` : table;
-}
-
-function undoHole() {
-  if (currentHole === 1) return alert("Nothing to undo.");
-  currentHole--;
-  players.forEach(player => player.scores.pop());
-  showHole();
-  updateLeaderboard();
-}
-
-window.onbeforeunload = function () {
-  return "Are you sure you want to leave? Your game progress will be lost.";
-};
+  document.getElementById("le
