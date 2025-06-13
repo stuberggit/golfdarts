@@ -1,8 +1,10 @@
-/* Background and layout */
+/* Background and font */
 body {
-  background-color: #3a5f0b; /* golf grass green */
+  background-color: #3a5f0b;
+  background-image: url('images/grass-texture.png');
+  background-repeat: repeat;
   color: white;
-  font-family: Arial, sans-serif;
+  font-family: 'Prata', serif;
   text-align: center;
   padding: 20px;
   margin: 0;
@@ -10,14 +12,16 @@ body {
 
 /* Title */
 h1 {
-  font-size: 2.5em;
+  font-size: 2.8em;
   margin-bottom: 20px;
+  color: white;
+  text-shadow: 1px 1px 4px #000;
 }
 
-/* Start screen buttons */
+/* Buttons */
 #setup button {
   margin: 12px 10px;
-  padding: 10px 20px;
+  padding: 10px 24px;
   font-size: 1rem;
   border-radius: 8px;
   border: none;
@@ -37,29 +41,45 @@ label {
   margin: 10px 0;
 }
 
-/* Game area and leaderboard */
+/* Game section */
 #game {
   margin-top: 30px;
 }
 
+/* Scoreboard and leaderboard */
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
 
 th, td {
-  padding: 8px;
-  border: 1px solid #ddd;
-  background-color: white;
+  padding: 10px;
+  border: 1px solid #ccc;
   color: black;
+}
+
+th {
+  background-color: #c9e3c2;
+}
+
+#leaderboard {
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 960px;
 }
 
 /* Score animation */
 #scoreAnimation {
   font-size: 1.5rem;
   font-weight: bold;
-  margin-top: 15px;
+  margin-top: 20px;
 }
 
 /* Animation */
@@ -67,6 +87,7 @@ th, td {
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
+
 
 
 #dartboardWrapper {
