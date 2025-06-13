@@ -71,14 +71,22 @@ function showHole() {
   container.innerHTML = "";
 
   const player = players[currentPlayerIndex];
-  container.innerHTML = `<label>${player.name} hits: 
-    <input type="number" id="hits" min="0" max="9" value="0"></label><br>`;
+
+  container.innerHTML = `
+    <label>${player.name} hits:
+      <select id="hits">
+        <option value="0">Miss!</option>
+        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+      </select>
+    </label><br>
+  `;
 
   const dartboard = document.getElementById("dartboardImage");
   if (dartboard) {
     dartboard.src = `images/dartboard-${currentHole}.png`;
   }
 }
+
 
 function getScore(hits) {
   if (hits === 0) return 5; // double bogey
