@@ -44,11 +44,14 @@ function handleNameDropdown(selectId, inputId) {
   
 
 function startGame() {
+ function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   players = [];
 
   for (let i = 0; i < count; i++) {
-    const name = document.getElementById(`name-${i}`).value.trim();
+    const select = document.getElementById(`select-${i}`);
+    const input = document.getElementById(`name-${i}`);
+    const name = select.value === "Other" ? input.value.trim() : select.value;
     players.push({ name: name || `Player ${i + 1}`, scores: [] });
   }
 
@@ -58,6 +61,7 @@ function startGame() {
   showHole();
   updateLeaderboard();
 }
+
 
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
