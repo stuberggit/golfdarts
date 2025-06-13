@@ -4,53 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GolfDarts</title>
-  <link rel="stylesheet" href="style.css">
-
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background: url('images/pebble-beach-7.jpg') no-repeat center center fixed;
-      background-size: cover;
-    }
-    h1 {
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0.5);
-      display: inline-block;
-      padding: 10px 20px;
-      border-radius: 12px;
-    }
-    #scoreAnimation {
-      font-size: 1.2em;
-      font-weight: bold;
-      animation: popIn 0.6s ease-out;
-    }
-    @keyframes popIn {
-      0% { transform: scale(0.8); opacity: 0; }
-      50% { transform: scale(1.2); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-    table {
-      margin: 0 auto;
-      border-collapse: collapse;
-      background-color: rgba(255, 255, 255, 0.8);
-    }
-    th, td {
-      padding: 5px 10px;
-      border: 1px solid #333;
-    }
-    #dartboardWrapper {
-      margin: 20px auto;
-    }
-    #dartboardImage {
-      width: 300px;
-      border: 4px solid #444;
-      border-radius: 50%;
-    }
-  </style>
 </head>
 <body>
-
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
 
   <div id="setup">
@@ -58,29 +13,29 @@
       <input type="number" id="playerCount" min="1" max="20" value="1">
     </label>
     <button onclick="createPlayerInputs()">Next</button>
-    <div id="nameInputs" style="margin-top: 10px;"></div>
-    <button id="startBtn" onclick="startGame()" style="display:none; margin-top: 10px;">Start Game</button>
+    <div id="nameInputs"></div>
+    <button id="startBtn" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
 
-  <div id="game" style="display:none;">
-    <h2 id="holeHeader">Hole 1</h2>
+  <script>
+    function createPlayerInputs() {
+      const count = parseInt(document.getElementById("playerCount").value);
+      if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
 
-    <div id="dartboardWrapper">
-      <img id="dartboardImage" src="" alt="Dartboard for Current Hole">
-    </div>
+      const container = document.getElementById("nameInputs");
+      container.innerHTML = "";
 
-    <div id="scoreInputs"></div>
+      for (let i = 0; i < count; i++) {
+        container.innerHTML += `<label>Player ${i + 1}: <input type="text" id="name-${i}"></label><br>`;
+      }
 
-    <div style="margin-top: 20px;">
-      <button onclick="nextHole()">Next Hole</button>
-      <button onclick="undoHole()">Undo Last Hole</button>
-    </div>
+      // ✅ This is the key line:
+      document.getElementById("startBtn").style.display = "inline";
+    }
 
-    <h3>Leaderboard</h3>
-    <div id="leaderboard"></div>
-    <div id="scoreAnimation" style="margin-top: 20px;"></div>
-  </div>
-
-  <script src="script.js"></script>
+    function startGame() {
+      alert("Game starting...");
+    }
+  </script>
 </body>
 </html>
