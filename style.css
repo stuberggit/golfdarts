@@ -1,4 +1,4 @@
-/* Background and font */
+/* General body styling */
 body {
   background-color: #3a5f0b;
   background-image: url('images/grass-texture.png');
@@ -21,8 +21,8 @@ h1 {
 /* Buttons */
 #setup button,
 #game button {
-  background-color: #206a1e; /* dark green */
-  border: 2px solid white;   /* adds contrast */
+  background-color: #206a1e;
+  border: 2px solid white;
   color: white;
   border-radius: 8px;
   padding: 10px 20px;
@@ -37,7 +37,6 @@ h1 {
   background-color: #2c8a2a;
 }
 
-
 /* Input labels */
 label {
   display: block;
@@ -49,21 +48,24 @@ label {
   margin-top: 30px;
 }
 
-/* Scoreboard and leaderboard */
-table {
+/* Leaderboard and tables */
+table,
+.leaderboard-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
-  overflow: hidden;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  overflow: hidden;
+  font-size: 0.9rem;
 }
 
 th, td {
   padding: 10px;
   border: 1px solid #ccc;
   color: black;
+  text-align: center;
 }
 
 th {
@@ -72,12 +74,12 @@ th {
 
 #leaderboard {
   border-radius: 16px;
-  overflow: hidden;
   margin: 0 auto;
   width: 100%;
   max-width: 960px;
 }
 
+/* Score animation */
 #scoreAnimation {
   font-size: 1.4rem;
   font-weight: bold;
@@ -89,13 +91,7 @@ th {
   animation: popIn 0.4s ease-out;
 }
 
-
-/* Animation */
-@keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
+/* Dartboard */
 #dartboardWrapper {
   margin: 20px auto;
 }
@@ -105,20 +101,8 @@ th {
   border: 4px solid #444;
   border-radius: 50%;
 }
-.leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-  font-size: 0.9rem;
-}
 
-.leaderboard-table th,
-.leaderboard-table td {
-  padding: 6px;
-  border: 1px solid #ccc;
-  text-align: center;
-}
-
+/* Total score list */
 .total-list {
   list-style: none;
   padding: 0;
@@ -129,7 +113,13 @@ th {
   margin: 4px 0;
 }
 
-/* Responsive tweaks */
+/* Animation */
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Mobile responsiveness */
 @media (max-width: 768px) {
   .leaderboard-table {
     font-size: 0.8rem;
