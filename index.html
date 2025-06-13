@@ -8,19 +8,22 @@
 </head>
 <body>
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+
   <div id="setup">
     <label>Number of Players (1-20): <input type="number" id="playerCount" min="1" max="20" value="1"></label>
-    <button onclick="startGame()">Start Game</button>
+    <button onclick="createPlayerInputs()">Next</button>
+    <div id="nameInputs"></div>
+    <button id="startBtn" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
 
   <div id="game" style="display:none;">
     <h2 id="holeHeader">Hole 1</h2>
     <div id="scoreInputs"></div>
     <button onclick="nextHole()">Next Hole</button>
-    <div id="finalScore" style="margin-top:20px;"></div>
+    <h3>Leaderboard</h3>
+    <div id="leaderboard"></div>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
-
