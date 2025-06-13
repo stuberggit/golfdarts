@@ -21,8 +21,7 @@ function createPlayerInputs() {
       <label>Player ${i + 1}:
         <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
           <option value="" disabled selected>Select Player</option>
-${playerOptions.map(name => `<option value="${name}">${name}</option>`).join('')}
-
+          ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
         </select>
         <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;">
       </label><br>
@@ -35,13 +34,7 @@ ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join('')
 function handleNameDropdown(selectId, inputId) {
   const select = document.getElementById(selectId);
   const input = document.getElementById(inputId);
-
-  if (select.value === "Other") {
-    input.style.display = "inline";
-    input.focus();
-  } else {
-    input.style.display = "none";
-  }
+  input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
 function startGame() {
@@ -52,9 +45,8 @@ function startGame() {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
     const name = select.value === "Other" ? input.value.trim() : select.value;
-    players.push({ name: name || `Player ${i + 1}`, scores: [] });
     if (!name) return alert(`Player ${i + 1} must have a name.`);
-
+    players.push({ name, scores: [] });
   }
 
   document.getElementById("setup").style.display = "none";
@@ -68,8 +60,6 @@ function startGame() {
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
   const container = document.getElementById("scoreInputs");
-  container.innerHTML = "";
-
   const player = players[currentPlayerIndex];
 
   container.innerHTML = `
@@ -87,11 +77,10 @@ function showHole() {
   }
 }
 
-
 function getScore(hits) {
-  if (hits === 0) return 5; // double bogey
+  if (hits === 0) return 5; // Miss = double bogey
   const scores = [3, 2, 1, 0, -1, -2, -3, -4, -5];
-  return hits >= 1 && hits <= 9 ? scores[hits - 1] : 5;
+  return scores[hits - 1] ?? 5;
 }
 
 function getScoreLabelAndColor(hits) {
@@ -103,17 +92,14 @@ function getScoreLabelAndColor(hits) {
     "#c00", "#222", "#3c6", "#08f", "#888", "#0cc",
     "#06c", "#339", "#446", "#113"
   ];
-
-  if (hits >= 0 && hits <= 9) {
-    return { label: labels[hits], color: colors[hits] };
-  } else {
-    return { label: "Unknown", color: "#000" };
-  }
+  return { label: labels[hits] ?? "Unknown", color: colors[hits] ?? "#000" };
 }
 
 function submitPlayerScore() {
-  const hits = parseInt(document.getElementById("hits").value);
-  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter 0 to 9 darts hit.");
+  const hitsValue = document.getElementById("hits").value;
+  const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
+
+  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
 
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
@@ -121,14 +107,11 @@ function submitPlayerScore() {
 
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
-
-  // ✅ Update leaderboard immediately after this player's score is submitted
   updateLeaderboard();
 
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
-    // End of hole
     if (currentHole < 18) {
       currentHole++;
       currentPlayerIndex = 0;
@@ -142,11 +125,9 @@ function submitPlayerScore() {
   }
 }
 
-
 function updateLeaderboard(final = false) {
   let table = `<table class="leaderboard-table">`;
 
-  // Front Nine Header
   table += `
     <tr><th colspan="11">🏌️ Front Nine</th></tr>
     <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
@@ -163,7 +144,6 @@ function updateLeaderboard(final = false) {
     table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
   });
 
-  // Back Nine Header
   table += `
     <tr><th colspan="11">🏌️ Back Nine</th></tr>
     <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
@@ -180,23 +160,18 @@ function updateLeaderboard(final = false) {
     table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
   });
 
-  // Final Total
   table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
-
   table += `<ul class="total-list">`;
   players.forEach(player => {
     const total = player.scores.reduce((sum, s) => sum + (s ?? 0), 0);
     table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
   });
-  table += `</ul></td></tr>`;
-
-  table += `</table>`;
+  table += `</ul></td></tr></table>`;
 
   document.getElementById("leaderboard").innerHTML = final
     ? `<h2>🏆 Final Leaderboard</h2>${table}`
     : table;
 }
-
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
