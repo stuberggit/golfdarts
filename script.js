@@ -90,3 +90,11 @@ function updateLeaderboard(final = false) {
   const board = document.getElementById("leaderboard");
   board.innerHTML = final ? `<h2>🏆 Final Leaderboard</h2>${table}` : table;
 }
+function undoHole() {
+  if (currentHole === 1) return alert("Nothing to undo.");
+
+  currentHole--;
+  players.forEach(player => player.scores.pop());
+  showHole();
+  updateLeaderboard();
+}
