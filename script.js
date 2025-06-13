@@ -41,9 +41,6 @@ function handleNameDropdown(selectId, inputId) {
   }
 }
 
-  
-
-
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   players = [];
@@ -83,23 +80,15 @@ function getScore(hits) {
 function nextHole() {
   players.forEach((player, idx) => {
   const hits = parseInt(document.getElementById(`hits-${idx}`).value);
+  if (isNaN(hits) || hits < 0 || hits > 9) return;
+
   const score = getScore(hits);
   player.scores.push(score);
 
-  const labels = ["Double Bogey", "Par", "Birdie", "Ace", "Goose Egg", "Icicle", "Polar Bear", "Frostbite", "Snowman", "Avalanche"];
-  const colors = ["#c00", "#222", "#3c6", "#08f", "#888", "#0cc", "#06c", "#339", "#446", "#113"];
-  showScoreAnimation(`${player.name}: ${labels[hits] ?? "Unknown"}!`, colors[hits] ?? "#000");
+  const { label, color } = getScoreLabelAndColor(hits);
+  showScoreAnimation(`${player.name}: ${label}!`, color);
 });
 
-
-  if (currentHole < 18) {
-    currentHole++;
-    showHole();
-    updateLeaderboard();
-  } else {
-    updateLeaderboard(true);
-  }
-}
 
 function updateLeaderboard(final = false) {
   let table = `<table><tr><th>Player</th>`;
