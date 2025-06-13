@@ -1,14 +1,34 @@
 let players = [];
 let currentHole = 1;
 
-function startGame() {
+function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
-  
-  players = Array.from({ length: count }, (_, i) => ({ name: `Player ${i + 1}`, scores: [] }));
+
+  const container = document.getElementById("nameInputs");
+  container.innerHTML = "";
+
+  for (let i = 0; i < count; i++) {
+    container.innerHTML += `<label>Player ${i + 1} Name: <input type="text" id="name-${i}" required></label><br>`;
+  }
+
+  document.getElementById("startBtn").style.display = "inline";
+}
+
+function startGame() {
+  const count = parseInt(document.getElementById("playerCount").value);
+  players = [];
+
+  for (let i = 0; i < count; i++) {
+    const name = document.getElementById(`name-${i}`).value.trim();
+    players.push({ name: name || `Player ${i + 1}`, scores: [] });
+  }
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
+
   showHole();
+  updateLeaderboard();
 }
 
 function showHole() {
@@ -17,10 +37,15 @@ function showHole() {
   container.innerHTML = "";
 
   players.forEach((player, idx) => {
-    const label = document.createElement("label");
-    label.innerHTML = `${player.name} hits: <input type="number" id="hits-${idx}" min="0" max="9" value="0"><br>`;
-    container.appendChild(label);
+    container.innerHTML += `<label>${player.name} hits: 
+      <input type="number" id="hits-${idx}" min="0" max="9" value="0"><br>`;
   });
+}
+
+function getScore(hits) {
+  if (hits === 0) return 5; // double bogey
+  const scores = [3, 2, 1, 0, -1, -2, -3, -4, -5];
+  return hits >= 1 && hits <= 9 ? scores[hits - 1] : 5;
 }
 
 function nextHole() {
@@ -32,27 +57,30 @@ function nextHole() {
   if (currentHole < 18) {
     currentHole++;
     showHole();
+    updateLeaderboard();
   } else {
-    showFinalScores();
+    updateLeaderboard(true);
   }
 }
 
-function getScore(hits) {
-  const scores = [3, 2, 1, 0, -1, -2, -3, -4, -5];
-  return hits >= 1 && hits <= 9 ? scores[hits - 1] : 0;
-}
-
-function showFinalScores() {
-  document.getElementById("game").style.display = "none";
-  const resultDiv = document.getElementById("finalScore");
-  let html = "<h2>🏆 Final Scores</h2><ul>";
+function updateLeaderboard(final = false) {
+  let table = `<table><tr><th>Player</th>`;
+  for (let i = 1; i <= 18; i++) {
+    table += `<th>${i}</th>`;
+  }
+  table += `<th>Total</th></tr>`;
 
   players.forEach(player => {
-    const total = player.scores.reduce((a, b) => a + b, 0);
-    html += `<li>${player.name}: ${total}</li>`;
+    const total = player.scores.reduce((sum, s) => sum + s, 0);
+    table += `<tr><td>${player.name}</td>`;
+    for (let i = 0; i < 18; i++) {
+      table += `<td>${player.scores[i] !== undefined ? player.scores[i] : ""}</td>`;
+    }
+    table += `<td>${total}</td></tr>`;
   });
 
-  html += "</ul>";
-  resultDiv.innerHTML = html;
-}
+  table += "</table>";
 
+  const board = document.getElementById("leaderboard");
+  board.innerHTML = final ? `<h2>🏆 Final Leaderboard</h2>${table}` : table;
+}
