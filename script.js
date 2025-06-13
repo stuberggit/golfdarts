@@ -136,24 +136,59 @@ function submitPlayerScore() {
 
 
 function updateLeaderboard(final = false) {
-  let table = `<table><tr><th>Player</th>`;
-  for (let i = 1; i <= 18; i++) {
-    table += `<th>${i}</th>`;
-  }
-  table += `<th>Total</th></tr>`;
+  let table = `<table class="leaderboard-table">`;
+
+  // Front Nine Header
+  table += `
+    <tr><th colspan="11">🏌️ Front Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
+  `;
 
   players.forEach(player => {
-    const total = player.scores.reduce((sum, s) => sum + s, 0);
+    const outScores = player.scores.slice(0, 9);
+    const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
+
     table += `<tr><td>${player.name}</td>`;
-    for (let i = 0; i < 18; i++) {
-      table += `<td>${player.scores[i] !== undefined ? player.scores[i] : ""}</td>`;
+    for (let i = 0; i < 9; i++) {
+      table += `<td>${player.scores[i] ?? ""}</td>`;
     }
-    table += `<td>${total}</td></tr>`;
+    table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
   });
 
-  table += "</table>";
-  document.getElementById("leaderboard").innerHTML = final ? `<h2>🏆 Final Leaderboard</h2>${table}` : table;
+  // Back Nine Header
+  table += `
+    <tr><th colspan="11">🏌️ Back Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
+  `;
+
+  players.forEach(player => {
+    const inScores = player.scores.slice(9, 18);
+    const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
+
+    table += `<tr><td>${player.name}</td>`;
+    for (let i = 9; i < 18; i++) {
+      table += `<td>${player.scores[i] ?? ""}</td>`;
+    }
+    table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
+  });
+
+  // Final Total
+  table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
+
+  table += `<ul class="total-list">`;
+  players.forEach(player => {
+    const total = player.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
+  });
+  table += `</ul></td></tr>`;
+
+  table += `</table>`;
+
+  document.getElementById("leaderboard").innerHTML = final
+    ? `<h2>🏆 Final Leaderboard</h2>${table}`
+    : table;
 }
+
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
