@@ -43,8 +43,8 @@ function handleNameDropdown(selectId, inputId) {
 
   
 
+
 function startGame() {
- function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   players = [];
 
