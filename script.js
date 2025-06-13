@@ -89,9 +89,18 @@ function getScoreLabelAndColor(hits) {
     "Polar Bear", "Frostbite", "Snowman", "Avalanche"
   ];
   const colors = [
-    "#c00", "#222", "#3c6", "#08f", "#888", "#0cc",
-    "#06c", "#339", "#446", "#113"
-  ];
+  "#ff4c4c", // Double Bogey - bright red
+  "#ffffff", // Par - white
+  "#00ff00", // Birdie - bright green
+  "#00ffff", // Ace - bright cyan
+  "#ffcc00", // Goose Egg - yellow
+  "#ff66ff", // Icicle - pink
+  "#00bfff", // Polar Bear - sky blue
+  "#ff9933", // Frostbite - orange
+  "#ff69b4", // Snowman - hot pink
+  "#ffff00"  // Avalanche - bright yellow
+];
+
   return { label: labels[hits] ?? "Unknown", color: colors[hits] ?? "#000" };
 }
 
