@@ -98,3 +98,6 @@ function undoHole() {
   showHole();
   updateLeaderboard();
 }
+window.onbeforeunload = function (e) {
+  return "Are you sure you want to leave? Your game progress will be lost.";
+};
