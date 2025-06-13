@@ -2,18 +2,46 @@ let players = [];
 let currentHole = 1;
 
 function createPlayerInputs() {
+  function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
+
+  const playerOptions = [
+    "Brandon", "Brock", "Dan", "Deanna", "Derrick", "Don", "Edgar", 
+    "Erin", "Mullins", "Phillip", "Pusti", "Stuberg", "Tara", "Other"
+  ];
 
   const container = document.getElementById("nameInputs");
   container.innerHTML = "";
 
   for (let i = 0; i < count; i++) {
-    container.innerHTML += `<label>Player ${i + 1} Name: <input type="text" id="name-${i}" required></label><br>`;
+    const selectId = `select-${i}`;
+    const inputId = `name-${i}`;
+    container.innerHTML += `
+      <label>Player ${i + 1}:
+        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
+          ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join('')}
+        </select>
+        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;">
+      </label><br>
+    `;
   }
 
   document.getElementById("startBtn").style.display = "inline";
 }
+function handleNameDropdown(selectId, inputId) {
+  const select = document.getElementById(selectId);
+  const input = document.getElementById(inputId);
+
+  if (select.value === "Other") {
+    input.style.display = "inline";
+    input.focus();
+  } else {
+    input.style.display = "none";
+  }
+}
+
+  
 
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
