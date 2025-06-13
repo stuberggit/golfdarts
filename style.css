@@ -3,6 +3,9 @@ body {
   margin: 20px;
   background: #f8f8f8;
 }
+h1 {
+  text-align: center;
+}
 
 input {
   margin: 5px;
