@@ -145,4 +145,35 @@ function updateLeaderboard(final = false) {
   });
 
   table += "</table>";
-  document.getElementById("le
+  document.getElementById("leaderboard").innerHTML = final ? `<h2>🏆 Final Leaderboard</h2>${table}` : table;
+}
+
+function undoHole() {
+  if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
+
+  if (currentPlayerIndex > 0) {
+    currentPlayerIndex--;
+  } else {
+    currentHole--;
+    currentPlayerIndex = players.length - 1;
+  }
+
+  players[currentPlayerIndex].scores.pop();
+  showHole();
+  updateLeaderboard();
+}
+
+function showScoreAnimation(message, color = "#0a3") {
+  const el = document.getElementById("scoreAnimation");
+  if (!el) return;
+  el.style.color = color;
+  el.innerText = message;
+  el.style.animation = "none";
+  void el.offsetWidth;
+  el.style.animation = "popIn 0.6s ease-out";
+  setTimeout(() => el.innerText = "", 1000);
+}
+
+window.onbeforeunload = function () {
+  return "Are you sure you want to leave? Your game progress will be lost.";
+};
