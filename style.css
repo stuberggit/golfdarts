@@ -1,1 +1,12 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f0f9ff;
+}
+input {
+  margin: 5px;
+}
+#scoreInputs {
+  margin-top: 15px;
+}
 
