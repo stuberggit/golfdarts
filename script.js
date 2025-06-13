@@ -1,8 +1,8 @@
 let players = [];
 let currentHole = 1;
 
+
 function createPlayerInputs() {
-  function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
 
