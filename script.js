@@ -20,7 +20,9 @@ function createPlayerInputs() {
     container.innerHTML += `
       <label>Player ${i + 1}:
         <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
-          ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join('')}
+          <option value="" disabled selected>Select Player</option>
+${playerOptions.map(name => `<option value="${name}">${name}</option>`).join('')}
+
         </select>
         <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;">
       </label><br>
@@ -51,6 +53,8 @@ function startGame() {
     const input = document.getElementById(`name-${i}`);
     const name = select.value === "Other" ? input.value.trim() : select.value;
     players.push({ name: name || `Player ${i + 1}`, scores: [] });
+    if (!name) return alert(`Player ${i + 1} must have a name.`);
+
   }
 
   document.getElementById("setup").style.display = "none";
