@@ -75,7 +75,7 @@ function showHole() {
   container.innerHTML = `
     <label>${player.name} hits:
       <select id="hits">
-        <option value="5">Miss!</option>
+        <option value="miss">Miss!</option>
         ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
       </select>
     </label><br>
