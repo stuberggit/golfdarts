@@ -110,15 +110,17 @@ function submitPlayerScore() {
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
+  // ✅ Update leaderboard immediately after this player's score is submitted
+  updateLeaderboard();
+
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
-    // End of hole, move to next
+    // End of hole
     if (currentHole < 18) {
       currentHole++;
       currentPlayerIndex = 0;
       showHole();
-      updateLeaderboard();
     } else {
       updateLeaderboard(true);
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
@@ -127,6 +129,7 @@ function submitPlayerScore() {
     showHole();
   }
 }
+
 
 function updateLeaderboard(final = false) {
   let table = `<table><tr><th>Player</th>`;
