@@ -1,12 +1,31 @@
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background: #f0f9ff;
+  background: #f8f8f8;
 }
+
 input {
   margin: 5px;
 }
+
 #scoreInputs {
   margin-top: 15px;
 }
 
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
+  background: white;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  text-align: center;
+  padding: 6px;
+}
+
+th {
+  background-color: #4CAF50;
+  color: white;
+}
