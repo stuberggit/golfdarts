@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GolfDarts</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
@@ -17,25 +18,25 @@
     <button id="startBtn" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
 
-  <script>
-    function createPlayerInputs() {
-      const count = parseInt(document.getElementById("playerCount").value);
-      if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
+  <div id="game" style="display:none;">
+    <h2 id="holeHeader">Hole 1</h2>
 
-      const container = document.getElementById("nameInputs");
-      container.innerHTML = "";
+    <div id="dartboardWrapper">
+      <img id="dartboardImage" src="" alt="Dartboard for Current Hole" />
+    </div>
 
-      for (let i = 0; i < count; i++) {
-        container.innerHTML += `<label>Player ${i + 1}: <input type="text" id="name-${i}"></label><br>`;
-      }
+    <div id="scoreInputs"></div>
 
-      // ✅ This is the key line:
-      document.getElementById("startBtn").style.display = "inline";
-    }
+    <div style="margin-top: 20px;">
+      <button onclick="nextHole()">Next Hole</button>
+      <button onclick="undoHole()">Undo Last Hole</button>
+    </div>
 
-    function startGame() {
-      alert("Game starting...");
-    }
-  </script>
+    <h3>Leaderboard</h3>
+    <div id="leaderboard"></div>
+    <div id="scoreAnimation"></div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
