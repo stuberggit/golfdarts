@@ -1,9 +1,10 @@
+// --- Global Variables ---
 let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 
-
+// --- Player Setup ---
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -43,6 +44,7 @@ function handleNameDropdown(selectId, inputId) {
   input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
+// --- Game Logic ---
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -67,8 +69,10 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
+  gameStarted = true;
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
+  currentHole = 1;
   currentPlayerIndex = 0;
   showHole();
   updateLeaderboard();
@@ -206,31 +210,14 @@ function showScoreAnimation(message, color = "#0a3") {
   setTimeout(() => el.innerText = "", 1000);
 }
 
-window.onbeforeunload = function () {
-  return "Are you sure you want to leave? Your game progress will be lost.";
-};
-let gameStarted = false;
-
-function startGame() {
-  // ... your existing code ...
-  gameStarted = true;
-}
-
-// Override default reload behavior with a custom confirmation
-window.addEventListener("beforeunload", function (e) {
-  if (gameStarted) {
-    e.preventDefault();
-    e.returnValue = ''; // This triggers the native confirm prompt in some browsers
-  }
-});
-// Exit warning modal logic
+// --- Custom Exit Confirmation Modal ---
 function resumeGame() {
   document.getElementById("exitModal").style.display = "none";
 }
 
 function confirmExit() {
   gameStarted = false;
-  window.location.href = "about:blank"; // simulate page leave
+  window.location.href = "about:blank";
 }
 
 function showExitModal() {
@@ -239,14 +226,21 @@ function showExitModal() {
   }
 }
 
-// Detect tab switch or refresh attempts
+// Handle visibility changes (for mobile/tab switch)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     showExitModal();
   }
 });
 
-// For some iOS browsers
 window.addEventListener("pagehide", () => {
   showExitModal();
+});
+
+// Basic native browser unload confirm
+window.addEventListener("beforeunload", function (e) {
+  if (gameStarted) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
 });
