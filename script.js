@@ -4,7 +4,7 @@ let currentPlayerIndex = 0;
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
-  if (count < 1 || count > 20) return alert("Enter 1 to 20 players.");
+  if (!count || count < 1 || count > 20) return alert("Please select a valid number of players.");
 
   const playerOptions = [
     "Brandon", "Brock", "Dan", "Deanna", "Derrick", "Don", "Edgar",
@@ -18,13 +18,14 @@ function createPlayerInputs() {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
     container.innerHTML += `
-      <label>Player ${i + 1}:
-        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
+      <div class="input-group">
+        <label>Player ${i + 1}:</label>
+        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')" class="full-width">
           <option value="" disabled selected>Select Player</option>
           ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
         </select>
-        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;">
-      </label><br>
+        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;" class="full-width">
+      </div>
     `;
   }
 
@@ -39,6 +40,7 @@ function handleNameDropdown(selectId, inputId) {
 
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
+  if (!count) return alert("Please select a valid number of players.");
   players = [];
 
   for (let i = 0; i < count; i++) {
@@ -63,12 +65,13 @@ function showHole() {
   const player = players[currentPlayerIndex];
 
   container.innerHTML = `
-    <label>${player.name} hits:
-      <select id="hits">
+    <div class="input-group">
+      <label>${player.name} hits:</label>
+      <select id="hits" class="full-width">
         <option value="miss">Miss!</option>
         ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
       </select>
-    </label><br>
+    </div>
   `;
 
   const dartboard = document.getElementById("dartboardImage");
@@ -78,7 +81,7 @@ function showHole() {
 }
 
 function getScore(hits) {
-  if (hits === 0) return 5; // Miss = double bogey
+  if (hits === 0) return 5;
   const scores = [3, 2, 1, 0, -1, -2, -3, -4, -5];
   return scores[hits - 1] ?? 5;
 }
@@ -89,25 +92,15 @@ function getScoreLabelAndColor(hits) {
     "Polar Bear", "Frostbite", "Snowman", "Avalanche"
   ];
   const colors = [
-  "#ff4c4c", // Double Bogey - bright red
-  "#ffffff", // Par - white
-  "#00ff00", // Birdie - bright green
-  "#00ffff", // Ace - bright cyan
-  "#ffcc00", // Goose Egg - yellow
-  "#ff66ff", // Icicle - pink
-  "#00bfff", // Polar Bear - sky blue
-  "#ff9933", // Frostbite - orange
-  "#ff69b4", // Snowman - hot pink
-  "#ffff00"  // Avalanche - bright yellow
-];
-
+    "#ff4c4c", "#ffffff", "#00ff00", "#00ffff", "#ffcc00", "#ff66ff",
+    "#00bfff", "#ff9933", "#ff69b4", "#ffff00"
+  ];
   return { label: labels[hits] ?? "Unknown", color: colors[hits] ?? "#000" };
 }
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
-
   if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
 
   const score = getScore(hits);
@@ -136,39 +129,32 @@ function submitPlayerScore() {
 
 function updateLeaderboard(final = false) {
   let table = `<table class="leaderboard-table">`;
-
   table += `
     <tr><th colspan="11">🏌️ Front Nine</th></tr>
     <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
   `;
-
   players.forEach(player => {
     const outScores = player.scores.slice(0, 9);
     const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-
     table += `<tr><td>${player.name}</td>`;
     for (let i = 0; i < 9; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
   });
-
   table += `
     <tr><th colspan="11">🏌️ Back Nine</th></tr>
     <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
   `;
-
   players.forEach(player => {
     const inScores = player.scores.slice(9, 18);
     const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-
     table += `<tr><td>${player.name}</td>`;
     for (let i = 9; i < 18; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
   });
-
   table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
   table += `<ul class="total-list">`;
   players.forEach(player => {
@@ -176,7 +162,6 @@ function updateLeaderboard(final = false) {
     table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
   });
   table += `</ul></td></tr></table>`;
-
   document.getElementById("leaderboard").innerHTML = final
     ? `<h2>🏆 Final Leaderboard</h2>${table}`
     : table;
@@ -184,14 +169,12 @@ function updateLeaderboard(final = false) {
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
-
   if (currentPlayerIndex > 0) {
     currentPlayerIndex--;
   } else {
     currentHole--;
     currentPlayerIndex = players.length - 1;
   }
-
   players[currentPlayerIndex].scores.pop();
   showHole();
   updateLeaderboard();
