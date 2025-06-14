@@ -13,28 +13,30 @@ body {
 /* Title */
 h1 {
   font-size: 2.8em;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   color: white;
   text-shadow: 1px 1px 4px #000;
 }
 
-/* Top links layout */
-.top-links.spaced {
+/* Top links */
+.top-links {
   display: flex;
   justify-content: space-between;
   max-width: 960px;
-  margin: 0 auto 20px auto;
-  padding: 0 20px;
-}
-
-.top-links.spaced a {
-  color: white;
-  text-decoration: underline;
+  margin: 0 auto 10px;
   font-size: 1rem;
 }
 
+.top-links a {
+  color: white;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Buttons */
-button.primary-button {
+button,
+#setup button,
+#game button {
   background-color: #206a1e;
   border: 2px solid white;
   color: white;
@@ -49,14 +51,16 @@ button.primary-button {
   max-width: 400px;
 }
 
-button.primary-button:hover {
+button:hover,
+#setup button:hover,
+#game button:hover {
   background-color: #2c8a2a;
 }
 
 /* Input labels and selects */
 label {
   display: block;
-  margin: 20px auto 10px auto;
+  margin: 20px auto;
   font-size: 1.2rem;
 }
 
@@ -86,12 +90,12 @@ table,
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
   overflow: hidden;
   font-size: 0.9rem;
+  color: black;
 }
 
 th, td {
   padding: 10px;
   border: 1px solid #ccc;
-  color: black;
   text-align: center;
 }
 
@@ -99,12 +103,20 @@ th {
   background-color: #c9e3c2;
 }
 
-#leaderboard,
-#leaderboardModalContent {
+#leaderboard {
   border-radius: 16px;
   margin: 0 auto;
   width: 100%;
   max-width: 960px;
+}
+
+/* Modal specific leaderboard text color */
+#leaderboardModal .leaderboard-table,
+#leaderboardModal td,
+#leaderboardModal th {
+  color: white;
+  background-color: transparent;
+  border-color: #ccc;
 }
 
 /* Score animation */
@@ -114,7 +126,7 @@ th {
   padding: 8px 12px;
   border-radius: 8px;
   display: inline-block;
-  animation: popIn 1.6s ease-out;
+  animation: popIn 0.8s ease-out;
   color: #fff;
 }
 
@@ -135,7 +147,7 @@ th {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Modal styling */
+/* Modal overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -157,7 +169,7 @@ th {
   background: #2a4f0f;
   border: 3px solid white;
   border-radius: 20px;
-  max-width: 360px;
+  max-width: 400px;
   width: 90%;
 }
 
@@ -177,40 +189,10 @@ th {
   border-radius: 8px;
 }
 
-/* Scoring modal list */
-.scoring-list {
-  list-style-type: none;
-  padding: 0;
-  text-align: left;
-}
-
-.scoring-list li {
-  margin: 6px 0;
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-/* Leaderboard modal styling */
-#leaderboardModalContent table {
-  width: 100%;
-  background-color: #1c3f0a;
-  font-family: 'Courier New', Courier, monospace;
-  color: white;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-#leaderboardModalContent th, #leaderboardModalContent td {
-  padding: 8px;
-  border-bottom: 1px solid #ccc;
-  text-align: center;
-}
-
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .leaderboard-table {
     font-size: 0.8rem;
-    color: white
   }
 
   h1 {
@@ -224,14 +206,5 @@ th {
 
   label {
     font-size: 1rem;
-  }
-
-  .top-links.spaced {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .top-links.spaced a {
-    margin: 6px 0;
   }
 }
