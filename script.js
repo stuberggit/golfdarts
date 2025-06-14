@@ -1,10 +1,8 @@
-// --- Global Variables ---
 let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 
-// --- Player Setup ---
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -35,7 +33,7 @@ function createPlayerInputs() {
     `;
   }
 
-  document.getElementById("startBtn").style.display = "inline";
+  document.getElementById("startBtn").style.display = "block";
 }
 
 function handleNameDropdown(selectId, inputId) {
@@ -44,7 +42,6 @@ function handleNameDropdown(selectId, inputId) {
   input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
-// --- Game Logic ---
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -69,11 +66,11 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
-  gameStarted = true;
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  currentHole = 1;
   currentPlayerIndex = 0;
+  currentHole = 1;
+  gameStarted = true;
   showHole();
   updateLeaderboard();
 }
@@ -210,7 +207,7 @@ function showScoreAnimation(message, color = "#0a3") {
   setTimeout(() => el.innerText = "", 1000);
 }
 
-// --- Custom Exit Confirmation Modal ---
+// Exit modal logic
 function resumeGame() {
   document.getElementById("exitModal").style.display = "none";
 }
@@ -226,7 +223,6 @@ function showExitModal() {
   }
 }
 
-// Handle visibility changes (for mobile/tab switch)
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") {
     showExitModal();
@@ -237,10 +233,9 @@ window.addEventListener("pagehide", () => {
   showExitModal();
 });
 
-// Basic native browser unload confirm
 window.addEventListener("beforeunload", function (e) {
   if (gameStarted) {
     e.preventDefault();
-    e.returnValue = '';
+    e.returnValue = "";
   }
 });
