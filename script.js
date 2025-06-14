@@ -1,6 +1,8 @@
 let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
+let gameStarted = false;
+
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -42,6 +44,8 @@ function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (!count) return alert("Please select a valid number of players.");
   players = [];
+  gameStarted = true;
+
 
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
@@ -207,4 +211,31 @@ window.addEventListener("beforeunload", function (e) {
     e.preventDefault();
     e.returnValue = ''; // This triggers the native confirm prompt in some browsers
   }
+});
+// Exit warning modal logic
+function resumeGame() {
+  document.getElementById("exitModal").style.display = "none";
+}
+
+function confirmExit() {
+  gameStarted = false;
+  window.location.href = "about:blank"; // simulate page leave
+}
+
+function showExitModal() {
+  if (gameStarted) {
+    document.getElementById("exitModal").style.display = "flex";
+  }
+}
+
+// Detect tab switch or refresh attempts
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    showExitModal();
+  }
+});
+
+// For some iOS browsers
+window.addEventListener("pagehide", () => {
+  showExitModal();
 });
