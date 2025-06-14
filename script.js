@@ -50,7 +50,6 @@ function startGame() {
   }
 
   players = [];
-
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
@@ -66,10 +65,11 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
+  gameStarted = true;
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  gameStarted = true;
   currentPlayerIndex = 0;
+  currentHole = 1;
   showHole();
   updateLeaderboard();
 }
@@ -122,60 +122,48 @@ function submitPlayerScore() {
   updateLeaderboard();
 
   currentPlayerIndex++;
-
   if (currentPlayerIndex >= players.length) {
     if (currentHole < 18) {
       currentHole++;
       currentPlayerIndex = 0;
-      showHole();
     } else {
       updateLeaderboard(true);
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+      return;
     }
-  } else {
-    showHole();
   }
+
+  showHole();
 }
 
 function updateLeaderboard(final = false) {
-  const scorecard = document.getElementById("leaderboard");
-  const sorted = [...players].sort((a, b) => {
-    const aTotal = a.scores.reduce((sum, s) => sum + (s ?? 0), 0);
-    const bTotal = b.scores.reduce((sum, s) => sum + (s ?? 0), 0);
-    return aTotal - bTotal;
-  });
-
-  const leaders = sorted.map(p => p.name);
-
   let table = `<table class="leaderboard-table">`;
-  table += `<tr><th colspan="11">🏌️ Front Nine</th></tr>`;
-  table += `<tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>`;
-
+  table += `
+    <tr><th colspan="11">🏌️ Front Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
+  `;
   players.forEach(player => {
     const outScores = player.scores.slice(0, 9);
     const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    const isLeader = player.name === leaders[0];
-    table += `<tr${isLeader ? ' class="leader-highlight"' : ''}><td>${player.name}</td>`;
+    table += `<tr><td>${player.name}</td>`;
     for (let i = 0; i < 9; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
   });
-
-  table += `<tr><th colspan="11">🏌️ Back Nine</th></tr>`;
-  table += `<tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>`;
-
+  table += `
+    <tr><th colspan="11">🏌️ Back Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
+  `;
   players.forEach(player => {
     const inScores = player.scores.slice(9, 18);
     const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    const isLeader = player.name === leaders[0];
-    table += `<tr${isLeader ? ' class="leader-highlight"' : ''}><td>${player.name}</td>`;
+    table += `<tr><td>${player.name}</td>`;
     for (let i = 9; i < 18; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
   });
-
   table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
   table += `<ul class="total-list">`;
   players.forEach(player => {
@@ -183,20 +171,35 @@ function updateLeaderboard(final = false) {
     table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
   });
   table += `</ul></td></tr></table>`;
-
-  scorecard.innerHTML = final
+  document.getElementById("leaderboard").innerHTML = final
     ? `<h2>🏆 Final Scorecard</h2>${table}`
     : table;
+
+  // Update modal leaderboard
+  const scoresSorted = [...players].map(p => ({
+    name: p.name,
+    score: p.scores.reduce((a, b) => a + b, 0),
+    completed: p.scores.length
+  })).filter(p => p.completed > 0).sort((a, b) => a.score - b.score);
+
+  let leaderHTML = `<table class="leaderboard-table"><tr><th>Player</th><th>Score</th></tr>`;
+  scoresSorted.forEach((p, i) => {
+    leaderHTML += `<tr><td>${p.name}</td><td>${p.score}</td></tr>`;
+  });
+  leaderHTML += `</table>`;
+  document.getElementById("leaderboardDetails").innerHTML = leaderHTML;
 }
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
+
   if (currentPlayerIndex > 0) {
     currentPlayerIndex--;
   } else {
     currentHole--;
     currentPlayerIndex = players.length - 1;
   }
+
   players[currentPlayerIndex].scores.pop();
   showHole();
   updateLeaderboard();
@@ -209,12 +212,11 @@ function showScoreAnimation(message, color = "#0a3") {
   el.innerText = message;
   el.style.animation = "none";
   void el.offsetWidth;
-  el.style.animation = "popIn 1.6s ease-out";
-  setTimeout(() => el.innerText = "", 1600);
+  el.style.animation = "popIn 0.6s ease-out";
+  setTimeout(() => el.innerText = "", 2000);
 }
 
-// Modals
-function openModal(id) {
+function showModal(id) {
   document.getElementById(id).style.display = "flex";
 }
 
@@ -222,28 +224,19 @@ function closeModal(id) {
   document.getElementById(id).style.display = "none";
 }
 
-// Exit modal behavior
-function resumeGame() {
-  closeModal("exitModal");
-}
-
-function confirmExit() {
-  gameStarted = false;
-  window.location.href = "about:blank";
-}
-
-function showExitModal() {
+window.addEventListener("beforeunload", function (e) {
   if (gameStarted) {
-    openModal("exitModal");
-  }
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    showExitModal();
+    e.preventDefault();
+    e.returnValue = '';
   }
 });
 
-window.addEventListener("pagehide", () => {
-  showExitModal();
+document.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("playerCount");
+  for (let i = 1; i <= 20; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    select.appendChild(opt);
+  }
 });
