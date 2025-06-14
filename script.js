@@ -33,7 +33,7 @@ function createPlayerInputs() {
     `;
   }
 
-  document.getElementById("startBtn").style.display = "block";
+  document.getElementById("startBtn").style.display = "inline";
 }
 
 function handleNameDropdown(selectId, inputId) {
@@ -69,7 +69,6 @@ function startGame() {
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   currentPlayerIndex = 0;
-  currentHole = 1;
   gameStarted = true;
   showHole();
   updateLeaderboard();
@@ -89,11 +88,6 @@ function showHole() {
       </select>
     </div>
   `;
-
-  const dartboard = document.getElementById("dartboardImage");
-  if (dartboard) {
-    dartboard.src = `images/dartboard-${currentHole}.png`;
-  }
 }
 
 function getScore(hits) {
@@ -207,7 +201,6 @@ function showScoreAnimation(message, color = "#0a3") {
   setTimeout(() => el.innerText = "", 1000);
 }
 
-// Exit modal logic
 function resumeGame() {
   document.getElementById("exitModal").style.display = "none";
 }
@@ -222,20 +215,3 @@ function showExitModal() {
     document.getElementById("exitModal").style.display = "flex";
   }
 }
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
-    showExitModal();
-  }
-});
-
-window.addEventListener("pagehide", () => {
-  showExitModal();
-});
-
-window.addEventListener("beforeunload", function (e) {
-  if (gameStarted) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
