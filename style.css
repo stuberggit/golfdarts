@@ -140,3 +140,43 @@ th {
     font-size: 1rem;
   }
 }
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Prata', serif;
+}
+
+.modal-content {
+  text-align: center;
+  padding: 30px;
+  background: #2a4f0f;
+  border: 3px solid white;
+  border-radius: 20px;
+  max-width: 300px;
+  width: 80%;
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+}
+
+.modal-content button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  font-size: 1rem;
+  background-color: #206a1e;
+  border: 2px solid white;
+  color: white;
+  border-radius: 8px;
+}
