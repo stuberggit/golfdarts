@@ -99,7 +99,8 @@ th {
   background-color: #c9e3c2;
 }
 
-#leaderboard {
+#leaderboard,
+#leaderboardModalContent {
   border-radius: 16px;
   margin: 0 auto;
   width: 100%;
@@ -190,9 +191,19 @@ th {
 }
 
 /* Leaderboard modal styling */
-.leaderboard-theme {
+#leaderboardModalContent table {
+  width: 100%;
   background-color: #1c3f0a;
   font-family: 'Courier New', Courier, monospace;
+  color: white;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#leaderboardModalContent th, #leaderboardModalContent td {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+  text-align: center;
 }
 
 /* Mobile responsiveness */
