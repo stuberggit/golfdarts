@@ -101,7 +101,7 @@ th {
   padding: 8px 12px;
   border-radius: 8px;
   display: inline-block;
-  animation: popIn 0.8s ease-out;
+  animation: popIn 1.8s ease-out;
   color: #fff;
   background: none;
   text-shadow: none;
