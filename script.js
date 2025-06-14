@@ -194,3 +194,17 @@ function showScoreAnimation(message, color = "#0a3") {
 window.onbeforeunload = function () {
   return "Are you sure you want to leave? Your game progress will be lost.";
 };
+let gameStarted = false;
+
+function startGame() {
+  // ... your existing code ...
+  gameStarted = true;
+}
+
+// Override default reload behavior with a custom confirmation
+window.addEventListener("beforeunload", function (e) {
+  if (gameStarted) {
+    e.preventDefault();
+    e.returnValue = ''; // This triggers the native confirm prompt in some browsers
+  }
+});
