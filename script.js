@@ -68,8 +68,8 @@ function startGame() {
 
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  currentPlayerIndex = 0;
   gameStarted = true;
+  currentPlayerIndex = 0;
   showHole();
   updateLeaderboard();
 }
@@ -138,33 +138,44 @@ function submitPlayerScore() {
 }
 
 function updateLeaderboard(final = false) {
+  const scorecard = document.getElementById("leaderboard");
+  const sorted = [...players].sort((a, b) => {
+    const aTotal = a.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    const bTotal = b.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    return aTotal - bTotal;
+  });
+
+  const leaders = sorted.map(p => p.name);
+
   let table = `<table class="leaderboard-table">`;
-  table += `
-    <tr><th colspan="11">🏌️ Front Nine</th></tr>
-    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
-  `;
+  table += `<tr><th colspan="11">🏌️ Front Nine</th></tr>`;
+  table += `<tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>`;
+
   players.forEach(player => {
     const outScores = player.scores.slice(0, 9);
     const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    table += `<tr><td>${player.name}</td>`;
+    const isLeader = player.name === leaders[0];
+    table += `<tr${isLeader ? ' class="leader-highlight"' : ''}><td>${player.name}</td>`;
     for (let i = 0; i < 9; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
   });
-  table += `
-    <tr><th colspan="11">🏌️ Back Nine</th></tr>
-    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
-  `;
+
+  table += `<tr><th colspan="11">🏌️ Back Nine</th></tr>`;
+  table += `<tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>`;
+
   players.forEach(player => {
     const inScores = player.scores.slice(9, 18);
     const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    table += `<tr><td>${player.name}</td>`;
+    const isLeader = player.name === leaders[0];
+    table += `<tr${isLeader ? ' class="leader-highlight"' : ''}><td>${player.name}</td>`;
     for (let i = 9; i < 18; i++) {
       table += `<td>${player.scores[i] ?? ""}</td>`;
     }
     table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
   });
+
   table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
   table += `<ul class="total-list">`;
   players.forEach(player => {
@@ -172,8 +183,9 @@ function updateLeaderboard(final = false) {
     table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
   });
   table += `</ul></td></tr></table>`;
-  document.getElementById("leaderboard").innerHTML = final
-    ? `<h2>🏆 Final Leaderboard</h2>${table}`
+
+  scorecard.innerHTML = final
+    ? `<h2>🏆 Final Scorecard</h2>${table}`
     : table;
 }
 
@@ -197,12 +209,22 @@ function showScoreAnimation(message, color = "#0a3") {
   el.innerText = message;
   el.style.animation = "none";
   void el.offsetWidth;
-  el.style.animation = "popIn 1.8s ease-out";
-  setTimeout(() => el.innerText = "", 1000);
+  el.style.animation = "popIn 1.6s ease-out";
+  setTimeout(() => el.innerText = "", 1600);
 }
 
+// Modals
+function openModal(id) {
+  document.getElementById(id).style.display = "flex";
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+// Exit modal behavior
 function resumeGame() {
-  document.getElementById("exitModal").style.display = "none";
+  closeModal("exitModal");
 }
 
 function confirmExit() {
@@ -212,6 +234,16 @@ function confirmExit() {
 
 function showExitModal() {
   if (gameStarted) {
-    document.getElementById("exitModal").style.display = "flex";
+    openModal("exitModal");
   }
 }
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    showExitModal();
+  }
+});
+
+window.addEventListener("pagehide", () => {
+  showExitModal();
+});
