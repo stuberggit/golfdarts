@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GolfDarts</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
@@ -11,14 +11,17 @@
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
 
   <div id="setup">
-    <label>Number of Players:
-      <select id="playerCount">
+    <div class="form-group">
+      <label for="playerCount">Number of Players:</label>
+      <select id="playerCount" class="large-select">
         <option value="" disabled selected>Select Players</option>
       </select>
-    </label>
-    <button onclick="createPlayerInputs()">Next</button>
+    </div>
+
+    <button class="primary-button" onclick="createPlayerInputs()">Next</button>
+
     <div id="nameInputs"></div>
-    <button id="startBtn" onclick="startGame()" style="display:none;">Start Game</button>
+    <button id="startBtn" class="primary-button" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
 
   <div id="game" style="display:none;">
@@ -26,12 +29,12 @@
 
     <div id="scoreInputs"></div>
 
-    <div style="margin-top: 20px;">
-      <button onclick="submitPlayerScore()">Submit Score</button>
-      <button onclick="undoHole()">Undo Last Hole</button>
+    <div class="form-actions">
+      <button class="primary-button" onclick="submitPlayerScore()">Submit Score</button>
+      <button class="primary-button" onclick="undoHole()">Undo Last Hole</button>
     </div>
 
-    <div id="scoreAnimation" style="margin-bottom: 12px;"></div>
+    <div id="scoreAnimation"></div>
 
     <h3>Leaderboard</h3>
     <div id="leaderboard"></div>
@@ -47,6 +50,12 @@
         opt.textContent = i;
         select.appendChild(opt);
       }
+    });
+
+    // Confirm refresh/close
+    window.addEventListener("beforeunload", function (e) {
+      e.preventDefault();
+      e.returnValue = "Are you sure you want to leave? Your game progress will be lost.";
     });
   </script>
 
