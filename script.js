@@ -6,7 +6,10 @@ let gameStarted = false;
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
-  if (!count || count < 1 || count > 20) return alert("Please select a valid number of players.");
+  if (isNaN(count) || count < 1 || count > 20) {
+    alert("Please select the number of players.");
+    return;
+  }
 
   const playerOptions = [
     "Brandon", "Brock", "Dan", "Deanna", "Derrick", "Don", "Edgar",
@@ -20,13 +23,13 @@ function createPlayerInputs() {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
     container.innerHTML += `
-      <div class="input-group">
-        <label>Player ${i + 1}:</label>
-        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')" class="full-width">
+      <div class="playerInputBlock">
+        <label for="${selectId}">Player ${i + 1}:</label>
+        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
           <option value="" disabled selected>Select Player</option>
           ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
         </select>
-        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;" class="full-width">
+        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;" />
       </div>
     `;
   }
@@ -42,22 +45,30 @@ function handleNameDropdown(selectId, inputId) {
 
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
-  if (!count) return alert("Please select a valid number of players.");
-  players = [];
-  gameStarted = true;
+  if (isNaN(count) || count < 1 || count > 20) {
+    alert("Please select a valid number of players.");
+    return;
+  }
 
+  players = [];
 
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
-    const name = select.value === "Other" ? input.value.trim() : select.value;
-    if (!name) return alert(`Player ${i + 1} must have a name.`);
+    const selected = select.value;
+    const inputted = input.value.trim();
+    const name = selected === "Other" ? inputted : selected;
+
+    if (!name) {
+      alert(`Player ${i + 1} must have a name.`);
+      return;
+    }
+
     players.push({ name, scores: [] });
   }
 
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-
   currentPlayerIndex = 0;
   showHole();
   updateLeaderboard();
