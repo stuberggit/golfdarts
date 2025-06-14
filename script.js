@@ -197,7 +197,7 @@ function showScoreAnimation(message, color = "#0a3") {
   el.innerText = message;
   el.style.animation = "none";
   void el.offsetWidth;
-  el.style.animation = "popIn 0.6s ease-out";
+  el.style.animation = "popIn 0.8s ease-out";
   setTimeout(() => el.innerText = "", 1000);
 }
 
