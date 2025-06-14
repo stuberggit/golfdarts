@@ -61,38 +61,23 @@
       }
     });
 
-    // Custom modal exit logic
-    let gameStarted = false;
-
-    function resumeGame() {
-      document.getElementById("exitModal").style.display = "none";
-    }
-
-    function confirmExit() {
-      gameStarted = false;
-      window.location.href = "about:blank";
-    }
-
-    function showExitModal() {
-      if (gameStarted) {
-        document.getElementById("exitModal").style.display = "flex";
+    // Built-in warning for supported browsers
+    window.addEventListener("beforeunload", function (e) {
+      if (window.gameStarted) {
+        e.preventDefault();
+        e.returnValue = '';
       }
-    }
+    });
 
+    // Custom modal triggers for iOS/Safari
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") {
+      if (document.visibilityState === "hidden" && window.gameStarted) {
         showExitModal();
       }
     });
 
     window.addEventListener("pagehide", () => {
-      showExitModal();
-    });
-
-    window.addEventListener("beforeunload", function (e) {
-      if (gameStarted) {
-        e.preventDefault();
-        e.returnValue = ""; // Required for some browsers
+      if (window.gameStarted) {
         showExitModal();
       }
     });
