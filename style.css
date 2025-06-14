@@ -19,8 +19,7 @@ h1 {
 }
 
 /* Buttons */
-#setup button,
-#game button {
+button {
   background-color: #206a1e;
   border: 2px solid white;
   color: white;
@@ -35,16 +34,17 @@ h1 {
   max-width: 400px;
 }
 
-#setup button:hover,
-#game button:hover {
+button:hover {
   background-color: #2c8a2a;
 }
 
 /* Input labels and selects */
 label {
   display: block;
-  margin: 20px auto;
+  margin: 20px auto 10px;
   font-size: 1.2rem;
+  width: 100%;
+  max-width: 400px;
 }
 
 select, input[type="text"], input[type="number"] {
@@ -52,9 +52,10 @@ select, input[type="text"], input[type="number"] {
   padding: 10px;
   border-radius: 8px;
   border: none;
-  margin-top: 10px;
   width: 90%;
   max-width: 400px;
+  display: block;
+  margin: 0 auto 20px;
 }
 
 /* Game section */
@@ -102,6 +103,8 @@ th {
   display: inline-block;
   animation: popIn 0.8s ease-out;
   color: #fff;
+  background: none;
+  text-shadow: none;
 }
 
 /* Total score list */
@@ -121,25 +124,7 @@ th {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  .leaderboard-table {
-    font-size: 0.8rem;
-  }
-
-  h1 {
-    font-size: 2rem;
-  }
-
-  select, input[type="text"], input[type="number"] {
-    font-size: 1.1rem;
-    width: 95%;
-  }
-
-  label {
-    font-size: 1rem;
-  }
-}
+/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -179,4 +164,24 @@ th {
   border: 2px solid white;
   color: white;
   border-radius: 8px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .leaderboard-table {
+    font-size: 0.8rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  select, input[type="text"], input[type="number"] {
+    font-size: 1.1rem;
+    width: 95%;
+  }
+
+  label {
+    font-size: 1rem;
+  }
 }
