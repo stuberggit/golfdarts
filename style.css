@@ -160,7 +160,7 @@ th {
 
   .modal-content {
   background-color: #3a5f0b; /* deep green, same as body background */
-  color: black;
+  color: white;
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
