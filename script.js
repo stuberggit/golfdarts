@@ -266,3 +266,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadGameState();
 });
+function showModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = "block";
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = "none";
+}
