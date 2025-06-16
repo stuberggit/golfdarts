@@ -1,3 +1,4 @@
+// Existing variables
 let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
@@ -237,6 +238,7 @@ function loadGameState() {
   }
 }
 
+// Load players on startup and game state if present
 document.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
