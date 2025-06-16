@@ -159,7 +159,7 @@ th {
   }
 
   .modal-content {
-  background-color: white;
+  background-color: #3a5f0b; /* deep green, same as body background */
   color: black;
   max-width: 90vw;
   max-height: 90vh;
