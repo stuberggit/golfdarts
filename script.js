@@ -3,7 +3,6 @@ let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 
-// Create player input fields
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -140,43 +139,21 @@ function submitPlayerScore() {
 }
 
 function updateLeaderboard(final = false) {
-  let table = `<table class="leaderboard-table">`;
-  table += `
-    <tr><th colspan="11">🏌️ Front Nine</th></tr>
-    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
-  `;
-  players.forEach(player => {
-    const outScores = player.scores.slice(0, 9);
-    const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    table += `<tr><td>${player.name}</td>`;
-    for (let i = 0; i < 9; i++) {
-      table += `<td>${player.scores[i] ?? ""}</td>`;
-    }
-    table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
+  const leaderboardDetails = document.getElementById("leaderboardDetails");
+  if (!leaderboardDetails) return;
+
+  const sortedPlayers = [...players].map(player => ({
+    name: player.name,
+    total: player.scores.reduce((sum, s) => sum + (s ?? 0), 0)
+  })).sort((a, b) => a.total - b.total);
+
+  let html = "<ol class='leaderboard-list'>";
+  sortedPlayers.forEach(p => {
+    html += `<li><strong>${p.name}:</strong> ${p.total}</li>`;
   });
-  table += `
-    <tr><th colspan="11">🏌️ Back Nine</th></tr>
-    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
-  `;
-  players.forEach(player => {
-    const inScores = player.scores.slice(9, 18);
-    const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-    table += `<tr><td>${player.name}</td>`;
-    for (let i = 9; i < 18; i++) {
-      table += `<td>${player.scores[i] ?? ""}</td>`;
-    }
-    table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
-  });
-  table += `<tr><th colspan="11">⛳ Total</th></tr><tr><th>Player</th><td colspan="10">`;
-  table += `<ul class="total-list">`;
-  players.forEach(player => {
-    const total = player.scores.reduce((sum, s) => sum + (s ?? 0), 0);
-    table += `<li><strong>${player.name}:</strong> ${player.scores.length === 18 ? total : "-"}</li>`;
-  });
-  table += `</ul></td></tr></table>`;
-  document.getElementById("leaderboard").innerHTML = final
-    ? `<h2>🏆 Final Scorecard</h2>${table}`
-    : table;
+  html += "</ol>";
+
+  leaderboardDetails.innerHTML = html;
 }
 
 function undoHole() {
@@ -238,28 +215,6 @@ function loadGameState() {
   }
 }
 
-// Modal controls
-function showModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.style.display = "block";
-}
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.style.display = "none";
-}
-
-// Custom exit modal
-window.addEventListener("beforeunload", function (e) {
-  if (gameStarted) {
-    const modal = document.getElementById("exitModal");
-    if (modal) modal.style.display = "block";
-    e.preventDefault();
-    e.returnValue = '';
-    return '';
-  }
-});
-
-// DOM loaded
 document.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
@@ -268,16 +223,5 @@ document.addEventListener("DOMContentLoaded", () => {
     opt.textContent = i;
     select.appendChild(opt);
   }
-
-  // Modal triggers
-  document.getElementById("rulesLink")?.addEventListener("click", () => showModal("rulesModal"));
-  document.getElementById("scoringLink")?.addEventListener("click", () => showModal("scoringModal"));
-  document.querySelectorAll(".close-modal").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const modal = btn.closest(".modal");
-      if (modal) modal.style.display = "none";
-    });
-  });
-
   loadGameState();
 });
