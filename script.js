@@ -73,6 +73,7 @@ function startGame() {
   currentHole = 1;
   showHole();
   updateLeaderboard();
+  updateScorecard();
 }
 
 function showHole() {
@@ -122,6 +123,7 @@ function submitPlayerScore() {
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
   updateLeaderboard();
+  updateScorecard();
 
   currentPlayerIndex++;
   if (currentPlayerIndex >= players.length) {
@@ -130,6 +132,7 @@ function submitPlayerScore() {
       currentPlayerIndex = 0;
     } else {
       updateLeaderboard(true);
+      updateScorecard();
       localStorage.removeItem("golfdartsState");
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
       return;
@@ -156,6 +159,42 @@ function updateLeaderboard(final = false) {
   leaderboardDetails.innerHTML = html;
 }
 
+function updateScorecard() {
+  const container = document.getElementById("leaderboard");
+  if (!container) return;
+
+  let table = `<table class="leaderboard-table">`;
+  table += `
+    <tr><th colspan="11">🏌️ Front Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
+  `;
+  players.forEach(player => {
+    const outScores = player.scores.slice(0, 9);
+    const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
+    table += `<tr><td>${player.name}</td>`;
+    for (let i = 0; i < 9; i++) {
+      table += `<td>${player.scores[i] ?? ""}</td>`;
+    }
+    table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
+  });
+  table += `
+    <tr><th colspan="11">🏌️ Back Nine</th></tr>
+    <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
+  `;
+  players.forEach(player => {
+    const inScores = player.scores.slice(9, 18);
+    const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
+    table += `<tr><td>${player.name}</td>`;
+    for (let i = 9; i < 18; i++) {
+      table += `<td>${player.scores[i] ?? ""}</td>`;
+    }
+    table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
+  });
+  table += `</table>`;
+
+  container.innerHTML = table;
+}
+
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
 
@@ -170,6 +209,7 @@ function undoHole() {
   saveGameState();
   showHole();
   updateLeaderboard();
+  updateScorecard();
 }
 
 function showScoreAnimation(message, color = "#0a3") {
@@ -210,6 +250,7 @@ function loadGameState() {
     document.getElementById("game").style.display = "block";
     showHole();
     updateLeaderboard();
+    updateScorecard();
   } else {
     localStorage.removeItem("golfdartsState");
   }
@@ -225,26 +266,3 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadGameState();
 });
-function showModal(id) {
-  document.getElementById(id).style.display = "block";
-
-  if (id === "leaderboardModal") {
-    const leaderboardDetails = document.getElementById("leaderboardDetails");
-    const sortedPlayers = [...players].map(player => ({
-      name: player.name,
-      total: player.scores.reduce((sum, s) => sum + (s ?? 0), 0)
-    })).sort((a, b) => a.total - b.total);
-
-    let html = "<ol class='leaderboard-list'>";
-    sortedPlayers.forEach(p => {
-      html += `<li><strong>${p.name}:</strong> ${p.total}</li>`;
-    });
-    html += "</ol>";
-
-    leaderboardDetails.innerHTML = html;
-  }
-}
-
-function closeModal(id) {
-  document.getElementById(id).style.display = "none";
-}
