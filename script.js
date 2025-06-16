@@ -2,8 +2,6 @@ let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
-let pendingExit = false;
-let lastEvent = null;
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -68,6 +66,7 @@ function startGame() {
   }
 
   gameStarted = true;
+  saveGameState();
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   currentPlayerIndex = 0;
@@ -118,6 +117,7 @@ function submitPlayerScore() {
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
   player.scores.push(score);
+  saveGameState();
 
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
@@ -130,11 +130,11 @@ function submitPlayerScore() {
       currentPlayerIndex = 0;
     } else {
       updateLeaderboard(true);
+      localStorage.removeItem("golfdartsState");
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
       return;
     }
   }
-
   showHole();
 }
 
@@ -176,20 +176,6 @@ function updateLeaderboard(final = false) {
   document.getElementById("leaderboard").innerHTML = final
     ? `<h2>🏆 Final Scorecard</h2>${table}`
     : table;
-
-  // Update modal leaderboard
-  const scoresSorted = [...players].map(p => ({
-    name: p.name,
-    score: p.scores.reduce((a, b) => a + b, 0),
-    completed: p.scores.length
-  })).filter(p => p.completed > 0).sort((a, b) => a.score - b.score);
-
-  let leaderHTML = `<table class="leaderboard-table"><tr><th>Player</th><th>Score</th></tr>`;
-  scoresSorted.forEach((p, i) => {
-    leaderHTML += `<tr><td>${p.name}</td><td>${p.score}</td></tr>`;
-  });
-  leaderHTML += `</table>`;
-  document.getElementById("leaderboardDetails").innerHTML = leaderHTML;
 }
 
 function undoHole() {
@@ -203,6 +189,7 @@ function undoHole() {
   }
 
   players[currentPlayerIndex].scores.pop();
+  saveGameState();
   showHole();
   updateLeaderboard();
 }
@@ -218,57 +205,38 @@ function showScoreAnimation(message, color = "#0a3") {
   setTimeout(() => el.innerText = "", 2000);
 }
 
-function showModal(id) {
-  document.getElementById(id).style.display = "flex";
+function saveGameState() {
+  const state = {
+    players,
+    currentHole,
+    currentPlayerIndex,
+    gameStarted
+  };
+  localStorage.setItem("golfdartsState", JSON.stringify(state));
 }
 
-function closeModal(id) {
-  document.getElementById(id).style.display = "none";
-}
+function loadGameState() {
+  const saved = localStorage.getItem("golfdartsState");
+  if (!saved) return;
 
-// Exit logic
-function confirmExit(choice) {
-  const modal = document.getElementById("confirmExitModal");
-  modal.style.display = "none";
+  const state = JSON.parse(saved);
+  if (!state || !state.players || state.players.length === 0) return;
 
-  if (choice === "yes" && lastEvent) {
-    pendingExit = false;
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-    window.location.href = window.location.href;
+  if (confirm("Resume your previous game?")) {
+    players = state.players;
+    currentHole = state.currentHole;
+    currentPlayerIndex = state.currentPlayerIndex;
+    gameStarted = state.gameStarted;
+
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    showHole();
+    updateLeaderboard();
   } else {
-    pendingExit = false;
-    lastEvent = null;
+    localStorage.removeItem("golfdartsState");
   }
 }
 
-function handleBeforeUnload(e) {
-  if (!gameStarted) return;
-  e.preventDefault();
-  e.returnValue = '';
-  return '';
-}
-
-window.addEventListener("beforeunload", handleBeforeUnload);
-
-document.addEventListener("visibilitychange", (e) => {
-  if (document.visibilityState === "hidden" && gameStarted && !pendingExit) {
-    e.preventDefault();
-    pendingExit = true;
-    lastEvent = e;
-    document.getElementById("confirmExitModal").style.display = "flex";
-  }
-});
-
-window.addEventListener("pagehide", (e) => {
-  if (gameStarted && !pendingExit) {
-    e.preventDefault();
-    pendingExit = true;
-    lastEvent = e;
-    document.getElementById("confirmExitModal").style.display = "flex";
-  }
-});
-
-// Initialize dropdown on load
 document.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
@@ -277,4 +245,5 @@ document.addEventListener("DOMContentLoaded", () => {
     opt.textContent = i;
     select.appendChild(opt);
   }
+  loadGameState();
 });
