@@ -223,6 +223,33 @@ function showModal(id) {
 function closeModal(id) {
   document.getElementById(id).style.display = "none";
 }
+let pendingNavigation = false;
+
+document.addEventListener("visibilitychange", (e) => {
+  if (document.visibilityState === "hidden" && gameStarted && !pendingNavigation) {
+    e.preventDefault();
+    showModal("confirmExitModal");
+    pendingNavigation = true;
+  }
+});
+
+window.addEventListener("pagehide", (e) => {
+  if (gameStarted && !pendingNavigation) {
+    e.preventDefault();
+    showModal("confirmExitModal");
+    pendingNavigation = true;
+  }
+});
+
+function confirmExit(choice) {
+  if (choice === "yes") {
+    pendingNavigation = false;
+    window.location.reload(); // or redirect to home/setup
+  } else {
+    pendingNavigation = false;
+    closeModal("confirmExitModal");
+  }
+}
 
 window.addEventListener("beforeunload", function (e) {
   if (gameStarted) {
