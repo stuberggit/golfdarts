@@ -2,6 +2,8 @@ let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
+let pendingExit = false;
+let lastEvent = null;
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -223,41 +225,50 @@ function showModal(id) {
 function closeModal(id) {
   document.getElementById(id).style.display = "none";
 }
-let pendingNavigation = false;
+
+// Exit logic
+function confirmExit(choice) {
+  const modal = document.getElementById("confirmExitModal");
+  modal.style.display = "none";
+
+  if (choice === "yes" && lastEvent) {
+    pendingExit = false;
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.location.href = window.location.href;
+  } else {
+    pendingExit = false;
+    lastEvent = null;
+  }
+}
+
+function handleBeforeUnload(e) {
+  if (!gameStarted) return;
+  e.preventDefault();
+  e.returnValue = '';
+  return '';
+}
+
+window.addEventListener("beforeunload", handleBeforeUnload);
 
 document.addEventListener("visibilitychange", (e) => {
-  if (document.visibilityState === "hidden" && gameStarted && !pendingNavigation) {
+  if (document.visibilityState === "hidden" && gameStarted && !pendingExit) {
     e.preventDefault();
-    showModal("confirmExitModal");
-    pendingNavigation = true;
+    pendingExit = true;
+    lastEvent = e;
+    document.getElementById("confirmExitModal").style.display = "flex";
   }
 });
 
 window.addEventListener("pagehide", (e) => {
-  if (gameStarted && !pendingNavigation) {
+  if (gameStarted && !pendingExit) {
     e.preventDefault();
-    showModal("confirmExitModal");
-    pendingNavigation = true;
+    pendingExit = true;
+    lastEvent = e;
+    document.getElementById("confirmExitModal").style.display = "flex";
   }
 });
 
-function confirmExit(choice) {
-  if (choice === "yes") {
-    pendingNavigation = false;
-    window.location.reload(); // or redirect to home/setup
-  } else {
-    pendingNavigation = false;
-    closeModal("confirmExitModal");
-  }
-}
-
-window.addEventListener("beforeunload", function (e) {
-  if (gameStarted) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
-
+// Initialize dropdown on load
 document.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
