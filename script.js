@@ -1,9 +1,9 @@
-// Existing variables
 let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 
+// Create player input fields
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -203,7 +203,7 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "none";
   void el.offsetWidth;
   el.style.animation = "popIn 0.6s ease-out";
-  setTimeout(() => el.innerText = "", 2000);
+  setTimeout(() => el.innerText = "", 3000);
 }
 
 function saveGameState() {
@@ -238,7 +238,28 @@ function loadGameState() {
   }
 }
 
-// Load players on startup and game state if present
+// Modal controls
+function showModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = "block";
+}
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.style.display = "none";
+}
+
+// Custom exit modal
+window.addEventListener("beforeunload", function (e) {
+  if (gameStarted) {
+    const modal = document.getElementById("exitModal");
+    if (modal) modal.style.display = "block";
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+// DOM loaded
 document.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
@@ -247,5 +268,16 @@ document.addEventListener("DOMContentLoaded", () => {
     opt.textContent = i;
     select.appendChild(opt);
   }
+
+  // Modal triggers
+  document.getElementById("rulesLink")?.addEventListener("click", () => showModal("rulesModal"));
+  document.getElementById("scoringLink")?.addEventListener("click", () => showModal("scoringModal"));
+  document.querySelectorAll(".close-modal").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const modal = btn.closest(".modal");
+      if (modal) modal.style.display = "none";
+    });
+  });
+
   loadGameState();
 });
