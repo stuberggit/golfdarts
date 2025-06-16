@@ -225,3 +225,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadGameState();
 });
+function showModal(id) {
+  document.getElementById(id).style.display = "block";
+
+  if (id === "leaderboardModal") {
+    const leaderboardDetails = document.getElementById("leaderboardDetails");
+    const sortedPlayers = [...players].map(player => ({
+      name: player.name,
+      total: player.scores.reduce((sum, s) => sum + (s ?? 0), 0)
+    })).sort((a, b) => a.total - b.total);
+
+    let html = "<ol class='leaderboard-list'>";
+    sortedPlayers.forEach(p => {
+      html += `<li><strong>${p.name}:</strong> ${p.total}</li>`;
+    });
+    html += "</ol>";
+
+    leaderboardDetails.innerHTML = html;
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
