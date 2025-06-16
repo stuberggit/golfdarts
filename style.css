@@ -208,3 +208,40 @@ th {
     font-size: 1rem;
   }
 }
+#confirmExitModal {
+  display: none;
+  position: fixed;
+  z-index: 999;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+}
+
+#confirmExitModal .modal-content {
+  background: #222;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 12px rgba(255,255,255,0.3);
+}
+
+#confirmExitModal .button-group button {
+  margin: 0.5rem 1rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#confirmExitModal .button-group button:first-child {
+  background-color: #e74c3c;
+  color: white;
+}
+
+#confirmExitModal .button-group button:last-child {
+  background-color: #2ecc71;
+  color: white;
+}
