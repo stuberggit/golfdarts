@@ -188,3 +188,13 @@ th {
   background-color: #2ecc71;
   color: white;
 }
+#leaderboard {
+  display: block; /* ensure it's not hidden */
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.95); /* or your green background */
+  padding: 16px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
