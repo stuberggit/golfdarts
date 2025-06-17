@@ -198,3 +198,22 @@ th {
   padding: 16px;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
+#scorecardWrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0 1rem;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Optional: Ensures table has a sensible base width */
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #ccc;
+  white-space: nowrap;
+}
