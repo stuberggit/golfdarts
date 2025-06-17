@@ -137,6 +137,25 @@ function submitPlayerScore() {
       updateScorecard();
       localStorage.removeItem("golfdartsState");
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+      const startNewBtn = document.createElement("button");
+startNewBtn.innerText = "Start New Round";
+startNewBtn.className = "primary-button";
+startNewBtn.onclick = () => {
+  if (confirm("Start new round with same players?")) {
+    players.forEach(p => p.scores = []);
+    currentHole = 1;
+    currentPlayerIndex = 0;
+    gameStarted = true;
+    saveGameState();
+    showHole();
+    updateLeaderboard();
+    updateScorecard();
+  } else {
+    location.reload(); // fallback if they want to reset everything
+  }
+};
+document.getElementById("scoreInputs").appendChild(startNewBtn);
+
       return;
     }
   }
@@ -225,7 +244,27 @@ function updateScorecard() {
     });
   }
 
-  table += `</table>`;
+  // Total Row
+table += `
+  <tr><th>Total</th>${[...Array(18)].map((_, i) => {
+    return i === 8 || i === 17 ? "<th></th>" : "<th></th>";
+  }).join('')}<th></th></tr>
+`;
+
+players.forEach(player => {
+  const out = player.scores.slice(0, 9).reduce((sum, s) => sum + (s ?? 0), 0);
+  const inn = player.scores.slice(9, 18).reduce((sum, s) => sum + (s ?? 0), 0);
+  const total = out + inn;
+
+  table += `<tr class="total-row"><td><strong>${player.name} Totals</strong></td>`;
+  for (let i = 0; i < 18; i++) {
+    table += `<td>${player.scores[i] ?? ""}</td>`;
+  }
+  table += `<td><strong>${player.scores.length === 18 ? total : "-"}</strong></td></tr>`;
+});
+
+table += `</table>`;
+
   container.innerHTML = table;
 }
 
