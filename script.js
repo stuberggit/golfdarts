@@ -142,8 +142,8 @@ function submitPlayerScore() {
 }
 
 function updateLeaderboard(final = false) {
-  const leaderboardDetails = document.getElementById("leaderboardDetails");
-  if (!leaderboardDetails) return;
+  const modalContainer = document.getElementById("leaderboardModalContent");
+  if (!modalContainer) return;
 
   const sortedPlayers = [...players].map(player => ({
     name: player.name,
@@ -156,8 +156,9 @@ function updateLeaderboard(final = false) {
   });
   html += "</ol>";
 
-  leaderboardDetails.innerHTML = html;
+  modalContainer.innerHTML = html;
 }
+
 
 function updateScorecard() {
   const container = document.getElementById("leaderboard");
