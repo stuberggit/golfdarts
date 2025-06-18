@@ -66,16 +66,16 @@ function startGame() {
   }
 
   gameStarted = true;
-  saveGameState();
+  document.querySelector(".top-links").style.display = "none"; // hide Rules/Scoring links
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  document.querySelector("h1").style.display = "none"; // hide title
-  document.querySelector(".top-links").style.display = "none"; // hide menu
+  document.querySelector("h1").style.display = "none";
   currentPlayerIndex = 0;
   currentHole = 1;
   showHole();
   updateLeaderboard();
   updateScorecard();
+  saveGameState();
 }
 
 function showHole() {
@@ -138,24 +138,23 @@ function submitPlayerScore() {
       localStorage.removeItem("golfdartsState");
       document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
       const startNewBtn = document.createElement("button");
-startNewBtn.innerText = "Start New Round";
-startNewBtn.className = "primary-button";
-startNewBtn.onclick = () => {
-  if (confirm("Start new round with same players?")) {
-    players.forEach(p => p.scores = []);
-    currentHole = 1;
-    currentPlayerIndex = 0;
-    gameStarted = true;
-    saveGameState();
-    showHole();
-    updateLeaderboard();
-    updateScorecard();
-  } else {
-    location.reload(); // fallback if they want to reset everything
-  }
-};
-document.getElementById("scoreInputs").appendChild(startNewBtn);
-
+      startNewBtn.innerText = "Start New Round";
+      startNewBtn.className = "primary-button";
+      startNewBtn.onclick = () => {
+        if (confirm("Start new round with same players?")) {
+          players.forEach(p => p.scores = []);
+          currentHole = 1;
+          currentPlayerIndex = 0;
+          gameStarted = true;
+          saveGameState();
+          showHole();
+          updateLeaderboard();
+          updateScorecard();
+        } else {
+          location.reload();
+        }
+      };
+      document.getElementById("scoreInputs").appendChild(startNewBtn);
       return;
     }
   }
@@ -166,18 +165,14 @@ function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
   if (!leaderboardDetails) return;
 
-  const sortedPlayers = [...players].map(player => ({
-    name: player.name,
-    total: player.scores.reduce((sum, s) => sum + (s ?? 0), 0)
+  const sorted = [...players].map(p => ({
+    name: p.name,
+    total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
   })).sort((a, b) => a.total - b.total);
 
-  let html = "<ol class='leaderboard-list'>";
-  sortedPlayers.forEach(p => {
-    html += `<li><strong>${p.name}:</strong> ${p.total}</li>`;
-  });
-  html += "</ol>";
-
-  leaderboardDetails.innerHTML = html;
+  leaderboardDetails.innerHTML = sorted
+    .map(p => `<div><strong>${p.name}</strong>: ${p.total}</div>`)
+    .join("");
 }
 
 function updateScorecard() {
@@ -191,70 +186,52 @@ function updateScorecard() {
       <tr><th colspan="11">🏌️ Back Nine</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
     `;
-    players.forEach(player => {
-      const inScores = player.scores.slice(9, 18);
-      const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-      table += `<tr><td>${player.name}</td>`;
-      for (let i = 9; i < 18; i++) {
-        table += `<td>${player.scores[i] ?? ""}</td>`;
-      }
-      table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
+    players.forEach(p => {
+      const back = p.scores.slice(9, 18);
+      const backTotal = back.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td>${p.name}</td>${back.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${back.length === 9 ? backTotal : ""}</strong></td></tr>`;
     });
 
     table += `
       <tr><th colspan="11">🏌️ Front Nine</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
     `;
-    players.forEach(player => {
-      const outScores = player.scores.slice(0, 9);
-      const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-      table += `<tr><td>${player.name}</td>`;
-      for (let i = 0; i < 9; i++) {
-        table += `<td>${player.scores[i] ?? ""}</td>`;
-      }
-      table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
+    players.forEach(p => {
+      const front = p.scores.slice(0, 9);
+      const frontTotal = front.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td>${p.name}</td>${front.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${front.length === 9 ? frontTotal : ""}</strong></td></tr>`;
     });
+
   } else {
     table += `
       <tr><th colspan="11">🏌️ Front Nine</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
     `;
-    players.forEach(player => {
-      const outScores = player.scores.slice(0, 9);
-      const outTotal = outScores.reduce((sum, s) => sum + (s ?? 0), 0);
-      table += `<tr><td>${player.name}</td>`;
-      for (let i = 0; i < 9; i++) {
-        table += `<td>${player.scores[i] ?? ""}</td>`;
-      }
-      table += `<td><strong>${outScores.length === 9 ? outTotal : ""}</strong></td></tr>`;
+    players.forEach(p => {
+      const front = p.scores.slice(0, 9);
+      const frontTotal = front.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td>${p.name}</td>${front.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${front.length === 9 ? frontTotal : ""}</strong></td></tr>`;
     });
 
     table += `
       <tr><th colspan="11">🏌️ Back Nine</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
     `;
-    players.forEach(player => {
-      const inScores = player.scores.slice(9, 18);
-      const inTotal = inScores.reduce((sum, s) => sum + (s ?? 0), 0);
-      table += `<tr><td>${player.name}</td>`;
-      for (let i = 9; i < 18; i++) {
-        table += `<td>${player.scores[i] ?? ""}</td>`;
-      }
-      table += `<td><strong>${inScores.length === 9 ? inTotal : ""}</strong></td></tr>`;
+    players.forEach(p => {
+      const back = p.scores.slice(9, 18);
+      const backTotal = back.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td>${p.name}</td>${back.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${back.length === 9 ? backTotal : ""}</strong></td></tr>`;
     });
   }
 
-table += `</table>`;
-
+  table += "</table>";
   container.innerHTML = table;
 }
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
-
-  if (currentPlayerIndex > 0) {
-    currentPlayerIndex--;
-  } else {
+  if (currentPlayerIndex > 0) currentPlayerIndex--;
+  else {
     currentHole--;
     currentPlayerIndex = players.length - 1;
   }
@@ -290,7 +267,6 @@ function saveGameState() {
 function loadGameState() {
   const saved = localStorage.getItem("golfdartsState");
   if (!saved) return;
-
   const state = JSON.parse(saved);
   if (!state || !state.players || state.players.length === 0) return;
 
@@ -300,10 +276,11 @@ function loadGameState() {
     currentPlayerIndex = state.currentPlayerIndex;
     gameStarted = state.gameStarted;
 
+    document.querySelector(".top-links").style.display = "none";
     document.getElementById("setup").style.display = "none";
     document.getElementById("game").style.display = "block";
     document.querySelector("h1").style.display = "none";
-    document.querySelector(".top-links").style.display = "none";
+
     showHole();
     updateLeaderboard();
     updateScorecard();
@@ -322,22 +299,3 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadGameState();
 });
-
-function showModal(id) {
-  const restrictedBeforeGame = ['leaderboardModal'];
-  const restrictedAfterGame = ['rulesModal', 'scoringModal'];
-
-  // Prevent showing certain modals depending on game state
-  if ((gameStarted && restrictedAfterGame.includes(id)) || 
-      (!gameStarted && restrictedBeforeGame.includes(id))) {
-    return;
-  }
-
-  document.getElementById(id).style.display = 'flex';
-}
-
-
-
-function closeModal(id) {
-  document.getElementById(id).style.display = 'none';
-}
