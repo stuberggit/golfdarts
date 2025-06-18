@@ -41,10 +41,11 @@
     <h3>Scorecard</h3>
     <div id="scorecardWrapper">
       <div id="leaderboard"></div>
+    </div>
   </div>
 
   <!-- Modals -->
-  <div id="rulesModal" class="modal-overlay" style="display:none;">
+  <div id="rulesModal" class="modal-overlay hidden">
     <div class="modal-content">
       <h2>📜 Rules</h2>
       <p>
@@ -55,12 +56,12 @@
         Every hole is scored as a par three<br><br>
         The person with the lowest score wins the round<br><br>
         See the "scoring" summary for how scoring is calculated<br><br>
-        </p>
+      </p>
       <button onclick="closeModal('rulesModal')">Close</button>
     </div>
   </div>
 
-  <div id="scoringModal" class="modal-overlay" style="display:none;">
+  <div id="scoringModal" class="modal-overlay hidden">
     <div class="modal-content">
       <h2>📊 Scoring</h2>
       <h3># of Hits</h3>
@@ -80,7 +81,7 @@
     </div>
   </div>
 
-  <div id="leaderboardModal" class="modal-overlay" style="display:none;">
+  <div id="leaderboardModal" class="modal-overlay hidden">
     <div class="modal-content leaderboard-modal">
       <h2>🏆 Leaderboard</h2>
       <div id="leaderboardDetails"></div>
@@ -88,8 +89,7 @@
     </div>
   </div>
 
-  <!-- Custom Exit Modal -->
-  <div id="exitModal" class="modal-overlay" style="display:none;">
+  <div id="exitModal" class="modal-overlay hidden">
     <div class="modal-content">
       <h2>⚠️ Are you sure?</h2>
       <p>Your game will be lost if you leave this page.</p>
@@ -98,6 +98,24 @@
     </div>
   </div>
 
-  <script src="script2.js?v=2"></script>
+  <script>
+    function showModal(id) {
+      const restrictedBeforeGame = ['leaderboardModal'];
+      const restrictedAfterGame = ['rulesModal', 'scoringModal'];
+
+      if ((gameStarted && restrictedAfterGame.includes(id)) || 
+          (!gameStarted && restrictedBeforeGame.includes(id))) return;
+
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('hidden');
+    }
+  </script>
+
+  <script src="script2.js?v=3"></script>
 </body>
 </html>
