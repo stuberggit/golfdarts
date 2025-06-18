@@ -2,6 +2,9 @@ let players = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
+let suddenDeath = false;
+let suddenDeathHole = 19;
+let tiedPlayers = [];
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -115,7 +118,9 @@ function getScoreLabelAndColor(hits) {
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
-  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
+  if (isNaN(hits) || hits < 0 || hits > 9) {
+    return alert("Enter a valid number of hits.");
+  }
 
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
@@ -128,36 +133,44 @@ function submitPlayerScore() {
   updateScorecard();
 
   currentPlayerIndex++;
+
   if (currentPlayerIndex >= players.length) {
-    if (currentHole < 18) {
-      currentHole++;
-      currentPlayerIndex = 0;
+    currentPlayerIndex = 0;
+
+    // If at hole 18, check for tie
+    if (currentHole === 18) {
+      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
+      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
+
+      if (tied.length > 1) {
+        // Tied players only continue, others stop
+        players = tied;
+        tied.forEach(p => p.scores.length = 18); // lock 18-hole scores
+        currentHole = 19; // sudden death starts
+      } else {
+        endGame(); // no tie
+        return;
+      }
+    } else if (currentHole >= 19) {
+      // If still tied after sudden death hole, add next
+      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
+      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
+
+      if (tied.length > 1) {
+        players = tied;
+        currentHole = currentHole === 20 ? 1 : currentHole + 1;
+      } else {
+        endGame();
+        return;
+      }
     } else {
-      updateLeaderboard(true);
-      updateScorecard();
-      localStorage.removeItem("golfdartsState");
-      document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
-      const startNewBtn = document.createElement("button");
-      startNewBtn.innerText = "Start New Round";
-      startNewBtn.className = "primary-button";
-      startNewBtn.onclick = () => {
-        if (confirm("Start new round with same players?")) {
-          players.forEach(p => p.scores = []);
-          currentHole = 1;
-          currentPlayerIndex = 0;
-          gameStarted = true;
-          saveGameState();
-          showHole();
-          updateLeaderboard();
-          updateScorecard();
-        } else {
-          location.reload();
-        }
-      };
-      document.getElementById("scoreInputs").appendChild(startNewBtn);
-      return;
+      currentHole++;
     }
   }
+
+  showHole();
+}
+
   showHole();
 }
 
@@ -307,3 +320,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   loadGameState();
 });
+function endGame() {
+  updateLeaderboard(true);
+  updateScorecard();
+  localStorage.removeItem("golfdartsState");
+
+  document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button";
+  startNewBtn.onclick = () => {
+    if (confirm("Start new round with same players?")) {
+      players.forEach(p => p.scores = []);
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      gameStarted = true;
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+  document.getElementById("scoreInputs").appendChild(startNewBtn);
+}
