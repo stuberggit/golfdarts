@@ -74,7 +74,7 @@ input[type="number"] {
 }
 
 table,
-.leaderboard-table {
+.scorecard-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
@@ -90,9 +90,8 @@ th, td {
   border: 1px solid #ccc;
   padding: 10px;
   text-align: center;
-  min-width: 32px; /* Optional: helps keep uniform width */
+  min-width: 32px;
 }
-
 
 th {
   background-color: #c9e3c2;
@@ -173,7 +172,7 @@ th {
   padding: 0 1rem;
 }
 
-#leaderboard {
+#scorecard {
   display: block;
   width: 100%;
   max-width: 960px;
@@ -184,18 +183,22 @@ th {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
-.leaderboard-table {
+.scorecard-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 600px;
 }
 
-.leaderboard-table th,
-.leaderboard-table td {
+.scorecard-table th,
+.scorecard-table td {
   padding: 6px;
   text-align: center;
   border: 1px solid #ccc;
   white-space: nowrap;
+}
+
+.scorecard-table tr {
+  border-bottom: 1px solid #ccc;
 }
 
 /* Mobile styles */
@@ -214,9 +217,7 @@ th {
     padding: 1rem;
   }
 }
+
 #scoringModal .modal-content {
   text-align: center;
-}
-table.leaderboard-table tr {
-  border-bottom: 1px solid #ccc;
 }
