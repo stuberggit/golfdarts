@@ -1,3 +1,4 @@
+/* === Base Styles === */
 body {
   background-color: #3a5f0b;
   background-image: url('images/grass-texture.png');
@@ -92,7 +93,7 @@ input[type="number"] {
   margin-top: 30px;
 }
 
-/* Scorecard Styles */
+/* === Scorecard Styles === */
 #scorecardWrapper {
   max-width: 100%;
   overflow-x: auto;
@@ -129,13 +130,12 @@ input[type="number"] {
 }
 
 .scorecard-table td:empty::before {
-  content: "\00a0"; /* non-breaking space */
+  content: "\00a0";
   display: inline-block;
   visibility: hidden;
 }
 
-
-/* Leaderboard (Masters-style) */
+/* === Leaderboard (Masters-style) === */
 .leaderboard-modal {
   background: #004d00;
   border: 3px solid white;
@@ -171,7 +171,7 @@ input[type="number"] {
   margin-bottom: 1rem;
 }
 
-/* Score animation */
+/* === Score Animation === */
 #scoreAnimation {
   font-size: 1.6rem;
   font-weight: bold;
@@ -195,7 +195,7 @@ input[type="number"] {
   }
 }
 
-/* Modal Styling */
+/* === Modal Styling === */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -238,19 +238,33 @@ input[type="number"] {
   text-align: center;
 }
 
-/* Hidden Class */
+/* === Hidden Class === */
 .hidden {
   display: none !important;
 }
 
-/* Scoring List */
+/* === Scoring List === */
 .scoring-list {
   text-align: left;
   padding-left: 20px;
   margin-top: 10px;
 }
 
-/* Mobile Adjustments */
+/* === Sudden Death Styling === */
+#suddenDeath {
+  margin-top: 40px;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px dashed #ffcc00;
+  border-radius: 12px;
+}
+
+#suddenDeath h2 {
+  color: #ffcc00;
+  text-shadow: 1px 1px 3px #000;
+}
+
+/* === Mobile Adjustments === */
 @media (max-width: 768px) {
   h1 {
     font-size: 2rem;
@@ -273,16 +287,4 @@ input[type="number"] {
     max-height: 90vh;
     overflow-y: auto;
   }
-}
-#suddenDeath {
-  margin-top: 40px;
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px dashed #ffcc00;
-  border-radius: 12px;
-}
-
-#suddenDeath h2 {
-  color: #ffcc00;
-  text-shadow: 1px 1px 3px #000;
 }
