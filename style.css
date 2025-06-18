@@ -52,10 +52,20 @@ button:hover {
 }
 
 .button-leaderboard {
-  background: #fff;
+  background: #ffffff;
   color: #206a1e;
   border: 2px solid #1a5a18;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin: 14px auto;
+  cursor: pointer;
+  display: block;
+  width: 90%;
+  max-width: 400px;
+  transition: background-color 0.3s ease;
 }
+
 .button-leaderboard:hover {
   background: #f9f9f9;
 }
