@@ -324,8 +324,10 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function showModal(id) {
+  if (gameStarted) return; // Don't allow modals to open after game starts
   document.getElementById(id).style.display = 'flex';
 }
+
 
 function closeModal(id) {
   document.getElementById(id).style.display = 'none';
