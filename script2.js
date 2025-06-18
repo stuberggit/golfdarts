@@ -324,9 +324,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function showModal(id) {
-  if (gameStarted) return; // Don't allow modals to open after game starts
+  const restrictedBeforeGame = ['leaderboardModal'];
+  const restrictedAfterGame = ['rulesModal', 'scoringModal'];
+
+  // Prevent showing certain modals depending on game state
+  if ((gameStarted && restrictedAfterGame.includes(id)) || 
+      (!gameStarted && restrictedBeforeGame.includes(id))) {
+    return;
+  }
+
   document.getElementById(id).style.display = 'flex';
 }
+
 
 
 function closeModal(id) {
