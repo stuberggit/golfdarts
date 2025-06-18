@@ -86,12 +86,13 @@ table,
   color: black;
 }
 
-th,
-td {
-  padding: 10px;
+th, td {
   border: 1px solid #ccc;
+  padding: 10px;
   text-align: center;
+  min-width: 32px; /* Optional: helps keep uniform width */
 }
+
 
 th {
   background-color: #c9e3c2;
