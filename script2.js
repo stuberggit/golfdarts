@@ -170,9 +170,17 @@ function updateLeaderboard(final = false) {
     total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
   })).sort((a, b) => a.total - b.total);
 
-  leaderboardDetails.innerHTML = sorted
-    .map(p => `<div><strong>${p.name}</strong>: ${p.total}</div>`)
-    .join("");
+  leaderboardDetails.innerHTML = `
+  <ul class="leaderboard-list">
+    ${sorted.map((p, i) => `
+      <li${i === 0 ? ' class="first-place"' : ''}>
+        <span>${p.name}</span>
+        <span>${p.total}</span>
+      </li>
+    `).join("")}
+  </ul>
+`;
+
 }
 
 function updateScorecard() {
