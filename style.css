@@ -73,29 +73,52 @@ input[type="number"] {
   margin-top: 30px;
 }
 
-table,
+/* Scorecard Styles */
+#scorecardWrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0 1rem;
+}
+
+#scorecard {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
 .scorecard-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  border: 2px solid #ccc;
   background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
   font-size: 0.9rem;
   color: black;
+  min-width: 600px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
-th, td {
+.scorecard-table th,
+.scorecard-table td {
   border: 1px solid #ccc;
   padding: 10px;
   text-align: center;
-  min-width: 32px;
+  white-space: nowrap;
+  background-color: white;
 }
 
-th {
-  background-color: #c9e3c2;
-  font-weight: bold;
+.scorecard-table tr {
+  border-bottom: 1px solid #ccc;
+}
+
+/* Leaderboard Styles */
+#leaderboardDetails {
+  text-align: left;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
 }
 
 #scoreAnimation {
@@ -121,6 +144,7 @@ th {
   }
 }
 
+/* Modal Styling */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -156,52 +180,24 @@ th {
   display: block;
 }
 
+/* Center scoring modal only */
+#scoringModal .modal-content {
+  text-align: center;
+}
+
+/* Hidden Class */
 .hidden {
   display: none !important;
 }
 
+/* Scoring List */
 .scoring-list {
   text-align: left;
   padding-left: 20px;
   margin-top: 10px;
 }
 
-#scorecardWrapper {
-  max-width: 100%;
-  overflow-x: auto;
-  padding: 0 1rem;
-}
-
-#scorecard {
-  display: block;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  border-radius: 16px;
-  background-color: rgba(255, 255, 255, 0.95);
-  padding: 16px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-}
-
-.scorecard-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 600px;
-}
-
-.scorecard-table th,
-.scorecard-table td {
-  padding: 6px;
-  text-align: center;
-  border: 1px solid #ccc;
-  white-space: nowrap;
-}
-
-.scorecard-table tr {
-  border-bottom: 1px solid #ccc;
-}
-
-/* Mobile styles */
+/* Mobile Adjustments */
 @media (max-width: 768px) {
   h1 {
     font-size: 2rem;
@@ -216,8 +212,4 @@ th {
   .modal-content {
     padding: 1rem;
   }
-}
-
-#scoringModal .modal-content {
-  text-align: center;
 }
