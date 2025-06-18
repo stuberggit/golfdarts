@@ -163,9 +163,9 @@ input[type="number"] {
   border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
 }
 
-.leaderboard-list li:first-child {
+.leaderboard-list li.first-place {
   font-weight: bold;
-  color: #ff0;
+  color: #ffff66;
 }
 
 #leaderboardDetails {
