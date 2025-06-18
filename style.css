@@ -121,22 +121,19 @@ input[type="number"] {
 
 .scorecard-table th,
 .scorecard-table td {
-  border: 1px solid #ccc;
+  border: 1px solid #ccc !important;
   padding: 10px;
   text-align: center;
   white-space: nowrap;
   background-color: white;
 }
 
-.scorecard-table tr {
-  border-bottom: 1px solid #ccc;
+.scorecard-table td:empty::before {
+  content: "\00a0"; /* non-breaking space */
+  display: inline-block;
+  visibility: hidden;
 }
 
-.scorecard-table td:empty::after {
-  content: "\00a0";
-  visibility: hidden;
-  display: inline-block;
-}
 
 /* Leaderboard (Masters-style) */
 .leaderboard-modal {
