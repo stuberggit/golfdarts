@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>🏉️ GolfDarts 🎯</h1>
+  <h1>🏌️‍♂️ GolfDarts 🎯</h1>
 
   <div class="top-links">
     <a href="#" onclick="showModal('rulesModal')">Rules</a>
@@ -38,7 +38,7 @@
     </div>
 
     <div id="suddenDeath" style="display:none;">
-      <h2>🏋️ Sudden Death</h2>
+      <h2>🏌️ Sudden Death</h2>
       <p id="suddenDeathHoleLabel">Hole 19 - Tiebreaker</p>
       <div id="suddenDeathInputs"></div>
 
@@ -110,12 +110,14 @@
     </div>
   </div>
 
-  <!-- Modal functions + dropdown fill -->
+  <!-- Modal handling script -->
   <script>
+    let gameStarted = false;
+
     function showModal(id) {
       const modal = document.getElementById(id);
       if (!modal) return;
-      if (!gameStarted && id === 'leaderboardModal') return; // only restrict leaderboard before game
+      if (!gameStarted && id === 'leaderboardModal') return;
       modal.classList.remove('hidden');
     }
 
@@ -123,17 +125,6 @@
       const modal = document.getElementById(id);
       if (modal) modal.classList.add('hidden');
     }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const select = document.getElementById("playerCount");
-      for (let i = 1; i <= 20; i++) {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = i;
-        select.appendChild(opt);
-      }
-      loadGameState();
-    });
   </script>
 
   <script src="script2.js?v=3"></script>
