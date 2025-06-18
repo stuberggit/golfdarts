@@ -176,10 +176,10 @@ function updateLeaderboard(final = false) {
 }
 
 function updateScorecard() {
-  const container = document.getElementById("leaderboard");
+  const container = document.getElementById("scorecard");
   if (!container) return;
 
-  let table = `<table class="leaderboard-table">`;
+  let table = `<table class="scorecard-table">`;
 
   if (currentHole >= 10) {
     table += `
