@@ -6,6 +6,17 @@ let suddenDeath = false;
 let suddenDeathHole = 19;
 let tiedPlayers = [];
 
+document.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("playerCount");
+  for (let i = 1; i <= 20; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    select.appendChild(opt);
+  }
+  loadGameState();
+});
+
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -69,7 +80,7 @@ function startGame() {
   }
 
   gameStarted = true;
-  document.querySelector(".top-links").style.display = "none"; // hide Rules/Scoring links
+  document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   document.querySelector("h1").style.display = "none";
@@ -118,9 +129,7 @@ function getScoreLabelAndColor(hits) {
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
-  if (isNaN(hits) || hits < 0 || hits > 9) {
-    return alert("Enter a valid number of hits.");
-  }
+  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
 
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
@@ -137,22 +146,19 @@ function submitPlayerScore() {
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    // If at hole 18, check for tie
     if (currentHole === 18) {
       const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
       const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
 
       if (tied.length > 1) {
-        // Tied players only continue, others stop
         players = tied;
-        tied.forEach(p => p.scores.length = 18); // lock 18-hole scores
-        currentHole = 19; // sudden death starts
+        tied.forEach(p => p.scores.length = 18);
+        currentHole = 19;
       } else {
-        endGame(); // no tie
+        endGame();
         return;
       }
     } else if (currentHole >= 19) {
-      // If still tied after sudden death hole, add next
       const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
       const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
 
@@ -167,9 +173,6 @@ function submitPlayerScore() {
       currentHole++;
     }
   }
-
-  showHole();
-}
 
   showHole();
 }
@@ -192,8 +195,7 @@ function updateLeaderboard(final = false) {
       </li>
     `).join("")}
   </ul>
-`;
-
+  `;
 }
 
 function updateScorecard() {
