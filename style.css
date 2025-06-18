@@ -218,3 +218,65 @@ input[type="number"] {
   visibility: hidden;
   display: inline-block;
 }
+/* Scorecard borders: ensure full cell borders fill */
+.scorecard-table, .scorecard-table th, .scorecard-table td {
+  border: 1px solid #ccc !important;
+}
+
+/* Masters-style leaderboard within modal */
+.leaderboard-modal {
+  background: #004d00;
+  border: 3px solid white;
+  color: white;
+  padding: 1rem;
+  max-width: 500px;
+  width: 90%;
+}
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-family: 'Prata', serif;
+  border-bottom: 1px dashed rgba(255,255,255,0.5);
+}
+.leaderboard-list li:first-child {
+  font-weight: bold;
+  color: #ff0;
+}
+
+/* Leaderboard button styling */
+.button-leaderboard {
+  background: #fff;
+  color: #206a1e;
+  border: 2px solid #1a5a18;
+}
+.button-leaderboard:hover {
+  background: #f9f9f9;
+}
+
+/* Modal behavior */
+.modal-overlay {
+  padding: 1rem;
+}
+.modal-content {
+  box-sizing: border-box;
+}
+
+/* Ensure modals fit screens */
+@media (max-width: 600px) {
+  .modal-content {
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* Center scoring modal content only */
+#scoringModal .modal-content {
+  text-align: center;
+}
