@@ -213,3 +213,6 @@ th {
     padding: 1rem;
   }
 }
+#scoringModal .modal-content {
+  text-align: center;
+}
