@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+  <h1>🏉️ GolfDarts 🎯</h1>
 
   <div class="top-links">
     <a href="#" onclick="showModal('rulesModal')">Rules</a>
@@ -36,18 +36,18 @@
       <button class="primary-button" onclick="undoHole()">Undo Last Hole</button>
       <button class="button-leaderboard" onclick="showModal('leaderboardModal')">Leaderboard</button>
     </div>
-    
-<div id="suddenDeath" style="display:none;">
-  <h2>🏁 Sudden Death</h2>
-  <p id="suddenDeathHoleLabel">Hole 19 - Tiebreaker</p>
-  <div id="suddenDeathInputs"></div>
 
-  <div class="form-actions">
-    <button class="primary-button" onclick="submitSuddenDeathScore()">Submit Score</button>
-  </div>
+    <div id="suddenDeath" style="display:none;">
+      <h2>🏋️ Sudden Death</h2>
+      <p id="suddenDeathHoleLabel">Hole 19 - Tiebreaker</p>
+      <div id="suddenDeathInputs"></div>
 
-  <div id="suddenDeathResult" style="margin-top: 20px;"></div>
-</div>
+      <div class="form-actions">
+        <button class="primary-button" onclick="submitSuddenDeathScore()">Submit Score</button>
+      </div>
+
+      <div id="suddenDeathResult" style="margin-top: 20px;"></div>
+    </div>
 
     <div id="scoreAnimation"></div>
     <h3>Scorecard</h3>
@@ -110,22 +110,30 @@
     </div>
   </div>
 
+  <!-- Modal functions + dropdown fill -->
   <script>
     function showModal(id) {
-      const restrictedBeforeGame = ['leaderboardModal'];
-      const restrictedAfterGame = ['rulesModal', 'scoringModal'];
-
-      if ((gameStarted && restrictedAfterGame.includes(id)) || 
-          (!gameStarted && restrictedBeforeGame.includes(id))) return;
-
       const modal = document.getElementById(id);
-      if (modal) modal.classList.remove('hidden');
+      if (!modal) return;
+      if (!gameStarted && id === 'leaderboardModal') return; // only restrict leaderboard before game
+      modal.classList.remove('hidden');
     }
 
     function closeModal(id) {
       const modal = document.getElementById(id);
       if (modal) modal.classList.add('hidden');
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const select = document.getElementById("playerCount");
+      for (let i = 1; i <= 20; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = i;
+        select.appendChild(opt);
+      }
+      loadGameState();
+    });
   </script>
 
   <script src="script2.js?v=3"></script>
