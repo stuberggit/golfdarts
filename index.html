@@ -111,22 +111,7 @@
   </div>
 
   <!-- Modal handling script -->
-  <script>
-    let gameStarted = false;
+<script src="script2.js?v=3"></script>
 
-    function showModal(id) {
-      const modal = document.getElementById(id);
-      if (!modal) return;
-      if (!gameStarted && id === 'leaderboardModal') return;
-      modal.classList.remove('hidden');
-    }
-
-    function closeModal(id) {
-      const modal = document.getElementById(id);
-      if (modal) modal.classList.add('hidden');
-    }
-  </script>
-
-  <script src="script2.js?v=3"></script>
 </body>
 </html>
