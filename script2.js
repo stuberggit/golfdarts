@@ -171,6 +171,14 @@ function submitPlayerScore() {
         tiedPlayers = tied;
         suddenDeath = true;
         currentHole = 19;
+
+        const names = tied.map(p => `"${p.name}"`).join(" and ");
+        const container = document.getElementById("scoreInputs");
+        container.innerHTML = `
+          <h2>${names} tie! On to Sudden Death!</h2>
+          <button onclick="showHole()" class="primary-button">Continue</button>
+        `;
+        return;
       } else {
         endGame();
         return;
