@@ -6,17 +6,6 @@ let suddenDeath = false;
 let suddenDeathHole = 19;
 let tiedPlayers = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
-  for (let i = 1; i <= 20; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    select.appendChild(opt);
-  }
-  loadGameState();
-});
-
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -115,7 +104,7 @@ function startGame() {
   updateLeaderboard();
   updateScorecard();
   saveGameState();
-} 
+}
 
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
@@ -229,47 +218,24 @@ function updateScorecard() {
 
   let table = `<table class="scorecard-table">`;
 
+  const renderSection = (label, start) => {
+    table += `
+      <tr><th colspan="11">🏌️ ${label}</th></tr>
+      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
+    `;
+    players.forEach(p => {
+      const scores = p.scores.slice(start - 1, start + 8);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td>${p.name}</td>${scores.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+    });
+  };
+
   if (currentHole >= 10) {
-    table += `
-      <tr><th colspan="11">🏌️ Back Nine</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
-    `;
-    players.forEach(p => {
-      const back = p.scores.slice(9, 18);
-      const backTotal = back.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${back.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${back.length === 9 ? backTotal : ""}</strong></td></tr>`;
-    });
-
-    table += `
-      <tr><th colspan="11">🏌️ Front Nine</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
-    `;
-    players.forEach(p => {
-      const front = p.scores.slice(0, 9);
-      const frontTotal = front.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${front.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${front.length === 9 ? frontTotal : ""}</strong></td></tr>`;
-    });
-
+    renderSection("Back Nine", 10);
+    renderSection("Front Nine", 1);
   } else {
-    table += `
-      <tr><th colspan="11">🏌️ Front Nine</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 1}</th>`).join('')}<th>Out</th></tr>
-    `;
-    players.forEach(p => {
-      const front = p.scores.slice(0, 9);
-      const frontTotal = front.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${front.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${front.length === 9 ? frontTotal : ""}</strong></td></tr>`;
-    });
-
-    table += `
-      <tr><th colspan="11">🏌️ Back Nine</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + 10}</th>`).join('')}<th>In</th></tr>
-    `;
-    players.forEach(p => {
-      const back = p.scores.slice(9, 18);
-      const backTotal = back.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${back.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${back.length === 9 ? backTotal : ""}</strong></td></tr>`;
-    });
+    renderSection("Front Nine", 1);
+    renderSection("Back Nine", 10);
   }
 
   table += "</table>";
@@ -337,16 +303,6 @@ function loadGameState() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
-  for (let i = 1; i <= 20; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    select.appendChild(opt);
-  }
-  loadGameState();
-});
 function endGame() {
   updateLeaderboard(true);
   updateScorecard();
@@ -372,6 +328,7 @@ function endGame() {
   };
   document.getElementById("scoreInputs").appendChild(startNewBtn);
 }
+
 function showModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
@@ -383,3 +340,19 @@ function closeModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.classList.add('hidden');
 }
+
+// Attach modal functions to global scope
+window.showModal = showModal;
+window.closeModal = closeModal;
+
+// Initialize on DOM load
+window.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("playerCount");
+  for (let i = 1; i <= 20; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    select.appendChild(opt);
+  }
+  loadGameState();
+});
