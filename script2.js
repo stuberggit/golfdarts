@@ -241,6 +241,34 @@ function updateScorecard() {
     });
   };
 
+  const renderSuddenDeath = () => {
+    const hasSuddenDeath = players.some(p => p.scores.length > 18);
+    if (!hasSuddenDeath) return;
+
+    const maxHole = Math.max(...players.map(p => p.scores.length));
+    const sdHoles = [];
+    for (let i = 19; i <= maxHole; i++) {
+      const label = i <= 20 ? i : (i - 20);
+      sdHoles.push(label);
+    }
+
+    table += `<tr><th colspan="${sdHoles.length + 1}">🏌️ Sudden Death</th></tr>`;
+    table += `<tr><th>Player</th>${sdHoles.map(h => `<th>${h}</th>`).join("")}</tr>`;
+    players.forEach(p => {
+      const sdScores = p.scores.slice(18);
+      table += `<tr><td>${p.name}</td>${sdScores.map(s => `<td>${s ?? ""}</td>`).join("")}</tr>`;
+    });
+  };
+
+  renderSection("Front Nine", 1);
+  renderSection("Back Nine", 10);
+  renderSuddenDeath();
+
+  table += "</table>";
+  container.innerHTML = table;
+}
+
+
   if (currentHole >= 10) {
     renderSection("Back Nine", 10);
     renderSection("Front Nine", 1);
