@@ -165,11 +165,16 @@ function submitPlayerScore() {
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
 
-    if (!suddenDeath && currentHole === 18 && tied.length > 1) {
-      players = tied;
-      tiedPlayers = tied;
-      suddenDeath = true;
-      currentHole = 19;
+    if (currentHole === 18) {
+      if (tied.length > 1) {
+        players = tied;
+        tiedPlayers = tied;
+        suddenDeath = true;
+        currentHole = 19;
+      } else {
+        endGame();
+        return;
+      }
     } else if (suddenDeath) {
       const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
       const min = Math.min(...lastHoleScores);
@@ -181,9 +186,6 @@ function submitPlayerScore() {
       }
       players = winners;
       currentHole = currentHole === 20 ? 1 : currentHole + 1;
-    } else if (!suddenDeath && tied.length === 1) {
-      endGame();
-      return;
     } else {
       currentHole++;
     }
