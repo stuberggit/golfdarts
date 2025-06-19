@@ -160,31 +160,15 @@ function submitPlayerScore() {
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    if (currentHole === 18) {
-      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
-      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
+    const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
+    const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
 
-      if (tied.length > 1) {
-        players = tied;
-        tied.forEach(p => p.scores.length = 18);
-        currentHole = 19;
-      } else {
-        endGame();
-        return;
-      }
-    } else if (currentHole >= 19) {
-      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
-      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
-
-      if (tied.length > 1) {
-        players = tied;
-        currentHole = currentHole === 20 ? 1 : currentHole + 1;
-      } else {
-        endGame();
-        return;
-      }
+    if (tied.length > 1) {
+      players = tied;
+      currentHole = currentHole === 20 ? 1 : currentHole + 1;
     } else {
-      currentHole++;
+      endGame();
+      return;
     }
   }
 
@@ -201,14 +185,14 @@ function updateLeaderboard(final = false) {
   })).sort((a, b) => a.total - b.total);
 
   leaderboardDetails.innerHTML = `
-  <ul class="leaderboard-list">
-    ${sorted.map((p, i) => `
-      <li${i === 0 ? ' class="first-place"' : ''}>
-        <span>${p.name}</span>
-        <span>${p.total}</span>
-      </li>
-    `).join("")}
-  </ul>
+    <ul class="leaderboard-list">
+      ${sorted.map((p, i) => `
+        <li${i === 0 ? ' class="first-place"' : ''}>
+          <span>${p.name}</span>
+          <span>${p.total}</span>
+        </li>
+      `).join("")}
+    </ul>
   `;
 }
 
@@ -341,11 +325,9 @@ function closeModal(id) {
   if (modal) modal.classList.add('hidden');
 }
 
-// Attach modal functions to global scope
 window.showModal = showModal;
 window.closeModal = closeModal;
 
-// Initialize on DOM load
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
