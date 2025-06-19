@@ -35,13 +35,28 @@ function createPlayerInputs() {
   for (let i = 0; i < count; i++) {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
+
+    const label = document.createElement("label");
+    label.setAttribute("for", selectId);
+    label.textContent = `Player ${i + 1}:`;
+
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
-    selectEl.setAttribute("onchange", `handleNameDropdown('${selectId}', '${inputId}')`);
-    selectEl.innerHTML = `
-      <option value="" disabled selected>Select Player</option>
-      ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
-    `;
+    selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    defaultOption.textContent = "Select Player";
+    selectEl.appendChild(defaultOption);
+
+    playerOptions.forEach(name => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      selectEl.appendChild(option);
+    });
 
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
@@ -50,7 +65,7 @@ function createPlayerInputs() {
 
     const wrapper = document.createElement("div");
     wrapper.className = "playerInputBlock";
-    wrapper.innerHTML = `<label for="${selectId}">Player ${i + 1}:</label>`;
+    wrapper.appendChild(label);
     wrapper.appendChild(selectEl);
     wrapper.appendChild(inputEl);
 
@@ -100,7 +115,7 @@ function startGame() {
   updateLeaderboard();
   updateScorecard();
   saveGameState();
-}
+} 
 
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
