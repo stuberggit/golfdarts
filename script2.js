@@ -3,7 +3,6 @@ let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 let suddenDeath = false;
-let suddenDeathHole = 19;
 let tiedPlayers = [];
 
 function createPlayerInputs() {
@@ -94,6 +93,8 @@ function startGame() {
   }
 
   gameStarted = true;
+  suddenDeath = false;
+  tiedPlayers = [];
   document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -160,15 +161,31 @@ function submitPlayerScore() {
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
-    const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
+    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+    const lowest = Math.min(...totals);
+    const tied = players.filter((p, i) => totals[i] === lowest);
 
-    if (tied.length > 1) {
+    if (!suddenDeath && currentHole === 18 && tied.length > 1) {
       players = tied;
+      tiedPlayers = tied;
+      suddenDeath = true;
+      currentHole = 19;
+    } else if (suddenDeath) {
+      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+      const min = Math.min(...lastHoleScores);
+      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+      if (winners.length === 1) {
+        players = [winners[0]];
+        endGame();
+        return;
+      }
+      players = winners;
       currentHole = currentHole === 20 ? 1 : currentHole + 1;
-    } else {
+    } else if (!suddenDeath && tied.length === 1) {
       endGame();
       return;
+    } else {
+      currentHole++;
     }
   }
 
