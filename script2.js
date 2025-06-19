@@ -372,3 +372,14 @@ function endGame() {
   };
   document.getElementById("scoreInputs").appendChild(startNewBtn);
 }
+function showModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  if (!gameStarted && id === 'leaderboardModal') return;
+  modal.classList.remove('hidden');
+}
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('hidden');
+}
