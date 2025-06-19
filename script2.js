@@ -35,16 +35,26 @@ function createPlayerInputs() {
   for (let i = 0; i < count; i++) {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
-    container.innerHTML += `
-      <div class="playerInputBlock">
-        <label for="${selectId}">Player ${i + 1}:</label>
-        <select id="${selectId}" onchange="handleNameDropdown('${selectId}', '${inputId}')">
-          <option value="" disabled selected>Select Player</option>
-          ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
-        </select>
-        <input type="text" id="${inputId}" placeholder="Enter name" style="display:none;" />
-      </div>
+    const selectEl = document.createElement("select");
+    selectEl.id = selectId;
+    selectEl.setAttribute("onchange", `handleNameDropdown('${selectId}', '${inputId}')`);
+    selectEl.innerHTML = `
+      <option value="" disabled selected>Select Player</option>
+      ${playerOptions.map(name => `<option value="${name}">${name}</option>`).join("")}
     `;
+
+    const inputEl = document.createElement("input");
+    inputEl.id = inputId;
+    inputEl.placeholder = "Enter name";
+    inputEl.style.display = "none";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "playerInputBlock";
+    wrapper.innerHTML = `<label for="${selectId}">Player ${i + 1}:</label>`;
+    wrapper.appendChild(selectEl);
+    wrapper.appendChild(inputEl);
+
+    container.appendChild(wrapper);
   }
 
   document.getElementById("startBtn").style.display = "inline";
