@@ -178,10 +178,15 @@ input[type="number"] {
   padding: 8px 12px;
   border-radius: 8px;
   display: inline-block;
-  animation: popIn 0.8s ease-out;
   color: white;
   text-shadow: 1px 1px 3px black;
   margin-bottom: 12px;
+}
+
+.animate {
+  animation-name: popIn;
+  animation-duration: 0.8s;
+  animation-timing-function: ease-out;
 }
 
 @keyframes popIn {
@@ -206,6 +211,7 @@ input[type="number"] {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   z-index: 9999;
   padding: 1rem;
 }
@@ -221,6 +227,8 @@ input[type="number"] {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
   text-align: left;
   box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .modal-content h2 {
@@ -286,5 +294,13 @@ input[type="number"] {
     max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
+  }
+
+  .modal-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .modal-content {
+    font-size: 1rem;
   }
 }
