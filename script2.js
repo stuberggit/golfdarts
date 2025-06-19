@@ -253,12 +253,11 @@ function updateScorecard() {
     }
 
     table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
-players.forEach(p => {
-  const sdScores = p.scores.slice(18);
-  table += `<tr class="sudden-death-row"><td>${p.name}</td>${sdScores.map(s => `<td class="sudden-death-cell">${s ?? ""}</td>`).join("")}</tr>`;
-});
-
+    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    players.forEach(p => {
+      const sdScores = p.scores.slice(18);
+      table += `<tr class="sudden-death-row"><td>${p.name}</td>${sdScores.map(s => `<td class="sudden-death-cell">${s ?? ""}</td>`).join("")}</tr>`;
+    });
   };
 
   renderSection("Front Nine", 1);
@@ -270,17 +269,6 @@ players.forEach(p => {
 }
 
 
-  if (currentHole >= 10) {
-    renderSection("Back Nine", 10);
-    renderSection("Front Nine", 1);
-  } else {
-    renderSection("Front Nine", 1);
-    renderSection("Back Nine", 10);
-  }
-
-  table += "</table>";
-  container.innerHTML = table;
-}
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
