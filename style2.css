@@ -304,3 +304,20 @@ input[type="number"] {
     font-size: 1rem;
   }
 }
+/* Sudden Death Scorecard Header */
+.scorecard-table th.sudden-death-header {
+  background-color: #ffcc00;
+  color: black;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Sudden Death Player Row */
+.scorecard-table tr.sudden-death-row td {
+  background-color: #fff8dc;
+}
+
+/* Different background for sudden death cells */
+.scorecard-table td.sudden-death-cell {
+  background-color: #fff3b0;
+}
