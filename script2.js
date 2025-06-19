@@ -252,12 +252,13 @@ function updateScorecard() {
       sdHoles.push(label);
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th>Player</th>${sdHoles.map(h => `<th>${h}</th>`).join("")}</tr>`;
-    players.forEach(p => {
-      const sdScores = p.scores.slice(18);
-      table += `<tr><td>${p.name}</td>${sdScores.map(s => `<td>${s ?? ""}</td>`).join("")}</tr>`;
-    });
+    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+players.forEach(p => {
+  const sdScores = p.scores.slice(18);
+  table += `<tr class="sudden-death-row"><td>${p.name}</td>${sdScores.map(s => `<td class="sudden-death-cell">${s ?? ""}</td>`).join("")}</tr>`;
+});
+
   };
 
   renderSection("Front Nine", 1);
