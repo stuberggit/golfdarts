@@ -260,9 +260,10 @@ function updateScorecard() {
     });
   };
 
-  renderSection("Front Nine", 1);
-  renderSection("Back Nine", 10);
+  // Ensure correct order: Sudden Death > Front Nine > Back Nine
   renderSuddenDeath();
+  renderSection("Back Nine", 10);
+  renderSection("Front Nine", 1);
 
   table += "</table>";
   container.innerHTML = table;
@@ -293,12 +294,14 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "none";
   void el.offsetWidth;
   el.style.animation = "popIn 0.6s ease-out";
-  setTimeout(() => (el.innerText = ""), 3000);
+  setTimeout(() => el.innerText = "", 3000);
 
-  const match = message.match(/[-+]?\d+/);
-  if (match) {
-    const utterance = new SpeechSynthesisUtterance(match[0]);
-    speechSynthesis.speak(utterance);
+  // Speech synthesis for audio feedback
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(message.replace(/[^\w\d\- ]/g, ''));
+    utter.rate = 1;
+    utter.pitch = 1.2;
+    speechSynthesis.speak(utter);
   }
 }
 
