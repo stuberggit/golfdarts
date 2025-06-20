@@ -99,9 +99,13 @@ button:hover {
 /* Half-size gameplay buttons */
 .form-actions {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .form-actions .primary-button {
@@ -340,11 +344,19 @@ button:hover {
   }
 }
 
+/* Full-width Submit Score on its own line */
+.form-actions > .primary-button:not(.small-button) {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+/* Side-by-side small buttons */
 .form-actions .primary-button.small-button,
 .form-actions .button-leaderboard.small-button {
-  width: 48%;
-  max-width: 190px;
+  flex: 1 1 48%;
+  max-width: 48%;
   font-size: 1rem;
   padding: 10px;
-  margin: 5px;
+  margin: 5px 0;
+  display: inline-block;
 }
