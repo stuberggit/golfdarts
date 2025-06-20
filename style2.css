@@ -350,6 +350,7 @@ input[type="number"] {
   justify-content: center;
   gap: 10px;
 }
+
 button.small-button {
   font-size: 0.8em;
   padding: 6px 10px;
