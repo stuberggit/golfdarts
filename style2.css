@@ -335,13 +335,6 @@ input[type="number"] {
 .scorecard-table td.sudden-death-cell {
   background-color: #fff3b0;
 }
-/* Half-size buttons for usability */
-.form-actions .primary-button,
-.form-actions .button-leaderboard {
-  font-size: 0.8em;
-  padding: 6px 10px;
-  margin: 5px 5px;
-}
 
 /* Align buttons side-by-side */
 .form-actions {
