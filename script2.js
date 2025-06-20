@@ -293,7 +293,13 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "none";
   void el.offsetWidth;
   el.style.animation = "popIn 0.6s ease-out";
-  setTimeout(() => el.innerText = "", 3000);
+  setTimeout(() => (el.innerText = ""), 3000);
+
+  const match = message.match(/[-+]?\d+/);
+  if (match) {
+    const utterance = new SpeechSynthesisUtterance(match[0]);
+    speechSynthesis.speak(utterance);
+  }
 }
 
 function saveGameState() {
