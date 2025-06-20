@@ -18,6 +18,7 @@ h1 {
   text-shadow: 1px 1px 4px #000;
 }
 
+/* === Top Links === */
 .top-links {
   display: flex;
   justify-content: space-between;
@@ -33,6 +34,30 @@ h1 {
   cursor: pointer;
 }
 
+/* === Form Elements === */
+label {
+  display: block;
+  margin: 20px auto 10px auto;
+  font-size: 1.2rem;
+}
+
+select,
+input[type="text"],
+input[type="number"] {
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  width: 90%;
+  max-width: 400px;
+}
+
+#game {
+  margin-top: 30px;
+}
+
+/* === Buttons === */
 button {
   background-color: #206a1e;
   border: 2px solid white;
@@ -71,26 +96,27 @@ button:hover {
   background: #f9f9f9;
 }
 
-label {
-  display: block;
-  margin: 20px auto 10px auto;
-  font-size: 1.2rem;
+/* Half-size gameplay buttons */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 
-select,
-input[type="text"],
-input[type="number"] {
-  font-size: 1.2rem;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 10px;
-  width: 90%;
+.form-actions .primary-button {
+  width: 100%;
   max-width: 400px;
+  font-size: 1.1rem;
 }
 
-#game {
-  margin-top: 30px;
+.form-actions .primary-button.small-button,
+.form-actions .button-leaderboard.small-button {
+  width: 48%;
+  max-width: 190px;
+  font-size: 1rem;
+  padding: 10px;
+  margin: 5px;
 }
 
 /* === Scorecard Styles === */
@@ -135,40 +161,33 @@ input[type="number"] {
   visibility: hidden;
 }
 
-/* === Leaderboard (Masters-style) === */
-.leaderboard-modal {
-  background: #004d00;
-  border: 3px solid white;
-  color: white;
-  padding: 1rem;
-  max-width: 500px;
-  width: 90%;
-  box-sizing: border-box;
+/* Sudden Death Section */
+#suddenDeath {
+  margin-top: 40px;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px dashed #ffcc00;
+  border-radius: 12px;
 }
 
-.leaderboard-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+#suddenDeath h2 {
+  color: #ffcc00;
+  text-shadow: 1px 1px 3px #000;
 }
 
-.leaderboard-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  font-family: 'Prata', serif;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
-}
-
-.leaderboard-list li.first-place {
+.scorecard-table th.sudden-death-header {
+  background-color: #ffcc00;
+  color: black;
   font-weight: bold;
-  color: #ffff66;
+  font-size: 1rem;
 }
 
-#leaderboardDetails {
-  text-align: left;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+.scorecard-table tr.sudden-death-row td {
+  background-color: #fff8dc;
+}
+
+.scorecard-table td.sudden-death-cell {
+  background-color: #fff3b0;
 }
 
 /* === Score Animation === */
@@ -189,7 +208,6 @@ input[type="number"] {
   animation-timing-function: ease-out;
 }
 
-/* Pop animation */
 @keyframes popIn {
   0% {
     transform: scale(0.5);
@@ -245,12 +263,47 @@ input[type="number"] {
   display: block;
 }
 
-/* Center scoring modal only */
 #scoringModal .modal-content {
   text-align: center;
 }
 
-/* === Hidden Class === */
+/* === Leaderboard (Masters-style) === */
+.leaderboard-modal {
+  background: #004d00;
+  border: 3px solid white;
+  color: white;
+  padding: 1rem;
+  max-width: 500px;
+  width: 90%;
+  box-sizing: border-box;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-family: 'Prata', serif;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+}
+
+.leaderboard-list li.first-place {
+  font-weight: bold;
+  color: #ffff66;
+}
+
+#leaderboardDetails {
+  text-align: left;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* === Hidden Utility === */
 .hidden {
   display: none !important;
 }
@@ -260,31 +313,6 @@ input[type="number"] {
   text-align: left;
   padding-left: 20px;
   margin-top: 10px;
-}
-
-/* === Sudden Death Styling === */
-#suddenDeath {
-  margin-top: 40px;
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px dashed #ffcc00;
-  border-radius: 12px;
-}
-
-#suddenDeath h2 {
-  color: #ffcc00;
-  text-shadow: 1px 1px 3px #000;
-}
-.sudden-death-header {
-  background-color: #222;
-  color: #ff0;
-  font-weight: bold;
-  text-align: center;
-}
-
-.sudden-death-cell {
-  background-color: #111;
-  color: #fff;
 }
 
 /* === Mobile Adjustments === */
@@ -318,37 +346,4 @@ input[type="number"] {
   .modal-content {
     font-size: 1rem;
   }
-}
-/* Sudden Death Scorecard Header */
-.scorecard-table th.sudden-death-header {
-  background-color: #ffcc00;
-  color: black;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-/* Sudden Death Player Row */
-.scorecard-table tr.sudden-death-row td {
-  background-color: #fff8dc;
-}
-
-/* Different background for sudden death cells */
-.scorecard-table td.sudden-death-cell {
-  background-color: #fff3b0;
-}
-
-/* Align buttons side-by-side */
-.form-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-button.small-button {
-  font-size: 0.8em;
-  padding: 6px 10px;
-  margin: 5px;
-  width: auto;
-  max-width: 180px;
 }
