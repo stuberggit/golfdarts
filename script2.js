@@ -212,16 +212,22 @@ function submitPlayerScore() {
   showHole();
 }
 
-function undoHole() {
-  if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
-  if (currentPlayerIndex > 0) currentPlayerIndex--;
-  else {
+  function undoHole() {
+  if (currentHole === 1 && currentPlayerIndex === 0) {
+    alert("Nothing to undo.");
+    return;
+  }
+
+  if (currentPlayerIndex > 0) {
+    currentPlayerIndex--;
+  } else {
     currentHole--;
     currentPlayerIndex = players.length - 1;
   }
 
   const player = players[currentPlayerIndex];
   const allPlayer = allPlayers.find(p => p.name === player.name);
+
   if (allPlayer) allPlayer.scores.pop();
   player.scores.pop();
 
@@ -229,7 +235,11 @@ function undoHole() {
   showHole();
   updateLeaderboard();
   updateScorecard();
+
+  // ✅ Make sure to re-sync allPlayers
+  allPlayers = JSON.parse(JSON.stringify(players));
 }
+
 
 // ========== DISPLAY ==========
 
