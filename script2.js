@@ -91,6 +91,7 @@ function startGame() {
 
     players.push({ name, scores: [] });
   }
+allPlayers = JSON.parse(JSON.stringify(players));
 
   gameStarted = true;
   suddenDeath = false;
@@ -299,6 +300,8 @@ function undoHole() {
   showHole();
   updateLeaderboard();
   updateScorecard();
+  allPlayers = JSON.parse(JSON.stringify(players));
+
 }
 
 function showScoreAnimation(message, color = "#0a3") {
@@ -346,6 +349,7 @@ function loadGameState() {
     document.getElementById("setup").style.display = "none";
     document.getElementById("game").style.display = "block";
     document.querySelector("h1").style.display = "none";
+allPlayers = JSON.parse(JSON.stringify(players));
 
     showHole();
     updateLeaderboard();
@@ -357,6 +361,8 @@ function loadGameState() {
 
 function endGame() {
   updateLeaderboard(true);
+  if (suddenDeath) players = allPlayers;
+
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
