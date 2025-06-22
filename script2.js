@@ -1,4 +1,5 @@
 let players = [];
+let allPlayers = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
@@ -300,7 +301,10 @@ function undoHole() {
   showHole();
   updateLeaderboard();
   updateScorecard();
-  allPlayers = JSON.parse(JSON.stringify(players));
+  const player = players[currentPlayerIndex];
+const allPlayer = allPlayers.find(p => p.name === player.name);
+if (allPlayer) allPlayer.scores.pop();
+
 
 }
 
