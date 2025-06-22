@@ -80,6 +80,7 @@ function startGame() {
   }
 
   players = [];
+
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
@@ -95,13 +96,16 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
+  // Snapshot all players for scorecard and leaderboard reference
   allPlayers = JSON.parse(JSON.stringify(players));
+
   gameStarted = true;
   suddenDeath = false;
   tiedPlayers = [];
   currentHole = 1;
   currentPlayerIndex = 0;
 
+  // Hide setup, show game
   document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -112,6 +116,7 @@ function startGame() {
   updateScorecard();
   saveGameState();
 }
+
 
 // ========== GAMEPLAY ==========
 
