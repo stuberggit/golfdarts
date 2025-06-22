@@ -450,9 +450,13 @@ window.closeModal = closeModal;
 
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
-  if (select) {
-    select.addEventListener("change", createPlayerInputs);
+  for (let i = 1; i <= 20; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+    select.appendChild(option);
   }
 
-  loadGameState(); // optional but recommended
+  loadGameState();
 });
+
