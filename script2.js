@@ -201,7 +201,8 @@ function submitPlayerScore() {
         const names = tied.map(p => `"${p.name}"`).join(" and ");
         document.getElementById("scoreInputs").innerHTML = `
           <h2>${names} tie! On to Sudden Death!</h2>
-          <button onclick="showHole()" class="primary-button">Continue</button>
+          <button onclick="showHole()" class="primary-button full-width">Continue</button>
+
         `;
         return;
       } else {
@@ -274,7 +275,8 @@ function updateScorecard() {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
+      <tr>${["Player", ...[...Array(9)].map((_, i) => `${i + start}`), label === "Front Nine" ? "Out" : "In"].map(text => `<th style="min-width:40px; border: 1px solid #ccc;">${text}</th>`).join('')}</tr>
+
     `;
     allPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
@@ -293,15 +295,17 @@ function updateScorecard() {
       sdHoles.push(label);
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header" style="border: 1px solid #ccc;">🏌️ Sudden Death</th></tr>`;
+table += `<tr><th style="border: 1px solid #ccc;">Player</th>${sdHoles.map(h => `<th style="border: 1px solid #ccc;">${h}</th>`).join("")}</tr>`;
+
 
     allPlayers.forEach(p => {
       const sdScores = p.scores.slice(18);
-      table += `<tr class="sudden-death-row"><td>${p.name}</td>`;
+      table += `<tr class="sudden-death-row"><td style="border: 1px solid #ccc;">${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
         const score = sdScores[i];
-        table += `<td class="sudden-death-cell">${score ?? ""}</td>`;
+        table += `<td style="border: 1px solid #ccc;">${score ?? ""}</td>`;
+
       }
       table += `</tr>`;
     });
@@ -402,6 +406,8 @@ function loadGameState() {
 }
 
 function endGame() {
+  gameStarted = false;
+
   if (suddenDeath) players = allPlayers;
   updateLeaderboard(true);
   updateScorecard();
@@ -412,7 +418,7 @@ function endGame() {
 
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button";
+  startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
       players.forEach(p => p.scores = []);
