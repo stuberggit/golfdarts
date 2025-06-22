@@ -113,6 +113,12 @@ button:hover {
   max-width: 400px;
   font-size: 1.1rem;
 }
+.primary-button, .primary-button.full-width {
+  width: 100%;
+  max-width: 400px;
+  font-size: 1.1rem;
+  padding: 12px;
+}
 
 
 /* === Scorecard Styles === */
