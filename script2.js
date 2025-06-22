@@ -449,4 +449,10 @@ window.showModal = showModal;
 window.closeModal = closeModal;
 
 window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("
+  const select = document.getElementById("playerCount");
+  if (select) {
+    select.addEventListener("change", createPlayerInputs);
+  }
+
+  loadGameState(); // optional but recommended
+});
