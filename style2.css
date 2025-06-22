@@ -150,17 +150,17 @@ button:hover {
 
 .scorecard-table th,
 .scorecard-table td {
-  border: 1px solid #ccc !important;
+  border: 1px solid #ccc;
   padding: 10px;
   text-align: center;
   white-space: nowrap;
   background-color: white;
+  box-sizing: border-box;
 }
 
 .scorecard-table td:empty::before {
   content: "\00a0";
   display: inline-block;
-  visibility: hidden;
 }
 
 /* Sudden Death Section */
