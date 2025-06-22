@@ -234,7 +234,7 @@ function updateScorecard() {
       <tr><th colspan="11">🏌️ ${label}</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
     `;
-    players.forEach(p => {
+    allPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
       const total = scores.reduce((s, v) => s + (v ?? 0), 0);
       table += `<tr><td>${p.name}</td>${scores.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
@@ -242,7 +242,7 @@ function updateScorecard() {
   };
 
   const renderSuddenDeath = () => {
-    const maxHole = Math.max(...players.map(p => p.scores.length));
+    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
     if (maxHole <= 18) return;
 
     const sdHoles = [];
@@ -253,8 +253,8 @@ function updateScorecard() {
 
     table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
     table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
-    
-    players.forEach(p => {
+
+    allPlayers.forEach(p => {
       const sdScores = p.scores.slice(18); // from hole 19 onward
       table += `<tr class="sudden-death-row"><td>${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
@@ -265,7 +265,7 @@ function updateScorecard() {
     });
   };
 
-  // Sudden Death on top, then Back Nine, then Front Nine
+  // Order: Sudden Death, Back Nine, Front Nine
   renderSuddenDeath();
   renderSection("Back Nine", 10);
   renderSection("Front Nine", 1);
@@ -273,9 +273,6 @@ function updateScorecard() {
   table += "</table>";
   container.innerHTML = table;
 }
-
-
-
 
 function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
