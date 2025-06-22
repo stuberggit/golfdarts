@@ -242,10 +242,9 @@ function updateScorecard() {
   };
 
   const renderSuddenDeath = () => {
-    const hasSuddenDeath = players.some(p => p.scores.length > 18);
-    if (!hasSuddenDeath) return;
-
     const maxHole = Math.max(...players.map(p => p.scores.length));
+    if (maxHole <= 18) return;
+
     const sdHoles = [];
     for (let i = 19; i <= maxHole; i++) {
       const label = i <= 20 ? i : (i - 20);
@@ -254,13 +253,19 @@ function updateScorecard() {
 
     table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
     table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    
     players.forEach(p => {
-      const sdScores = p.scores.slice(18);
-      table += `<tr class="sudden-death-row"><td>${p.name}</td>${sdScores.map(s => `<td class="sudden-death-cell">${s ?? ""}</td>`).join("")}</tr>`;
+      const sdScores = p.scores.slice(18); // from hole 19 onward
+      table += `<tr class="sudden-death-row"><td>${p.name}</td>`;
+      for (let i = 0; i < sdHoles.length; i++) {
+        const score = sdScores[i];
+        table += `<td class="sudden-death-cell">${score ?? ""}</td>`;
+      }
+      table += `</tr>`;
     });
   };
 
-  // Ensure correct order: Sudden Death > Front Nine > Back Nine
+  // Sudden Death on top, then Back Nine, then Front Nine
   renderSuddenDeath();
   renderSection("Back Nine", 10);
   renderSection("Front Nine", 1);
@@ -268,6 +273,7 @@ function updateScorecard() {
   table += "</table>";
   container.innerHTML = table;
 }
+
 
 
 
