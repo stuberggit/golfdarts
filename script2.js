@@ -157,22 +157,32 @@ function getScoreLabelAndColor(hits) {
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
-  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
+
+  if (isNaN(hits) || hits < 0 || hits > 9) {
+    alert("Enter a valid number of hits.");
+    return;
+  }
 
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
-  player.scores.push(score);
   const allPlayer = allPlayers.find(p => p.name === player.name);
+
+  // Push score to both current and full player lists
+  player.scores.push(score);
   if (allPlayer) allPlayer.scores.push(score);
 
   saveGameState();
+
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
+
   updateLeaderboard();
   updateScorecard();
 
+  // Advance to next player
   currentPlayerIndex++;
 
+  // If all players completed this hole
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
@@ -180,6 +190,7 @@ function submitPlayerScore() {
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
 
+    // Handle end of regular game
     if (currentHole === 18) {
       if (tied.length > 1) {
         players = tied;
@@ -188,8 +199,7 @@ function submitPlayerScore() {
         currentHole = 19;
 
         const names = tied.map(p => `"${p.name}"`).join(" and ");
-        const container = document.getElementById("scoreInputs");
-        container.innerHTML = `
+        document.getElementById("scoreInputs").innerHTML = `
           <h2>${names} tie! On to Sudden Death!</h2>
           <button onclick="showHole()" class="primary-button">Continue</button>
         `;
@@ -198,15 +208,20 @@ function submitPlayerScore() {
         endGame();
         return;
       }
-    } else if (suddenDeath) {
+    }
+
+    // Handle sudden death
+    if (suddenDeath) {
       const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
       const min = Math.min(...lastHoleScores);
       const winners = players.filter((p, i) => lastHoleScores[i] === min);
+
       if (winners.length === 1) {
         players = [winners[0]];
         endGame();
         return;
       }
+
       players = winners;
       currentHole = currentHole === 20 ? 1 : currentHole + 1;
     } else {
@@ -216,6 +231,7 @@ function submitPlayerScore() {
 
   showHole();
 }
+
 
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
