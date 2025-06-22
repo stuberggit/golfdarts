@@ -230,8 +230,10 @@ function updateScorecard() {
   let table = `<table class="scorecard-table">`;
 
   const renderSection = (label, start) => {
+    // Determine if this section should be displayed on top
+    const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
-      <tr><th colspan="11">🏌️ ${label}</th></tr>
+      <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
     `;
     allPlayers.forEach(p => {
@@ -265,13 +267,23 @@ function updateScorecard() {
     });
   };
 
-  // Order: Sudden Death, Back Nine, Front Nine
+  // Order: Sudden Death, then Back Nine if applicable, then Front Nine
   renderSuddenDeath();
-  renderSection("Back Nine", 10);
+  if (currentHole > 9) renderSection("Back Nine", 10);
   renderSection("Front Nine", 1);
 
   table += "</table>";
   container.innerHTML = table;
+
+  // Add winner announcement at game end
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
 }
 
 function undoHole() {
