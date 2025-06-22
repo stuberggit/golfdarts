@@ -6,6 +6,8 @@ let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
 
+// ========== GAME SETUP ==========
+
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -92,22 +94,26 @@ function startGame() {
 
     players.push({ name, scores: [] });
   }
-allPlayers = JSON.parse(JSON.stringify(players));
 
+  allPlayers = JSON.parse(JSON.stringify(players));
   gameStarted = true;
   suddenDeath = false;
   tiedPlayers = [];
+  currentHole = 1;
+  currentPlayerIndex = 0;
+
   document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   document.querySelector("h1").style.display = "none";
-  currentPlayerIndex = 0;
-  currentHole = 1;
+
   showHole();
   updateLeaderboard();
   updateScorecard();
   saveGameState();
 }
+
+// ========== GAMEPLAY ==========
 
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
@@ -151,8 +157,10 @@ function submitPlayerScore() {
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
   player.scores.push(score);
-  saveGameState();
+  const allPlayer = allPlayers.find(p => p.name === player.name);
+  if (allPlayer) allPlayer.scores.push(score);
 
+  saveGameState();
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
   updateLeaderboard();
@@ -204,26 +212,26 @@ function submitPlayerScore() {
   showHole();
 }
 
-function updateLeaderboard(final = false) {
-  const leaderboardDetails = document.getElementById("leaderboardDetails");
-  if (!leaderboardDetails) return;
+function undoHole() {
+  if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
+  if (currentPlayerIndex > 0) currentPlayerIndex--;
+  else {
+    currentHole--;
+    currentPlayerIndex = players.length - 1;
+  }
 
-  const sorted = [...players].map(p => ({
-    name: p.name,
-    total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
-  })).sort((a, b) => a.total - b.total);
+  const player = players[currentPlayerIndex];
+  const allPlayer = allPlayers.find(p => p.name === player.name);
+  if (allPlayer) allPlayer.scores.pop();
+  player.scores.pop();
 
-  leaderboardDetails.innerHTML = `
-    <ul class="leaderboard-list">
-      ${sorted.map((p, i) => `
-        <li${i === 0 ? ' class="first-place"' : ''}>
-          <span>${p.name}</span>
-          <span>${p.total}</span>
-        </li>
-      `).join("")}
-    </ul>
-  `;
+  saveGameState();
+  showHole();
+  updateLeaderboard();
+  updateScorecard();
 }
+
+// ========== DISPLAY ==========
 
 function updateScorecard() {
   const container = document.getElementById("scorecard");
@@ -232,7 +240,6 @@ function updateScorecard() {
   let table = `<table class="scorecard-table">`;
 
   const renderSection = (label, start) => {
-    // Determine if this section should be displayed on top
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
@@ -259,7 +266,7 @@ function updateScorecard() {
     table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
 
     allPlayers.forEach(p => {
-      const sdScores = p.scores.slice(18); // from hole 19 onward
+      const sdScores = p.scores.slice(18);
       table += `<tr class="sudden-death-row"><td>${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
         const score = sdScores[i];
@@ -269,7 +276,6 @@ function updateScorecard() {
     });
   };
 
-  // Order: Sudden Death, then Back Nine if applicable, then Front Nine
   renderSuddenDeath();
   if (currentHole > 9) renderSection("Back Nine", 10);
   renderSection("Front Nine", 1);
@@ -277,7 +283,6 @@ function updateScorecard() {
   table += "</table>";
   container.innerHTML = table;
 
-  // Add winner announcement at game end
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
@@ -288,24 +293,25 @@ function updateScorecard() {
   }
 }
 
-function undoHole() {
-  if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
-  if (currentPlayerIndex > 0) currentPlayerIndex--;
-  else {
-    currentHole--;
-    currentPlayerIndex = players.length - 1;
-  }
+function updateLeaderboard(final = false) {
+  const leaderboardDetails = document.getElementById("leaderboardDetails");
+  if (!leaderboardDetails) return;
 
-  players[currentPlayerIndex].scores.pop();
-  saveGameState();
-  showHole();
-  updateLeaderboard();
-  updateScorecard();
-  const player = players[currentPlayerIndex];
-const allPlayer = allPlayers.find(p => p.name === player.name);
-if (allPlayer) allPlayer.scores.pop();
+  const sorted = [...players].map(p => ({
+    name: p.name,
+    total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
+  })).sort((a, b) => a.total - b.total);
 
-
+  leaderboardDetails.innerHTML = `
+    <ul class="leaderboard-list">
+      ${sorted.map((p, i) => `
+        <li${i === 0 ? ' class="first-place"' : ''}>
+          <span>${p.name}</span>
+          <span>${p.total}</span>
+        </li>
+      `).join("")}
+    </ul>
+  `;
 }
 
 function showScoreAnimation(message, color = "#0a3") {
@@ -318,14 +324,15 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "popIn 0.6s ease-out";
   setTimeout(() => el.innerText = "", 3000);
 
-  // Speech synthesis for audio feedback
   if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(message.replace(/[^\w\d\- ]/g, ''));
+    const utter = new SpeechSynthesisUtterance(message.replace(/[^"]+/g, ''));
     utter.rate = 1;
     utter.pitch = 1.2;
     speechSynthesis.speak(utter);
   }
 }
+
+// ========== STATE MGMT ==========
 
 function saveGameState() {
   const state = {
@@ -348,12 +355,12 @@ function loadGameState() {
     currentHole = state.currentHole;
     currentPlayerIndex = state.currentPlayerIndex;
     gameStarted = state.gameStarted;
+    allPlayers = JSON.parse(JSON.stringify(players));
 
     document.querySelector(".top-links").style.display = "none";
     document.getElementById("setup").style.display = "none";
     document.getElementById("game").style.display = "block";
     document.querySelector("h1").style.display = "none";
-allPlayers = JSON.parse(JSON.stringify(players));
 
     showHole();
     updateLeaderboard();
@@ -364,13 +371,14 @@ allPlayers = JSON.parse(JSON.stringify(players));
 }
 
 function endGame() {
-  updateLeaderboard(true);
   if (suddenDeath) players = allPlayers;
-
+  updateLeaderboard(true);
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+  const scoreInputs = document.getElementById("scoreInputs");
+  scoreInputs.innerHTML = "<h2>Game complete!</h2>";
+
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button";
@@ -388,8 +396,11 @@ function endGame() {
       location.reload();
     }
   };
-  document.getElementById("scoreInputs").appendChild(startNewBtn);
+
+  scoreInputs.appendChild(startNewBtn);
 }
+
+// ========== MODALS ==========
 
 function showModal(id) {
   const modal = document.getElementById(id);
@@ -407,12 +418,4 @@ window.showModal = showModal;
 window.closeModal = closeModal;
 
 window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
-  for (let i = 1; i <= 20; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    select.appendChild(opt);
-  }
-  loadGameState();
-});
+  const select = document.getElementById("
