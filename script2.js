@@ -461,6 +461,53 @@ function endGame() {
   scoreInputs.appendChild(startNewBtn);
 }
 
+function showStats() {
+  const modal = document.getElementById("gameStatsModal");
+  if (!modal) return;
+
+  const statsContainer = document.getElementById("statsDetails");
+  if (!statsContainer) return;
+
+  const scoreLabels = [
+    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg",
+    "Icicle", "Polar Bear", "Frostbite", "Snowman", "Avalanche"
+  ];
+
+  const hitCounts = allPlayers.map(player => {
+    const counts = Array(10).fill(0);
+    player.scores.forEach(score => {
+      const hitIndex = getHitsFromScore(score);
+      if (hitIndex !== -1) counts[hitIndex]++;
+    });
+    return { name: player.name, counts };
+  });
+
+  statsContainer.innerHTML = hitCounts.map(player => {
+    const bullets = player.counts
+      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
+      .filter(line => line).join("");
+    return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
+  }).join("<hr>");
+
+  modal.classList.remove("hidden");
+}
+
+// Helper: map score back to hit count
+function getHitsFromScore(score) {
+  const map = {
+    5: 0,
+    3: 1,
+    2: 2,
+    1: 3,
+    0: 4,
+    [-1]: 5,
+    [-2]: 6,
+    [-3]: 7,
+    [-4]: 8,
+    [-5]: 9
+  };
+  return map[score] ?? -1;
+}
 
 
 // ========== MODALS ==========
