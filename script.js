@@ -306,13 +306,15 @@ return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive
     table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
 
     allPlayers.forEach(p => {
-      const sdScores = p.scores.slice(18);
+      const isTiedPlayer = players.some(tp => tp.name === p.name);
+const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
       table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
-        const score = sdScores[i];
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${score ?? ""}</td>`;
+let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
+
       }
       table += `</tr>`;
     });
@@ -430,6 +432,15 @@ function endGame() {
   const scoreInputs = document.getElementById("scoreInputs");
   scoreInputs.innerHTML = "<h2>Game complete!</h2>";
 
+  // Game Stats Button (replaces Submit Score)
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+  statsBtn.onclick = () => showStats();
+  scoreInputs.appendChild(statsBtn);
+
+  // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
@@ -447,9 +458,58 @@ function endGame() {
       location.reload();
     }
   };
-
   scoreInputs.appendChild(startNewBtn);
 }
+
+
+function showStats() {
+  const modal = document.getElementById("gameStatsModal");
+  if (!modal) return;
+
+  const statsContainer = document.getElementById("statsDetails");
+  if (!statsContainer) return;
+
+  const scoreLabels = [
+    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg",
+    "Icicle", "Polar Bear", "Frostbite", "Snowman", "Avalanche"
+  ];
+
+  const hitCounts = allPlayers.map(player => {
+    const counts = Array(10).fill(0);
+    player.scores.forEach(score => {
+      const hitIndex = getHitsFromScore(score);
+      if (hitIndex !== -1) counts[hitIndex]++;
+    });
+    return { name: player.name, counts };
+  });
+
+  statsContainer.innerHTML = hitCounts.map(player => {
+    const bullets = player.counts
+      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
+      .filter(line => line).join("");
+    return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
+  }).join("<hr>");
+
+  modal.classList.remove("hidden");
+}
+
+// Helper: map score back to hit count
+function getHitsFromScore(score) {
+  const map = {
+    5: 0,
+    3: 1,
+    2: 2,
+    1: 3,
+    0: 4,
+    [-1]: 5,
+    [-2]: 6,
+    [-3]: 7,
+    [-4]: 8,
+    [-5]: 9
+  };
+  return map[score] ?? -1;
+}
+
 
 // ========== MODALS ==========
 
