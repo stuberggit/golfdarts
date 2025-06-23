@@ -432,15 +432,15 @@ function endGame() {
   const scoreInputs = document.getElementById("scoreInputs");
   scoreInputs.innerHTML = "<h2>Game complete!</h2>";
 
-  const winningPlayer = players.length === 1 ? players[0] : null;
-  if (winningPlayer) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${winningPlayer.name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
-  }
+  // Game Stats Button
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+  statsBtn.onclick = () => showStats();
+  scoreInputs.appendChild(statsBtn);
 
+  // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
@@ -458,9 +458,9 @@ function endGame() {
       location.reload();
     }
   };
-
   scoreInputs.appendChild(startNewBtn);
 }
+
 
 
 // ========== MODALS ==========
@@ -492,3 +492,40 @@ window.addEventListener("DOMContentLoaded", () => {
   loadGameState();
 });
 
+function generateGameStats() {
+  const statsContent = document.getElementById("statsContent");
+  if (!statsContent) return;
+
+  const labelMap = {
+    5: "Double Bogey",
+    3: "Par",
+    2: "Birdie",
+    1: "Ace",
+    0: "Goose Egg",
+    [-1]: "Icicle",
+    [-2]: "Polar Bear",
+    [-3]: "Frostbite",
+    [-4]: "Snowman",
+    [-5]: "Avalanche"
+  };
+
+  let output = "";
+
+  allPlayers.forEach(player => {
+    const counts = {};
+
+    player.scores.forEach(score => {
+      counts[score] = (counts[score] || 0) + 1;
+    });
+
+    output += `<h3>${player.name}</h3><ul>`;
+    Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([score, count]) => {
+      const label = labelMap[score] ?? `Score ${score}`;
+      output += `<li>${count} ${label}${count > 1 ? "s" : ""}</li>`;
+    });
+    output += "</ul>";
+  });
+
+  statsContent.innerHTML = output;
+  showModal("statsModal");
+}
