@@ -143,7 +143,7 @@ button:hover {
 .scorecard-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1rem; /* Match back nine size */
+  font-size: 1rem; /* Match Back Nine font size */
   color: black;
   min-width: 600px;
 }
