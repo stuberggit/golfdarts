@@ -430,6 +430,15 @@ function endGame() {
   const scoreInputs = document.getElementById("scoreInputs");
   scoreInputs.innerHTML = "<h2>Game complete!</h2>";
 
+  const winningPlayer = players.length === 1 ? players[0] : null;
+  if (winningPlayer) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${winningPlayer.name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
@@ -450,6 +459,7 @@ function endGame() {
 
   scoreInputs.appendChild(startNewBtn);
 }
+
 
 // ========== MODALS ==========
 
