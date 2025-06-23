@@ -284,7 +284,9 @@ function updateScorecard() {
         scores.map((s, i) => {
           const holeNum = i + start;
           const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${s ?? ""}</td>`;
+          const display = s === undefined || s === null ? "&nbsp;" : s;
+return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+
         }).join("")
       }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
