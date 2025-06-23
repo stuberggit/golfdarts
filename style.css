@@ -18,6 +18,7 @@ h1 {
   text-shadow: 1px 1px 4px #000;
 }
 
+/* === Top Links === */
 .top-links {
   display: flex;
   justify-content: space-between;
@@ -33,6 +34,30 @@ h1 {
   cursor: pointer;
 }
 
+/* === Form Elements === */
+label {
+  display: block;
+  margin: 20px auto 10px auto;
+  font-size: 1.2rem;
+}
+
+select,
+input[type="text"],
+input[type="number"] {
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  width: 90%;
+  max-width: 400px;
+}
+
+#game {
+  margin-top: 30px;
+}
+
+/* === Buttons === */
 button {
   background-color: #206a1e;
   border: 2px solid white;
@@ -71,27 +96,30 @@ button:hover {
   background: #f9f9f9;
 }
 
-label {
-  display: block;
-  margin: 20px auto 10px auto;
-  font-size: 1.2rem;
+/* Half-size gameplay buttons */
+.form-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-select,
-input[type="text"],
-input[type="number"] {
-  font-size: 1.2rem;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  margin-top: 10px;
-  width: 90%;
+.form-actions .primary-button {
+  width: 100%;
   max-width: 400px;
+  font-size: 1.1rem;
+}
+.primary-button, .primary-button.full-width {
+  width: 100%;
+  max-width: 400px;
+  font-size: 1.1rem;
+  padding: 12px;
 }
 
-#game {
-  margin-top: 30px;
-}
 
 /* === Scorecard Styles === */
 #scorecardWrapper {
@@ -122,65 +150,58 @@ input[type="number"] {
 
 .scorecard-table th,
 .scorecard-table td {
-  border: 1px solid #ccc !important;
+  border: 1px solid #ccc;
   padding: 10px;
   text-align: center;
   white-space: nowrap;
   background-color: white;
+  box-sizing: border-box;
 }
 
 .scorecard-table td:empty::before {
   content: "\00a0";
   display: inline-block;
-  visibility: hidden;
 }
 
-/* === Leaderboard (Masters-style) === */
-.leaderboard-modal {
-  background: #004d00;
-  border: 3px solid white;
-  color: white;
-  padding: 1rem;
-  max-width: 500px;
-  width: 90%;
-  box-sizing: border-box;
+/* Sudden Death Section */
+#suddenDeath {
+  margin-top: 40px;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px dashed #ffcc00;
+  border-radius: 12px;
 }
 
-.leaderboard-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+#suddenDeath h2 {
+  color: #ffcc00;
+  text-shadow: 1px 1px 3px #000;
 }
 
-.leaderboard-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  font-family: 'Prata', serif;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
-}
-
-.leaderboard-list li.first-place {
+.scorecard-table th.sudden-death-header {
+  background-color: #ffcc00;
+  color: black;
   font-weight: bold;
-  color: #ffff66;
+  font-size: 1rem;
 }
 
-#leaderboardDetails {
-  text-align: left;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+.scorecard-table tr.sudden-death-row td {
+  background-color: #fff8dc;
+}
+
+.scorecard-table td.sudden-death-cell {
+  background-color: #fff3b0;
 }
 
 /* === Score Animation === */
 #scoreAnimation {
-  font-size: 1.6rem;
-  font-weight: bold;
-  padding: 8px 12px;
-  border-radius: 8px;
-  display: inline-block;
-  color: white;
-  text-shadow: 1px 1px 3px black;
-  margin-bottom: 12px;
+  min-height: 2em;
+  text-align: center;
+  font-size: 1.2em;
+  margin: 10px 0;
+  color: #0a3;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .animate {
@@ -191,12 +212,15 @@ input[type="number"] {
 
 @keyframes popIn {
   0% {
-    transform: scale(0.8);
+    transform: scale(0.5);
     opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
   }
   100% {
     transform: scale(1);
-    opacity: 1;
   }
 }
 
@@ -241,12 +265,47 @@ input[type="number"] {
   display: block;
 }
 
-/* Center scoring modal only */
 #scoringModal .modal-content {
   text-align: center;
 }
 
-/* === Hidden Class === */
+/* === Leaderboard (Masters-style) === */
+.leaderboard-modal {
+  background: #004d00;
+  border: 3px solid white;
+  color: white;
+  padding: 1rem;
+  max-width: 500px;
+  width: 90%;
+  box-sizing: border-box;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-family: 'Prata', serif;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+}
+
+.leaderboard-list li.first-place {
+  font-weight: bold;
+  color: #ffff66;
+}
+
+#leaderboardDetails {
+  text-align: left;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* === Hidden Utility === */
 .hidden {
   display: none !important;
 }
@@ -256,20 +315,6 @@ input[type="number"] {
   text-align: left;
   padding-left: 20px;
   margin-top: 10px;
-}
-
-/* === Sudden Death Styling === */
-#suddenDeath {
-  margin-top: 40px;
-  padding: 16px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 2px dashed #ffcc00;
-  border-radius: 12px;
-}
-
-#suddenDeath h2 {
-  color: #ffcc00;
-  text-shadow: 1px 1px 3px #000;
 }
 
 /* === Mobile Adjustments === */
@@ -303,4 +348,21 @@ input[type="number"] {
   .modal-content {
     font-size: 1rem;
   }
+}
+
+/* Full-width Submit Score on its own line */
+.form-actions > .primary-button:not(.small-button) {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+/* Side-by-side small buttons */
+.form-actions .primary-button.small-button,
+.form-actions .button-leaderboard.small-button {
+  flex: 1 1 48%;
+  max-width: 48%;
+  font-size: 1rem;
+  padding: 10px;
+  margin: 5px 0;
+  display: inline-block;
 }
