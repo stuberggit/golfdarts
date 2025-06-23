@@ -1,10 +1,12 @@
 let players = [];
+let allPlayers = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
 let gameStarted = false;
 let suddenDeath = false;
-let suddenDeathHole = 19;
 let tiedPlayers = [];
+
+// ========== GAME SETUP ==========
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -78,6 +80,7 @@ function startGame() {
   }
 
   players = [];
+
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
@@ -93,18 +96,29 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
+  // Snapshot all players for scorecard and leaderboard reference
+  allPlayers = JSON.parse(JSON.stringify(players));
+
   gameStarted = true;
+  suddenDeath = false;
+  tiedPlayers = [];
+  currentHole = 1;
+  currentPlayerIndex = 0;
+
+  // Hide setup, show game
   document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   document.querySelector("h1").style.display = "none";
-  currentPlayerIndex = 0;
-  currentHole = 1;
+
   showHole();
   updateLeaderboard();
   updateScorecard();
   saveGameState();
 }
+
+
+// ========== GAMEPLAY ==========
 
 function showHole() {
   document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
@@ -143,46 +157,74 @@ function getScoreLabelAndColor(hits) {
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
-  if (isNaN(hits) || hits < 0 || hits > 9) return alert("Enter a valid number of hits.");
+
+  if (isNaN(hits) || hits < 0 || hits > 9) {
+    alert("Enter a valid number of hits.");
+    return;
+  }
 
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
+  const allPlayer = allPlayers.find(p => p.name === player.name);
+
+  // Push score to both current and full player lists
   player.scores.push(score);
+  if (allPlayer) allPlayer.scores.push(score);
+
   saveGameState();
 
   const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
+
   updateLeaderboard();
   updateScorecard();
 
+  // Advance to next player
   currentPlayerIndex++;
 
+  // If all players completed this hole
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
+    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+    const lowest = Math.min(...totals);
+    const tied = players.filter((p, i) => totals[i] === lowest);
+
+    // Handle end of regular game
     if (currentHole === 18) {
-      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
-      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
-
       if (tied.length > 1) {
         players = tied;
-        tied.forEach(p => p.scores.length = 18);
+        tiedPlayers = tied;
+        suddenDeath = true;
         currentHole = 19;
-      } else {
-        endGame();
-        return;
-      }
-    } else if (currentHole >= 19) {
-      const lowest = Math.min(...players.map(p => p.scores.reduce((a, b) => a + b, 0)));
-      const tied = players.filter(p => p.scores.reduce((a, b) => a + b, 0) === lowest);
 
-      if (tied.length > 1) {
-        players = tied;
-        currentHole = currentHole === 20 ? 1 : currentHole + 1;
+        const names = tied.map(p => `"${p.name}"`).join(" and ");
+        document.getElementById("scoreInputs").innerHTML = `
+          <h2>${names} tie! On to Sudden Death!</h2>
+          <button onclick="showHole()" class="primary-button full-width">Continue</button>
+
+        `;
+        return;
       } else {
         endGame();
         return;
       }
+    }
+
+    // Handle sudden death
+    if (suddenDeath) {
+      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+      const min = Math.min(...lastHoleScores);
+      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+
+      if (winners.length === 1) {
+        players = [winners[0]];
+        endGame();
+        return;
+      }
+
+      players = winners;
+      currentHole = currentHole === 20 ? 1 : currentHole + 1;
     } else {
       currentHole++;
     }
@@ -190,6 +232,115 @@ function submitPlayerScore() {
 
   showHole();
 }
+
+
+  function undoHole() {
+  if (currentHole === 1 && currentPlayerIndex === 0) {
+    alert("Nothing to undo.");
+    return;
+  }
+
+  if (currentPlayerIndex > 0) {
+    currentPlayerIndex--;
+  } else {
+    currentHole--;
+    currentPlayerIndex = players.length - 1;
+  }
+
+  const player = players[currentPlayerIndex];
+  const allPlayer = allPlayers.find(p => p.name === player.name);
+
+  if (allPlayer) allPlayer.scores.pop();
+  player.scores.pop();
+
+  saveGameState();
+  showHole();
+  updateLeaderboard();
+  updateScorecard();
+
+  // ✅ Make sure to re-sync allPlayers
+  allPlayers = JSON.parse(JSON.stringify(players));
+}
+
+
+// ========== DISPLAY ==========
+
+function updateScorecard() {
+  const container = document.getElementById("scorecard");
+  if (!container) return;
+
+  let table = `<table class="scorecard-table">`;
+
+  const renderSection = (label, start) => {
+    const highlight = (currentHole >= start && currentHole < start + 9);
+    table += `
+      <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
+    `;
+    allPlayers.forEach(p => {
+      const scores = p.scores.slice(start - 1, start + 8);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
+        scores.map((s, i) => {
+          const holeNum = i + start;
+          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+          const display = s === undefined || s === null ? "&nbsp;" : s;
+return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+
+        }).join("")
+      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+    });
+  };
+
+  const renderSuddenDeath = () => {
+    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
+    if (maxHole <= 18) return;
+
+    const sdHoles = [];
+    for (let i = 19; i <= maxHole; i++) {
+      const label = i <= 20 ? i : (i - 20);
+      sdHoles.push(label);
+    }
+
+    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+
+    allPlayers.forEach(p => {
+      const sdScores = p.scores.slice(18);
+      table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
+      for (let i = 0; i < sdHoles.length; i++) {
+        const holeNum = i + 19;
+        const score = sdScores[i];
+        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${score ?? ""}</td>`;
+      }
+      table += `</tr>`;
+    });
+  };
+
+  renderSuddenDeath();
+  if (currentHole > 9) renderSection("Back Nine", 10);
+  renderSection("Front Nine", 1);
+
+  table += "</table>";
+  container.innerHTML = table;
+
+  // Scroll to the active cell on mobile
+  const activeCell = document.querySelector(".active-cell");
+  if (activeCell) {
+    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+}
+
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
@@ -201,60 +352,15 @@ function updateLeaderboard(final = false) {
   })).sort((a, b) => a.total - b.total);
 
   leaderboardDetails.innerHTML = `
-  <ul class="leaderboard-list">
-    ${sorted.map((p, i) => `
-      <li${i === 0 ? ' class="first-place"' : ''}>
-        <span>${p.name}</span>
-        <span>${p.total}</span>
-      </li>
-    `).join("")}
-  </ul>
+    <ul class="leaderboard-list">
+      ${sorted.map((p, i) => `
+        <li${i === 0 ? ' class="first-place"' : ''}>
+          <span>${p.name}</span>
+          <span>${p.total}</span>
+        </li>
+      `).join("")}
+    </ul>
   `;
-}
-
-function updateScorecard() {
-  const container = document.getElementById("scorecard");
-  if (!container) return;
-
-  let table = `<table class="scorecard-table">`;
-
-  const renderSection = (label, start) => {
-    table += `
-      <tr><th colspan="11">🏌️ ${label}</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
-    `;
-    players.forEach(p => {
-      const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${scores.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
-    });
-  };
-
-  if (currentHole >= 10) {
-    renderSection("Back Nine", 10);
-    renderSection("Front Nine", 1);
-  } else {
-    renderSection("Front Nine", 1);
-    renderSection("Back Nine", 10);
-  }
-
-  table += "</table>";
-  container.innerHTML = table;
-}
-
-function undoHole() {
-  if (currentHole === 1 && currentPlayerIndex === 0) return alert("Nothing to undo.");
-  if (currentPlayerIndex > 0) currentPlayerIndex--;
-  else {
-    currentHole--;
-    currentPlayerIndex = players.length - 1;
-  }
-
-  players[currentPlayerIndex].scores.pop();
-  saveGameState();
-  showHole();
-  updateLeaderboard();
-  updateScorecard();
 }
 
 function showScoreAnimation(message, color = "#0a3") {
@@ -266,7 +372,16 @@ function showScoreAnimation(message, color = "#0a3") {
   void el.offsetWidth;
   el.style.animation = "popIn 0.6s ease-out";
   setTimeout(() => el.innerText = "", 3000);
+
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(message.replace(/[^"]+/g, ''));
+    utter.rate = 1;
+    utter.pitch = 1.2;
+    speechSynthesis.speak(utter);
+  }
 }
+
+// ========== STATE MGMT ==========
 
 function saveGameState() {
   const state = {
@@ -289,6 +404,7 @@ function loadGameState() {
     currentHole = state.currentHole;
     currentPlayerIndex = state.currentPlayerIndex;
     gameStarted = state.gameStarted;
+    allPlayers = JSON.parse(JSON.stringify(players));
 
     document.querySelector(".top-links").style.display = "none";
     document.getElementById("setup").style.display = "none";
@@ -304,14 +420,19 @@ function loadGameState() {
 }
 
 function endGame() {
+  gameStarted = false;
+
+  if (suddenDeath) players = allPlayers;
   updateLeaderboard(true);
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  document.getElementById("scoreInputs").innerHTML = "<h2>Game complete!</h2>";
+  const scoreInputs = document.getElementById("scoreInputs");
+  scoreInputs.innerHTML = "<h2>Game complete!</h2>";
+
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button";
+  startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
       players.forEach(p => p.scores = []);
@@ -326,8 +447,11 @@ function endGame() {
       location.reload();
     }
   };
-  document.getElementById("scoreInputs").appendChild(startNewBtn);
+
+  scoreInputs.appendChild(startNewBtn);
 }
+
+// ========== MODALS ==========
 
 function showModal(id) {
   const modal = document.getElementById(id);
@@ -341,18 +465,17 @@ function closeModal(id) {
   if (modal) modal.classList.add('hidden');
 }
 
-// Attach modal functions to global scope
 window.showModal = showModal;
 window.closeModal = closeModal;
 
-// Initialize on DOM load
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
   for (let i = 1; i <= 20; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    select.appendChild(opt);
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+    select.appendChild(option);
   }
+
   loadGameState();
 });
