@@ -432,7 +432,7 @@ function endGame() {
   const scoreInputs = document.getElementById("scoreInputs");
   scoreInputs.innerHTML = "<h2>Game complete!</h2>";
 
-  // Game Stats Button
+  // Game Stats Button (replaces Submit Score)
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -460,6 +460,7 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 }
+
 
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
