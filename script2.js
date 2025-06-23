@@ -306,13 +306,15 @@ return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive
     table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
 
     allPlayers.forEach(p => {
-      const sdScores = p.scores.slice(18);
+      const isTiedPlayer = players.some(tp => tp.name === p.name);
+const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
       table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
-        const score = sdScores[i];
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${score ?? ""}</td>`;
+let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
+
       }
       table += `</tr>`;
     });
