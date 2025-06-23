@@ -275,13 +275,18 @@ function updateScorecard() {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr>${["Player", ...[...Array(9)].map((_, i) => `${i + start}`), label === "Front Nine" ? "Out" : "In"].map(text => `<th style="min-width:40px; border: 1px solid #ccc;">${text}</th>`).join('')}</tr>
-
+      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
     `;
     allPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
       const total = scores.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td>${p.name}</td>${scores.map(s => `<td>${s ?? ""}</td>`).join("")}<td><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
+        scores.map((s, i) => {
+          const holeNum = i + start;
+          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${s ?? ""}</td>`;
+        }).join("")
+      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
   };
 
@@ -295,17 +300,17 @@ function updateScorecard() {
       sdHoles.push(label);
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header" style="border: 1px solid #ccc;">🏌️ Sudden Death</th></tr>`;
-table += `<tr><th style="border: 1px solid #ccc;">Player</th>${sdHoles.map(h => `<th style="border: 1px solid #ccc;">${h}</th>`).join("")}</tr>`;
-
+    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
 
     allPlayers.forEach(p => {
       const sdScores = p.scores.slice(18);
-      table += `<tr class="sudden-death-row"><td style="border: 1px solid #ccc;">${p.name}</td>`;
+      table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
+        const holeNum = i + 19;
         const score = sdScores[i];
-        table += `<td style="border: 1px solid #ccc;">${score ?? ""}</td>`;
-
+        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${score ?? ""}</td>`;
       }
       table += `</tr>`;
     });
@@ -318,6 +323,12 @@ table += `<tr><th style="border: 1px solid #ccc;">Player</th>${sdHoles.map(h => 
   table += "</table>";
   container.innerHTML = table;
 
+  // Scroll to the active cell on mobile
+  const activeCell = document.querySelector(".active-cell");
+  if (activeCell) {
+    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
@@ -327,6 +338,7 @@ table += `<tr><th style="border: 1px solid #ccc;">Player</th>${sdHoles.map(h => 
     scoreInputs.appendChild(winText);
   }
 }
+
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
