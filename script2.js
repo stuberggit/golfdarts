@@ -164,7 +164,7 @@ function submitPlayerScore() {
   }
   const player = players[currentPlayerIndex];
 if (hits === 6) {
-  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? <br>Cancel to score -2 and return to game. <br>OK to accept humiliating defeat`);
   if (isShanghai) {
     showShanghaiWin(player.name);
     return; // skip rest of the scoring logic
@@ -448,7 +448,7 @@ function loadGameState() {
   const state = JSON.parse(saved);
   if (!state || !state.players || state.players.length === 0) return;
 
-  if (confirm("Want to keep playing? OK to return to your game. Cancel to restart")) {
+  if (confirm("Want to keep playing? <br>OK to return to your game. <br>Cancel to restart")) {
     players = state.players;
     currentHole = state.currentHole;
     currentPlayerIndex = state.currentPlayerIndex;
