@@ -5,6 +5,9 @@ let currentPlayerIndex = 0;
 let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
+let audioEnabled = true;
+let advancedMode = false;
+
 
 // ========== GAME SETUP ==========
 
@@ -422,7 +425,7 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "popIn 0.6s ease-out";
   setTimeout(() => el.innerText = "", 3000);
 
-  if ('speechSynthesis' in window) {
+  if (audioEnabled && 'speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(message.replace(/[^"]+/g, ''));
     utter.rate = 1;
     utter.pitch = 1.2;
@@ -584,6 +587,14 @@ window.addEventListener("DOMContentLoaded", () => {
     option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
     select.appendChild(option);
   }
+  
+document.getElementById("audioToggle").addEventListener("change", (e) => {
+  audioEnabled = e.target.checked;
+});
+
+document.getElementById("advancedToggle").addEventListener("change", (e) => {
+  advancedMode = e.target.checked;
+});
 
   // ✅ ADD THIS to auto-trigger name inputs when count is selected
   select.addEventListener("change", createPlayerInputs);
