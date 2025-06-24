@@ -577,6 +577,7 @@ window.closeModal = closeModal;
 
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
+
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -584,5 +585,9 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
+  // ✅ ADD THIS to auto-trigger name inputs when count is selected
+  select.addEventListener("change", createPlayerInputs);
+
   loadGameState();
 });
+
