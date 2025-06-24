@@ -307,6 +307,16 @@ button:hover {
   text-align: center;
 }
 
+.settings-modal {
+  max-width: 400px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  color: black;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+
 /* === Leaderboard (Masters-style) === */
 .leaderboard-modal {
   background: #004d00;
