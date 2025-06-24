@@ -1,4 +1,4 @@
-shlet players = [];
+let players = [];
 let allPlayers = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
