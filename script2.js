@@ -6,6 +6,7 @@ let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
 let audioEnabled = true;
+let randomizedMode = false;
 let advancedMode = false;
 
 
@@ -590,6 +591,10 @@ window.addEventListener("DOMContentLoaded", () => {
   
 document.getElementById("audioToggle").addEventListener("change", (e) => {
   audioEnabled = e.target.checked;
+});
+
+  document.getElementById("randomizeToggle").addEventListener("change", (e) => {
+  randomizedMode = e.target.checked;
 });
 
 document.getElementById("advancedToggle").addEventListener("change", (e) => {
