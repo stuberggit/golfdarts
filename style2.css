@@ -120,6 +120,43 @@ button:hover {
   padding: 12px;
 }
 
+.shanghai-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, #fff700 0%, #ff4500 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  text-align: center;
+  color: black;
+  font-size: 2rem;
+  animation: pulse 1.5s infinite;
+}
+
+.shanghai-overlay h1 {
+  font-size: 4rem;
+  margin-bottom: 0.5em;
+  text-shadow: 2px 2px 4px white;
+}
+
+.shanghai-subtext {
+  font-size: 1.2rem;
+  margin-top: 0.5em;
+  font-style: italic;
+  color: #333;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 
 /* === Scorecard Styles === */
 #scorecardWrapper {
