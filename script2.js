@@ -162,7 +162,13 @@ function submitPlayerScore() {
     alert("Enter a valid number of hits.");
     return;
   }
-
+if (hits === 6) {
+  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})?`);
+  if (isShanghai) {
+    showShanghaiWin(player.name);
+    return; // skip rest of the scoring logic
+  }
+}
   const score = getScore(hits);
   const player = players[currentPlayerIndex];
   const allPlayer = allPlayers.find(p => p.name === player.name);
@@ -197,14 +203,6 @@ function submitPlayerScore() {
         tiedPlayers = tied;
         suddenDeath = true;
         currentHole = 19;
-
-        if (hits === 6) {
-  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})?`);
-  if (isShanghai) {
-    showShanghaiWin(player.name);
-    return; // skip rest of the scoring logic
-  }
-}
 
         const names = tied.map(p => `"${p.name}"`).join(" and ");
         document.getElementById("scoreInputs").innerHTML = `
