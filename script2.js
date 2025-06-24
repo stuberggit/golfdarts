@@ -115,6 +115,8 @@ function startGame() {
   document.getElementById("game").style.display = "block";
   document.querySelector("h1").style.display = "none";
 
+  closeModal('settingsModal');
+
   showHole();
   updateLeaderboard();
   updateScorecard();
