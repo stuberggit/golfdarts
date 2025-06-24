@@ -162,6 +162,7 @@ function submitPlayerScore() {
     alert("Enter a valid number of hits.");
     return;
   }
+  const player = players[currentPlayerIndex];
 if (hits === 6) {
   const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})?`);
   if (isShanghai) {
@@ -170,7 +171,6 @@ if (hits === 6) {
   }
 }
   const score = getScore(hits);
-  const player = players[currentPlayerIndex];
   const allPlayer = allPlayers.find(p => p.name === player.name);
 
   // Push score to both current and full player lists
@@ -239,32 +239,6 @@ if (hits === 6) {
   showHole();
 }
 
-function showShanghaiWin(winnerName) {
-  gameStarted = false;
-  localStorage.removeItem("golfdartsState");
-
-  document.getElementById("scoreInputs").innerHTML = "";
-
-  const overlay = document.createElement("div");
-  overlay.className = "shanghai-overlay";
-  overlay.innerHTML = `
-    <h1>🏆 SHANGHAI!!</h1>
-    <h2>${winnerName} WINS!</h2>
-    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
-    <button class="primary-button full-width" onclick="location.reload()">Play Again</button>
-  `;
-  document.body.appendChild(overlay);
-
-  // Optional: speech synthesis
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
-  }
-}
-
-
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
     alert("Nothing to undo.");
@@ -293,6 +267,30 @@ function showShanghaiWin(winnerName) {
   allPlayers = JSON.parse(JSON.stringify(players));
 }
 
+function showShanghaiWin(winnerName) {
+  gameStarted = false;
+  localStorage.removeItem("golfdartsState");
+
+  document.getElementById("scoreInputs").innerHTML = "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "shanghai-overlay";
+  overlay.innerHTML = `
+    <h1>🏆 SHANGHAI!!</h1>
+    <h2>${winnerName} WINS!</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+    <button class="primary-button full-width" onclick="location.reload()">Play Again</button>
+  `;
+  document.body.appendChild(overlay);
+
+  // Optional: speech synthesis
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }
+}
 
 // ========== DISPLAY ==========
 
