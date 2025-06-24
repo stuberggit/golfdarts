@@ -198,6 +198,14 @@ function submitPlayerScore() {
         suddenDeath = true;
         currentHole = 19;
 
+        if (hits === 6) {
+  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})?`);
+  if (isShanghai) {
+    showShanghaiWin(player.name);
+    return; // skip rest of the scoring logic
+  }
+}
+
         const names = tied.map(p => `"${p.name}"`).join(" and ");
         document.getElementById("scoreInputs").innerHTML = `
           <h2>${names} tie! On to Sudden Death!</h2>
@@ -231,6 +239,31 @@ function submitPlayerScore() {
   }
 
   showHole();
+}
+
+function showShanghaiWin(winnerName) {
+  gameStarted = false;
+  localStorage.removeItem("golfdartsState");
+
+  document.getElementById("scoreInputs").innerHTML = "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "shanghai-overlay";
+  overlay.innerHTML = `
+    <h1>🏆 SHANGHAI!!</h1>
+    <h2>${winnerName} WINS!</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+    <button class="primary-button full-width" onclick="location.reload()">Play Again</button>
+  `;
+  document.body.appendChild(overlay);
+
+  // Optional: speech synthesis
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }
 }
 
 
