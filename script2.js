@@ -164,7 +164,7 @@ function submitPlayerScore() {
   }
   const player = players[currentPlayerIndex];
 if (hits === 6) {
-  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})?`);
+  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
   if (isShanghai) {
     showShanghaiWin(player.name);
     return; // skip rest of the scoring logic
@@ -206,7 +206,7 @@ if (hits === 6) {
 
         const names = tied.map(p => `"${p.name}"`).join(" and ");
         document.getElementById("scoreInputs").innerHTML = `
-          <h2>${names} tie! On to Sudden Death!</h2>
+          <h2>${names} tie! On to <b>Sudden Death!</b></h2>
           <button onclick="showHole()" class="primary-button full-width">Continue</button>
 
         `;
@@ -284,12 +284,12 @@ function showShanghaiWin(winnerName) {
   document.body.appendChild(overlay);
 
   // Optional: speech synthesis
-  if ('speechSynthesis' in window) {
+  /*if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
     utter.pitch = 1.3;
     utter.rate = 1;
     speechSynthesis.speak(utter);
-  }
+  }*/
 }
 
 // ========== DISPLAY ==========
@@ -430,7 +430,7 @@ function loadGameState() {
   const state = JSON.parse(saved);
   if (!state || !state.players || state.players.length === 0) return;
 
-  if (confirm("Resume your previous game?")) {
+  if (confirm("Want to keep playing? OK to return to your game. Cancel to restart")) {
     players = state.players;
     currentHole = state.currentHole;
     currentPlayerIndex = state.currentPlayerIndex;
