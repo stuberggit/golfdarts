@@ -1,4 +1,4 @@
-let players = [];
+shlet players = [];
 let allPlayers = [];
 let currentHole = 1;
 let currentPlayerIndex = 0;
@@ -279,11 +279,28 @@ function showShanghaiWin(winnerName) {
     <h1>🏆 SHANGHAI!!</h1>
     <h2>${winnerName} WINS!</h2>
     <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
-    <button class="primary-button full-width" onclick="location.reload()">Play Again</button>
+    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
   `;
   document.body.appendChild(overlay);
 
-  // Optional: speech synthesis
+  document.getElementById("playAgainBtn").onclick = () => {
+    // Restart game with same players
+    players.forEach(p => p.scores = []);
+    currentHole = 1;
+    currentPlayerIndex = 0;
+    suddenDeath = false;
+    tiedPlayers = [];
+    gameStarted = true;
+
+    // Reset UI
+    document.body.removeChild(overlay);
+    document.getElementById("scoreInputs").innerHTML = "";
+    updateLeaderboard();
+    updateScorecard();
+    showHole();
+    saveGameState();
+  };
+
   /*if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
     utter.pitch = 1.3;
@@ -291,6 +308,7 @@ function showShanghaiWin(winnerName) {
     speechSynthesis.speak(utter);
   }*/
 }
+
 
 // ========== DISPLAY ==========
 
