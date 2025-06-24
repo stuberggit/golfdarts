@@ -110,12 +110,27 @@
     </div>
   </div>
 
-
   <div id="gameStatsModal" class="modal-overlay hidden">
   <div class="modal-content">
     <h2>📈 Game Stats</h2>
     <div id="statsDetails"></div>
     <button onclick="closeModal('gameStatsModal')">Close</button>
+  </div>
+</div>
+
+  <!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal-overlay hidden">
+  <div class="modal-content settings-modal">
+    <h2>⚙️ Settings</h2>
+    <label>
+      <input type="checkbox" id="audioToggle" checked>
+      Enable Audio
+    </label><br><br>
+    <label>
+      <input type="checkbox" id="randomizeToggle">
+      Randomize Holes (1–20 + Bullseye)
+    </label><br><br>
+    <button onclick="closeModal('settingsModal')">Close</button>
   </div>
 </div>
 
