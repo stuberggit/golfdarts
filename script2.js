@@ -110,7 +110,7 @@ function startGame() {
   currentPlayerIndex = 0;
 
   // Hide setup, show game
-  document.querySelector(".top-links").style.display = "none";
+   document.querySelector(".hamburger").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   document.querySelector("h1").style.display = "none";
