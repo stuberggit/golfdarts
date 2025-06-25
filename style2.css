@@ -18,21 +18,46 @@ h1 {
   text-shadow: 1px 1px 4px #000;
 }
 
-/* === Top Links === */
-.top-links {
-  display: flex;
-  justify-content: space-between;
-  max-width: 960px;
-  margin: 0 auto 20px auto;
-  padding: 0 20px;
+/* Hamburger Menu */
+.hamburger-menu {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  color: white;
+  cursor: pointer;
+  z-index: 99999;
 }
 
-.top-links a {
-  color: #ffffff;
-  font-size: 1rem;
-  text-decoration: underline;
-  cursor: pointer;
+.hamburger-content {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background-color: #004d00;
+  border: 1px solid white;
+  border-radius: 10px;
+  padding: 10px;
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
+
+.hamburger-content a,
+.hamburger-content label {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.hamburger-content label input {
+  margin-right: 8px;
+}
+
+.hamburger-content.hidden {
+  display: none;
+}
+
 
 /* === Form Elements === */
 label {
