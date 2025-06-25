@@ -120,6 +120,9 @@ function startGame() {
   updateLeaderboard();
   updateScorecard();
   saveGameState();
+
+  document.body.id = "gameStarted";
+
 }
 
 
