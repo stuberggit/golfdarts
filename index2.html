@@ -9,12 +9,17 @@
 </head>
 <body>
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
-
-  <div class="top-links">
-    <a href="#" onclick="showModal('rulesModal')">Rules</a>
-    <a href="#" onclick="showModal('settingsModal')">Settings</a>
-    <a href="#" onclick="showModal('scoringModal')">Scoring</a>
+<!-- Hamburger Menu -->
+<div id="hamburgerMenu" class="hamburger-menu">
+  ☰
+  <div id="hamburgerContent" class="hamburger-content hidden">
+    <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+    <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+    <label><input type="checkbox" id="audioToggle" checked> 🔊 Audio</label>
+    <label><input type="checkbox" id="randomToggle"> 🎲 Randomize</label>
+    <label><input type="checkbox" id="advancedToggle"> 🧠 Advanced</label>
   </div>
+</div>
 
   <div id="setup">
     <div class="form-group">
@@ -118,28 +123,21 @@
     <button onclick="closeModal('gameStatsModal')">Close</button>
   </div>
 </div>
+  
+  <script>
+  const hamburger = document.getElementById("hamburgerMenu");
+  const menuContent = document.getElementById("hamburgerContent");
 
-  <!-- SETTINGS MODAL -->
-<!-- SETTINGS MODAL (only visible before game starts) -->
-<div id="settingsModal" class="modal-overlay hidden">
-  <div class="modal-content">
-    <h2>⚙️ Game Settings</h2>
-    
-    <label>
-      <input type="checkbox" id="audioToggle" checked>
-      Enable Audio
-    </label><br><br>
+  hamburger.addEventListener("click", () => {
+    menuContent.classList.toggle("hidden");
+  });
 
-    <label>
-      <input type="checkbox" id="randomToggle">
-      Randomize Hole Order
-    </label><br><br>
-
-    <button onclick="closeModal('settingsModal')">Close</button>
-  </div>
-</div>
-
-<a href="javascript:void(0)" onclick="showModal('settingsModal')">Settings</a>
+  window.addEventListener("click", (e) => {
+    if (!hamburger.contains(e.target)) {
+      menuContent.classList.add("hidden");
+    }
+  });
+</script>
 
   
   <!-- Modal handling script -->
