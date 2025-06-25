@@ -43,6 +43,42 @@ h1 {
   gap: 10px;
 }
 
+.hamburger-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background-color: #004d00;
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 1rem;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 1rem;
+  color: white;
+  box-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+
+.hamburger-menu.hidden {
+  display: none;
+}
+
+.hamburger-menu a,
+.hamburger-menu label {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  display: block;
+  font-size: 1rem;
+}
+
+/* Hide hamburger after game starts */
+#gameStarted .hamburger,
+#gameStarted .hamburger-menu {
+  display: none !important;
+}
+
 .hamburger-content a,
 .hamburger-content label {
   color: white;
