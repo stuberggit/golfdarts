@@ -12,6 +12,11 @@ let advancedMode = false;
 
 // ========== GAME SETUP ==========
 
+function toggleHamburgerMenu() {
+  const menu = document.getElementById("hamburgerMenu");
+  menu.classList.toggle("hidden");
+}
+
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
