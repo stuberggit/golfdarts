@@ -496,6 +496,8 @@ function endGame() {
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
+  document.body.removeAttribute("id");
+
   // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
