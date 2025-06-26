@@ -17,6 +17,16 @@ function toggleHamburgerMenu() {
   menu.classList.toggle("hidden");
 }
 
+// Close hamburger when clicking outside of it
+document.addEventListener("click", function (event) {
+  const menu = document.getElementById("hamburgerMenu");
+  const icon = document.getElementById("hamburgerIcon");
+
+  if (!menu.contains(event.target) && !icon.contains(event.target)) {
+    menu.classList.add("hidden");
+  }
+});
+
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
