@@ -118,18 +118,17 @@
   const hamburgerIcon = document.getElementById("hamburgerIcon");
   const hamburgerMenu = document.getElementById("hamburgerMenu");
 
-  hamburgerIcon.addEventListener("click", (e) => {
-    e.stopPropagation(); // Prevent this click from bubbling to the window
+  hamburgerIcon.addEventListener("click", () => {
     hamburgerMenu.classList.toggle("hidden");
   });
 
   window.addEventListener("click", (e) => {
-    // Close menu if clicking outside
-    if (!hamburgerMenu.contains(e.target) && e.target !== hamburgerIcon) {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
       hamburgerMenu.classList.add("hidden");
     }
   });
 </script>
+
 
 
   
