@@ -18,16 +18,21 @@ function toggleHamburgerMenu() {
 }
 
 // Close hamburger when clicking outside of it
-document.addEventListener("click", function (event) {
+document.addEventListener("DOMContentLoaded", function () {
   const menu = document.getElementById("hamburgerMenu");
   const icon = document.getElementById("hamburgerIcon");
 
- if (menu && icon) {
-    document.addEventListener("click", function (event) {
-      if (!menu.contains(event.target) && !icon.contains(event.target)) {
-        menu.classList.add("hidden");
-  }
+  // Listen for clicks anywhere on the page
+  document.addEventListener("click", function (event) {
+    // Only close if the menu is open and the click is outside both icon and menu
+    if (!menu.classList.contains("hidden") &&
+        !menu.contains(event.target) &&
+        !icon.contains(event.target)) {
+      menu.classList.add("hidden");
+    }
+  });
 });
+
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
