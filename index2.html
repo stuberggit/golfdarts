@@ -115,18 +115,22 @@
 </div>
   
   <script>
-  const hamburger = document.getElementById("hamburgerMenu");
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
 
-  hamburger.addEventListener("click", () => {
-    menuContent.classList.toggle("hidden");
+  hamburgerIcon.addEventListener("click", (e) => {
+    e.stopPropagation(); // Prevent this click from bubbling to the window
+    hamburgerMenu.classList.toggle("hidden");
   });
 
   window.addEventListener("click", (e) => {
-    if (!hamburger.contains(e.target)) {
-      menuContent.classList.add("hidden");
+    // Close menu if clicking outside
+    if (!hamburgerMenu.contains(e.target) && e.target !== hamburgerIcon) {
+      hamburgerMenu.classList.add("hidden");
     }
   });
 </script>
+
 
   
   <!-- Modal handling script -->
