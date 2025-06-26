@@ -67,11 +67,11 @@ h1 {
   background-color: #004d00;
   border: 1px solid white;
   border-radius: 10px;
-  padding: 10px;
+  padding: 12px 16px;
   width: 200px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px; /* moderate space between all items */
   z-index: 999;
   font-size: 1rem;
   color: white;
@@ -82,13 +82,24 @@ h1 {
   display: none;
 }
 
-.hamburger-menu a,
-.hamburger-menu label {
+/* Tighten spacing between links */
+.hamburger-menu a {
+  margin: 2px 0;
   color: white;
   text-decoration: none;
-  cursor: pointer;
-  display: block;
   font-size: 1rem;
+}
+
+/* Add slight spacing above toggle section */
+.hamburger-menu label {
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.hamburger-menu label input {
+  margin-right: 8px;
 }
 
 
