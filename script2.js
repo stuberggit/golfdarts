@@ -130,11 +130,13 @@ function startGame() {
 
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  document.getElementById("gameTitle").style.display = "none";
-  document.querySelector(".hamburger").style.display = "none";
   
-  
-  
+  const title = document.querySelector(".header-bar h1");
+if (title) title.style.display = "none";
+
+  const hamburger = document.getElementById("hamburgerIcon");
+if (hamburger) hamburger.style.display = "block";
+   
   showHole();
   updateLeaderboard();
   updateScorecard();
