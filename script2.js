@@ -641,6 +641,7 @@ window.addEventListener("beforeunload", function (e) {
   // ✅ ADD THIS to auto-trigger name inputs when count is selected
   select.addEventListener("change", createPlayerInputs);
 
-  loadGameState();
+  window.addEventListener("load", loadGameState);
+  
 });
 
