@@ -50,20 +50,6 @@ h1 {
   box-shadow: 0 0 12px rgba(0,0,0,0.4);
 }
 
-.hamburger-content {
-  position: absolute;
-  top: 30px;
-  right: 0;
-  background-color: #004d00;
-  border: 1px solid white;
-  border-radius: 10px;
-  padding: 10px;
-  width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 .hamburger-menu.hidden {
   display: none;
 }
@@ -82,22 +68,6 @@ h1 {
 #gameStarted .hamburger-menu {
   display: none !important;
 }
-
-.hamburger-content a,
-.hamburger-content label {
-  color: white;
-  text-decoration: none;
-  font-size: 1rem;
-}
-
-.hamburger-content label input {
-  margin-right: 8px;
-}
-
-.hamburger-content.hidden {
-  display: none;
-}
-
 
 /* === Form Elements === */
 label {
