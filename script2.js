@@ -114,8 +114,7 @@ function startGame() {
   document.querySelector(".hamburger").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  document.querySelector("h1").style.display = "none";
-
+  
   showHole();
   updateLeaderboard();
   updateScorecard();
