@@ -26,9 +26,13 @@ h1 {
   max-width: 960px;
   margin: 0 auto;
   position: relative;
+  z-index: 10;
 }
 
+/* Center the title */
 .header-bar h1 {
+  flex: 1;
+  text-align: center;
   margin: 0;
   font-size: 2rem;
   color: white;
