@@ -128,9 +128,12 @@ function startGame() {
   currentHole = 1;
   currentPlayerIndex = 0;
 
-  document.querySelector(".hamburger").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
+  document.getElementById("gameTitle").style.display = "none";
+  document.querySelector(".hamburger").style.display = "none";
+  
+  
   
   showHole();
   updateLeaderboard();
