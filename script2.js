@@ -22,8 +22,10 @@ document.addEventListener("click", function (event) {
   const menu = document.getElementById("hamburgerMenu");
   const icon = document.getElementById("hamburgerIcon");
 
-  if (!menu.contains(event.target) && !icon.contains(event.target)) {
-    menu.classList.add("hidden");
+ if (menu && icon) {
+    document.addEventListener("click", function (event) {
+      if (!menu.contains(event.target) && !icon.contains(event.target)) {
+        menu.classList.add("hidden");
   }
 });
 
