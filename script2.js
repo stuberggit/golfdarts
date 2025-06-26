@@ -488,7 +488,7 @@ function loadGameState() {
     document.querySelector(".top-links").style.display = "none";
     document.getElementById("setup").style.display = "none";
     document.getElementById("game").style.display = "block";
-    document.querySelector("h1").style.display = "hidden";
+    document.querySelector("h1").style.display = "none";
 
     showHole();
     updateLeaderboard();
@@ -627,6 +627,15 @@ document.getElementById("audioToggle").addEventListener("change", (e) => {
 
 document.getElementById("advancedToggle").addEventListener("change", (e) => {
   advancedMode = e.target.checked;
+});
+  
+window.addEventListener("beforeunload", function (e) {
+  const saved = localStorage.getItem("golfdartsState");
+  if (saved) {
+    // Show confirmation dialog
+    e.preventDefault(); // Modern browsers ignore this but required by spec
+    e.returnValue = ""; // Triggers browser confirmation prompt
+  }
 });
 
   // ✅ ADD THIS to auto-trigger name inputs when count is selected
