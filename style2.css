@@ -46,6 +46,7 @@ h1 {
   background-color: transparent;
   padding: 5px;
   z-index: 1000;
+  display: block; /* Ensure it's visible by default */
 }
 
 /* ===== HAMBURGER MENU DROPDOWN ===== */
@@ -92,7 +93,15 @@ h1 {
   margin-right: 8px;
 }
 
+/* Hide the title in game mode */
+body#gameStarted .header-bar h1 {
+  display: none;
+}
 
+/* Keep hamburger visible during game */
+body#gameStarted .hamburger {
+  display: block;
+}
 
 /* === Form Elements === */
 label {
