@@ -642,6 +642,3 @@ window.addEventListener("beforeunload", function (e) {
   select.addEventListener("change", createPlayerInputs);
 
   window.addEventListener("load", loadGameState);
-  
-});
-
