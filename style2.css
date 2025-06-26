@@ -103,6 +103,11 @@ body#gameStarted .hamburger {
   display: block;
 }
 
+body#gameStarted .header-bar {
+  justify-content: flex-end;
+}
+
+
 /* === Form Elements === */
 label {
   display: block;
