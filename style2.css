@@ -72,7 +72,6 @@ h1 {
   flex-direction: column;
   gap: 8px; /* moderate space between all items */
   z-index: 999;
-  align-items: left;
   font-size: 1rem;
   color: white;
   box-shadow: 0 0 12px rgba(0,0,0,0.4);
@@ -84,10 +83,12 @@ h1 {
 
 /* Tighten spacing between links */
 .hamburger-menu a {
-  margin: 2px 0;
+  display: block;
+  text-align: left;
   color: white;
   text-decoration: none;
   font-size: 1rem;
+  margin: 2px 0;
 }
 
 /* Add slight spacing above toggle section */
