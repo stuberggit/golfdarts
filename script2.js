@@ -478,24 +478,29 @@ function loadGameState() {
   const state = JSON.parse(saved);
   if (!state || !state.players || state.players.length === 0) return;
 
-  if (confirm("Want to keep playing? OK to return to your game. Cancel to restart")) {
-    players = state.players;
-    currentHole = state.currentHole;
-    currentPlayerIndex = state.currentPlayerIndex;
-    gameStarted = state.gameStarted;
-    allPlayers = JSON.parse(JSON.stringify(players));
-
-    document.querySelector(".top-links").style.display = "none";
-    document.getElementById("setup").style.display = "none";
-    document.getElementById("game").style.display = "block";
-    document.querySelector("h1").style.display = "none";
-
-    showHole();
-    updateLeaderboard();
-    updateScorecard();
-  } else {
+  const proceed = confirm("Want to keep playing? OK to return to your game. Cancel to restart");
+  if (!proceed) {
     localStorage.removeItem("golfdartsState");
+    return;
   }
+
+  // Continue game setup
+  players = state.players;
+  currentHole = state.currentHole;
+  currentPlayerIndex = state.currentPlayerIndex;
+  gameStarted = state.gameStarted;
+  allPlayers = JSON.parse(JSON.stringify(players));
+
+  document.querySelector(".top-links").style.display = "none";
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  const title = document.querySelector(".header-bar h1");
+  if (title) title.style.display = "none";
+
+  showHole();
+  updateLeaderboard();
+  updateScorecard();
+  document.body.id = "gameStarted";
 }
 
 function endGame() {
