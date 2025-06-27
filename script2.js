@@ -610,35 +610,39 @@ window.closeModal = closeModal;
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
+  // Populate the dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
     select.appendChild(option);
   }
-  
-document.getElementById("audioToggle").addEventListener("change", (e) => {
-  audioEnabled = e.target.checked;
+
+  // Add checkbox toggle listeners (check IDs match your HTML)
+  document.getElementById("audioToggle").addEventListener("change", (e) => {
+    audioEnabled = e.target.checked;
+  });
+
+  document.getElementById("randomToggle").addEventListener("change", (e) => {
+    randomizedMode = e.target.checked;
+  });
+
+  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+    advancedMode = e.target.checked;
+  });
+
+  // Trigger name inputs when player count is selected
+  select.addEventListener("change", createPlayerInputs);
 });
 
-  document.getElementById("randomizeToggle").addEventListener("change", (e) => {
-  randomizedMode = e.target.checked;
-});
-
-document.getElementById("advancedToggle").addEventListener("change", (e) => {
-  advancedMode = e.target.checked;
-});
-  
+// Add unload protection if a saved game is in progress
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
-    // Show confirmation dialog
-    e.preventDefault(); // Modern browsers ignore this but required by spec
-    e.returnValue = ""; // Triggers browser confirmation prompt
+    e.preventDefault();
+    e.returnValue = ""; // Required for most browsers to show warning
   }
 });
 
-  // ✅ ADD THIS to auto-trigger name inputs when count is selected
-  select.addEventListener("change", createPlayerInputs);
-
-  window.addEventListener("load", loadGameState);
+// Load saved game state on full window load (after assets)
+window.addEventListener("load", loadGameState);
