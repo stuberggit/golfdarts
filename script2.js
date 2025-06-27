@@ -650,6 +650,10 @@ window.addEventListener("beforeunload", function (e) {
 });
 
 // Load saved game state on full window load (after assets)
-window.addEventListener("DOMContentLoaded", loadGameState);
+window.addEventListener("DOMContentLoaded", () => {
+  requestAnimationFrame(() => {
+    loadGameState();
+  });
+});
 
 
