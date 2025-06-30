@@ -8,13 +8,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
 </head>
 <body>
+  
+<!-- Hamburger Menu -->
+<div class="header-bar">
   <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+  <div class="hamburger" id="hamburgerIcon">☰</div>
+</div>
 
-  <div class="top-links">
-    <a href="#" onclick="showModal('rulesModal')">Rules</a>
-    <a href="#" onclick="showModal('scoringModal')">Scoring</a>
-  </div>
-
+<div class="hamburger-menu hidden" id="hamburgerMenu">
+  <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+  <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <label><input type="checkbox" id="audioToggle" checked> Audio</label>
+  <label><input type="checkbox" id="randomToggle"> Random</label>
+  <label><input type="checkbox" id="advancedToggle"> Advanced</label>
+</div>
+  
   <div id="setup">
     <div class="form-group">
       <label for="playerCount">Number of Players:</label>
@@ -22,7 +30,7 @@
         <option value="" disabled selected>Select Players</option>
       </select>
     </div>
-    <button class="primary-button" onclick="createPlayerInputs()">Next</button>
+    
     <div id="nameInputs"></div>
     <button id="startBtn" class="primary-button" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
@@ -30,13 +38,13 @@
   <div id="game" style="display:none;">
     <h2 id="holeHeader">Hole 1</h2>
     <div id="scoreInputs"></div>
+  
 
-    <div class="form-actions">
+  <div class="form-actions">
   <button class="primary-button" onclick="submitPlayerScore()">Submit Score</button>
   <button class="primary-button small-button" onclick="undoHole()" style="border-color: red;">Undo Last Hole</button>
   <button class="button-leaderboard small-button" onclick="showModal('leaderboardModal')">Leaderboard</button>
 </div>
-
 
     <div id="scoreAnimation"></div>
     <h3>Scorecard</h3>
@@ -90,16 +98,6 @@
     </div>
   </div>
 
-  <div id="exitModal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <h2>⚠️ Are you sure?</h2>
-      <p>Your game will be lost if you leave this page.</p>
-      <button onclick="resumeGame()">Stay</button>
-      <button onclick="confirmExit()">Leave Anyway</button>
-    </div>
-  </div>
-
-
   <div id="gameStatsModal" class="modal-overlay hidden">
   <div class="modal-content">
     <h2>📈 Game Stats</h2>
@@ -107,6 +105,23 @@
     <button onclick="closeModal('gameStatsModal')">Close</button>
   </div>
 </div>
+  
+  <script>
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  hamburgerIcon.addEventListener("click", () => {
+    hamburgerMenu.classList.toggle("hidden");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+      hamburgerMenu.classList.add("hidden");
+    }
+  });
+</script>
+
+
 
   
   <!-- Modal handling script -->
