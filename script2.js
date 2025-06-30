@@ -637,16 +637,6 @@ function closeModal(id) {
 window.showModal = showModal;
 window.closeModal = closeModal;
 
-window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
-
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
-  }
-
   select.addEventListener("change", createPlayerInputs);
 });
 
@@ -703,17 +693,6 @@ if (hazardHit) {
 
 <p>${player.name} hit ${player.hazards} hazard${player.hazards !== 1 ? "s" : ""}</p>
 
-window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
-
-  // Populate the dropdown
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
-  }
-
   // Attach listeners
   select.addEventListener("change", createPlayerInputs);
   document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
@@ -723,6 +702,42 @@ window.addEventListener("DOMContentLoaded", () => {
   loadGameState();
 });
 
+window.addEventListener("DOMContentLoaded", () => {
+  // Handle hamburger menu toggle
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  hamburgerIcon.addEventListener("click", () => {
+    hamburgerMenu.classList.toggle("hidden");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+      hamburgerMenu.classList.add("hidden");
+    }
+  });
+
+  // Populate the player count dropdown
+  const select = document.getElementById("playerCount");
+  for (let i = 1; i <= 20; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+    select.appendChild(option);
+  }
+
+  // Attach listeners for toggles and player select
+  select.addEventListener("change", createPlayerInputs);
+  document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
+  document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
+  document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
+
+  // Load previous game state if it exists
+  requestAnimationFrame(() => {
+    loadGameState();
+  });
+});
+
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
@@ -730,4 +745,3 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
-
