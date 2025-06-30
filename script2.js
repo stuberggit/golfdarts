@@ -638,13 +638,16 @@ window.closeModal = closeModal;
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
-  // Populate the dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
     select.appendChild(option);
   }
+
+  select.addEventListener("change", createPlayerInputs);
+});
+
 
   // Add checkbox toggle listeners (check IDs match your HTML)
   document.getElementById("audioToggle").addEventListener("change", (e) => {
