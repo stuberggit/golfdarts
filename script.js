@@ -5,8 +5,34 @@ let currentPlayerIndex = 0;
 let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
+let audioEnabled = true;
+let randomizedMode = false;
+let advancedMode = false;
+
 
 // ========== GAME SETUP ==========
+
+function toggleHamburgerMenu() {
+  const menu = document.getElementById("hamburgerMenu");
+  menu.classList.toggle("hidden");
+}
+
+// Close hamburger when clicking outside of it
+document.addEventListener("DOMContentLoaded", function () {
+  const menu = document.getElementById("hamburgerMenu");
+  const icon = document.getElementById("hamburgerIcon");
+
+  // Listen for clicks anywhere on the page
+  document.addEventListener("click", function (event) {
+    // Only close if the menu is open and the click is outside both icon and menu
+    if (!menu.classList.contains("hidden") &&
+        !menu.contains(event.target) &&
+        !icon.contains(event.target)) {
+      menu.classList.add("hidden");
+    }
+  });
+});
+
 
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -80,7 +106,6 @@ function startGame() {
   }
 
   players = [];
-
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
@@ -96,26 +121,31 @@ function startGame() {
     players.push({ name, scores: [] });
   }
 
-  // Snapshot all players for scorecard and leaderboard reference
   allPlayers = JSON.parse(JSON.stringify(players));
-
   gameStarted = true;
   suddenDeath = false;
   tiedPlayers = [];
   currentHole = 1;
   currentPlayerIndex = 0;
 
-  // Hide setup, show game
-  document.querySelector(".top-links").style.display = "none";
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  document.querySelector("h1").style.display = "none";
+  
+  const title = document.querySelector(".header-bar h1");
+if (title) title.style.display = "none";
 
+  const hamburger = document.getElementById("hamburgerIcon");
+if (hamburger) hamburger.style.display = "block";
+   
   showHole();
   updateLeaderboard();
   updateScorecard();
   saveGameState();
+
+  document.body.id = "gameStarted";
+
 }
+
 
 
 // ========== GAMEPLAY ==========
@@ -162,9 +192,15 @@ function submitPlayerScore() {
     alert("Enter a valid number of hits.");
     return;
   }
-
-  const score = getScore(hits);
   const player = players[currentPlayerIndex];
+if (hits === 6) {
+  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+  if (isShanghai) {
+    showShanghaiWin(player.name);
+    return; // skip rest of the scoring logic
+  }
+}
+  const score = getScore(hits);
   const allPlayer = allPlayers.find(p => p.name === player.name);
 
   // Push score to both current and full player lists
@@ -233,7 +269,6 @@ function submitPlayerScore() {
   showHole();
 }
 
-
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
     alert("Nothing to undo.");
@@ -260,6 +295,48 @@ function submitPlayerScore() {
 
   // ✅ Make sure to re-sync allPlayers
   allPlayers = JSON.parse(JSON.stringify(players));
+}
+
+function showShanghaiWin(winnerName) {
+  gameStarted = false;
+  localStorage.removeItem("golfdartsState");
+
+  document.getElementById("scoreInputs").innerHTML = "";
+
+  const overlay = document.createElement("div");
+  overlay.className = "shanghai-overlay";
+  overlay.innerHTML = `
+    <h1>🏆 SHANGHAI!!</h1>
+    <h2>${winnerName} WINS!</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById("playAgainBtn").onclick = () => {
+    // Restart game with same players
+    players.forEach(p => p.scores = []);
+    currentHole = 1;
+    currentPlayerIndex = 0;
+    suddenDeath = false;
+    tiedPlayers = [];
+    gameStarted = true;
+
+    // Reset UI
+    document.body.removeChild(overlay);
+    document.getElementById("scoreInputs").innerHTML = "";
+    updateLeaderboard();
+    updateScorecard();
+    showHole();
+    saveGameState();
+  };
+
+  /*if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }*/
 }
 
 
@@ -375,7 +452,7 @@ function showScoreAnimation(message, color = "#0a3") {
   el.style.animation = "popIn 0.6s ease-out";
   setTimeout(() => el.innerText = "", 3000);
 
-  if ('speechSynthesis' in window) {
+  if (audioEnabled && 'speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(message.replace(/[^"]+/g, ''));
     utter.rate = 1;
     utter.pitch = 1.2;
@@ -401,24 +478,29 @@ function loadGameState() {
   const state = JSON.parse(saved);
   if (!state || !state.players || state.players.length === 0) return;
 
-  if (confirm("Resume your previous game?")) {
-    players = state.players;
-    currentHole = state.currentHole;
-    currentPlayerIndex = state.currentPlayerIndex;
-    gameStarted = state.gameStarted;
-    allPlayers = JSON.parse(JSON.stringify(players));
-
-    document.querySelector(".top-links").style.display = "none";
-    document.getElementById("setup").style.display = "none";
-    document.getElementById("game").style.display = "block";
-    document.querySelector("h1").style.display = "none";
-
-    showHole();
-    updateLeaderboard();
-    updateScorecard();
-  } else {
+  const proceed = confirm("Want to keep playing? OK to return to your game. Cancel to restart");
+  if (!proceed) {
     localStorage.removeItem("golfdartsState");
+    return;
   }
+
+  // Continue game setup
+  players = state.players;
+  currentHole = state.currentHole;
+  currentPlayerIndex = state.currentPlayerIndex;
+  gameStarted = state.gameStarted;
+  allPlayers = JSON.parse(JSON.stringify(players));
+
+  document.querySelector(".top-links").style.display = "none";
+  document.getElementById("setup").style.display = "none";
+  document.getElementById("game").style.display = "block";
+  const title = document.querySelector(".header-bar h1");
+  if (title) title.style.display = "none";
+
+  showHole();
+  updateLeaderboard();
+  updateScorecard();
+  document.body.id = "gameStarted";
 }
 
 function endGame() {
@@ -439,6 +521,8 @@ function endGame() {
   statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
+
+  document.body.removeAttribute("id");
 
   // Start New Round Button
   const startNewBtn = document.createElement("button");
@@ -530,6 +614,8 @@ window.closeModal = closeModal;
 
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
+
+  // Populate the dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -537,5 +623,35 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
-  loadGameState();
+  // Add checkbox toggle listeners (check IDs match your HTML)
+  document.getElementById("audioToggle").addEventListener("change", (e) => {
+    audioEnabled = e.target.checked;
+  });
+
+  document.getElementById("randomToggle").addEventListener("change", (e) => {
+    randomizedMode = e.target.checked;
+  });
+
+  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+    advancedMode = e.target.checked;
+  });
+
+  // Trigger name inputs when player count is selected
+  select.addEventListener("change", createPlayerInputs);
+});
+
+// Add unload protection if a saved game is in progress
+window.addEventListener("beforeunload", function (e) {
+  const saved = localStorage.getItem("golfdartsState");
+  if (saved) {
+    e.preventDefault();
+    e.returnValue = ""; // Required for most browsers to show warning
+  }
+});
+
+// Load saved game state on full window load (after assets)
+window.addEventListener("DOMContentLoaded", () => {
+  requestAnimationFrame(() => {
+    loadGameState();
+  });
 });
