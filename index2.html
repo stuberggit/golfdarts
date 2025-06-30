@@ -107,22 +107,6 @@
   </div>
 </div>
 
-<!-- Hamburger menu JS -->
-<script>
-  const hamburgerIcon = document.getElementById("hamburgerIcon");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
-
-  hamburgerIcon.addEventListener("click", () => {
-    hamburgerMenu.classList.toggle("hidden");
-  });
-
-  window.addEventListener("click", (e) => {
-    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
-      hamburgerMenu.classList.add("hidden");
-    }
-  });
-</script>
-
 <!-- Game logic -->
 <script src="script2.js" defer></script>
 </body>
