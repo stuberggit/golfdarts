@@ -8,7 +8,7 @@ let tiedPlayers = [];
 let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
-
+let hazardHoles = [];
 
 // ========== GAME SETUP ==========
 
@@ -155,6 +155,7 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
+  // Start with hits input
   container.innerHTML = `
     <div class="input-group">
       <label>${player.name} hits:</label>
@@ -164,7 +165,19 @@ function showHole() {
       </select>
     </div>
   `;
+
+  // Append hazard checkbox only if this is a hazard hole in advanced mode
+  if (advancedMode && hazardHoles.includes(currentHole)) {
+    const hazardWrapper = document.createElement("div");
+    hazardWrapper.className = "hazard-toggle";
+    hazardWrapper.innerHTML = `<label><input type="checkbox" class="hazardCheckbox"> Hit Hazard</label>`;
+    container.appendChild(hazardWrapper);
+  }
+
+  // Optional: Highlight the hazard hole in the scorecard (visual feedback)
+  highlightHazardHole(currentHole);
 }
+
 
 function getScore(hits) {
   if (hits === 0) return 5;
@@ -192,18 +205,33 @@ function submitPlayerScore() {
     alert("Enter a valid number of hits.");
     return;
   }
+
   const player = players[currentPlayerIndex];
-if (hits === 6) {
-  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
-  if (isShanghai) {
-    showShanghaiWin(player.name);
-    return; // skip rest of the scoring logic
+
+  if (hits === 6) {
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    if (isShanghai) {
+      showShanghaiWin(player.name);
+      return;
+    }
   }
-}
-  const score = getScore(hits);
+
+  let score = getScore(hits);
+
+  // Check if hazard should be applied
+  const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
+  if (
+    advancedMode &&
+    hazardHoles.includes(currentHole) &&
+    hazardCheckboxes[currentPlayerIndex] &&
+    hazardCheckboxes[currentPlayerIndex].checked
+  ) {
+    score += 1;
+    player.hazards = (player.hazards || 0) + 1;
+  }
+
   const allPlayer = allPlayers.find(p => p.name === player.name);
 
-  // Push score to both current and full player lists
   player.scores.push(score);
   if (allPlayer) allPlayer.scores.push(score);
 
@@ -215,10 +243,8 @@ if (hits === 6) {
   updateLeaderboard();
   updateScorecard();
 
-  // Advance to next player
   currentPlayerIndex++;
 
-  // If all players completed this hole
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
@@ -226,7 +252,6 @@ if (hits === 6) {
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
 
-    // Handle end of regular game
     if (currentHole === 18) {
       if (tied.length > 1) {
         players = tied;
@@ -238,7 +263,6 @@ if (hits === 6) {
         document.getElementById("scoreInputs").innerHTML = `
           <h2>${names} tie! On to Sudden Death!</h2>
           <button onclick="showHole()" class="primary-button full-width">Continue</button>
-
         `;
         return;
       } else {
@@ -247,7 +271,6 @@ if (hits === 6) {
       }
     }
 
-    // Handle sudden death
     if (suddenDeath) {
       const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
       const min = Math.min(...lastHoleScores);
@@ -655,5 +678,60 @@ window.addEventListener("DOMContentLoaded", () => {
     loadGameState();
   });
 });
+
+// ========== ADVANCED MODE ==========
+
+const dartboardNeighbors = {
+  1: [20, 18],
+  2: [17, 15],
+  3: [19, 17],
+  4: [18, 13],
+  5: [12, 20],
+  6: [10, 13],
+  7: [16, 19],
+  8: [11, 16],
+  9: [14, 12],
+  10: [6, 15],
+  11: [8, 14],
+  12: [9, 5],
+  13: [6, 4],
+  14: [11, 9],
+  15: [2, 10],
+  16: [7, 8],
+  17: [3, 2],
+  18: [1, 4],
+  19: [7, 3],
+  20: [5, 1],
+};
+
+let hazardHoles = [];
+
+function selectHazardHoles() {
+  const allHoles = [...Array(18)].map((_, i) => i + 1);
+  hazardHoles = allHoles.sort(() => 0.5 - Math.random()).slice(0, 6);
+}
+
+const dartHits = [
+  { number: 20, multiplier: 2 },
+  { number: 1, multiplier: 1 },
+  { number: 1, multiplier: 1 },
+];
+
+function checkHazardPenalty(hole, dartHits) {
+  const neighbors = dartboardNeighbors[hole];
+  return dartHits.some(d => neighbors.includes(d.number) && d.multiplier >= 2);
+}
+
+if (document.getElementById("hazardPenalty")?.checked) {
+  score += 1;
+}
+
+players.push({ name, scores: [], hazards: 0 });
+
+if (hazardHit) {
+  player.hazards++;
+}
+
+<p>${player.name} hit ${player.hazards} hazard${player.hazards !== 1 ? "s" : ""}</p>
 
 
