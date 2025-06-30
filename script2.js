@@ -673,8 +673,6 @@ const dartboardNeighbors = {
   20: [5, 1],
 };
 
-let hazardHoles = [];
-
 function selectHazardHoles() {
   const allHoles = [...Array(18)].map((_, i) => i + 1);
   hazardHoles = allHoles.sort(() => 0.5 - Math.random()).slice(0, 6);
