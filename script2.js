@@ -10,6 +10,8 @@ let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 
+console.log("script2.js loaded");
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
