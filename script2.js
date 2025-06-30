@@ -648,40 +648,6 @@ window.addEventListener("DOMContentLoaded", () => {
   select.addEventListener("change", createPlayerInputs);
 });
 
-
-  // Add checkbox toggle listeners (check IDs match your HTML)
-  document.getElementById("audioToggle").addEventListener("change", (e) => {
-    audioEnabled = e.target.checked;
-  });
-
-  document.getElementById("randomToggle").addEventListener("change", (e) => {
-    randomizedMode = e.target.checked;
-  });
-
-  document.getElementById("advancedToggle").addEventListener("change", (e) => {
-    advancedMode = e.target.checked;
-  });
-
-  // Trigger name inputs when player count is selected
-  select.addEventListener("change", createPlayerInputs);
-});
-
-// Add unload protection if a saved game is in progress
-window.addEventListener("beforeunload", function (e) {
-  const saved = localStorage.getItem("golfdartsState");
-  if (saved) {
-    e.preventDefault();
-    e.returnValue = ""; // Required for most browsers to show warning
-  }
-});
-
-// Load saved game state on full window load (after assets)
-window.addEventListener("DOMContentLoaded", () => {
-  requestAnimationFrame(() => {
-    loadGameState();
-  });
-});
-
 // ========== ADVANCED MODE ==========
 
 const dartboardNeighbors = {
@@ -737,4 +703,31 @@ if (hazardHit) {
 
 <p>${player.name} hit ${player.hazards} hazard${player.hazards !== 1 ? "s" : ""}</p>
 
+window.addEventListener("DOMContentLoaded", () => {
+  const select = document.getElementById("playerCount");
+
+  // Populate the dropdown
+  for (let i = 1; i <= 20; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+    select.appendChild(option);
+  }
+
+  // Attach listeners
+  select.addEventListener("change", createPlayerInputs);
+  document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
+  document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
+  document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
+
+  loadGameState();
+});
+
+window.addEventListener("beforeunload", function (e) {
+  const saved = localStorage.getItem("golfdartsState");
+  if (saved) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
 
