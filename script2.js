@@ -666,14 +666,9 @@ if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
 
-  // Attach listeners
-  select.addEventListener("change", createPlayerInputs);
-  document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
-  document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
-  document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
-});
+// ========== EVENT LISTENERS ==========
 
-  window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
   // Populate the dropdown
@@ -690,25 +685,8 @@ if (document.getElementById("hazardPenalty")?.checked) {
   document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
   document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
 
-  // Hamburger menu logic
-  const hamburgerIcon = document.getElementById("hamburgerIcon");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
-
-  hamburgerIcon.addEventListener("click", () => {
-    hamburgerMenu.classList.toggle("hidden");
-  });
-
-  document.addEventListener("click", function (event) {
-    if (!hamburgerMenu.contains(event.target) && !hamburgerIcon.contains(event.target)) {
-      hamburgerMenu.classList.add("hidden");
-    }
-  });
-
-  // Load saved game
   loadGameState();
 });
-
-
 
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
