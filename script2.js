@@ -620,8 +620,6 @@ function closeModal(id) {
 window.showModal = showModal;
 window.closeModal = closeModal;
 
-  select.addEventListener("change", createPlayerInputs);
-});
 
 // ========== ADVANCED MODE ==========
 
@@ -667,14 +665,6 @@ function checkHazardPenalty(hole, dartHits) {
 if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
-
-players.push({ name, scores: [], hazards: 0 });
-
-if (hazardHit) {
-  player.hazards++;
-}
-
-<p>${player.name} hit ${player.hazards} hazard${player.hazards !== 1 ? "s" : ""}</p>
 
   // Attach listeners
   select.addEventListener("change", createPlayerInputs);
