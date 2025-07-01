@@ -104,7 +104,7 @@ body#gameStarted .hamburger {
 }
 
 body#gameStarted .header-bar {
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 
