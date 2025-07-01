@@ -685,6 +685,22 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
   document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
 
+  // Hamburger menu listeners
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  if (hamburgerIcon && hamburgerMenu) {
+    hamburgerIcon.addEventListener("click", () => {
+      hamburgerMenu.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!hamburgerMenu.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+        hamburgerMenu.classList.add("hidden");
+      }
+    });
+  }
+
   loadGameState();
 });
 
@@ -695,3 +711,4 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
+
