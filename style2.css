@@ -47,6 +47,9 @@ h1 {
   padding: 5px;
   z-index: 1000;
   display: block; /* Ensure it's visible by default */
+  position: absolute;
+  top: 16px;
+  right: 16px;
 }
 
 /* ===== HAMBURGER MENU DROPDOWN ===== */
