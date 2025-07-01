@@ -19,23 +19,6 @@ function toggleHamburgerMenu() {
   menu.classList.toggle("hidden");
 }
 
-// Close hamburger when clicking outside of it
-document.addEventListener("DOMContentLoaded", function () {
-  const menu = document.getElementById("hamburgerMenu");
-  const icon = document.getElementById("hamburgerIcon");
-
-  // Listen for clicks anywhere on the page
-  document.addEventListener("click", function (event) {
-    // Only close if the menu is open and the click is outside both icon and menu
-    if (!menu.classList.contains("hidden") &&
-        !menu.contains(event.target) &&
-        !icon.contains(event.target)) {
-      menu.classList.add("hidden");
-    }
-  });
-});
-
-
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -698,27 +681,12 @@ if (hazardHit) {
   document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
   document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
   document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
-
-  loadGameState();
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  // Handle hamburger menu toggle
-  const hamburgerIcon = document.getElementById("hamburgerIcon");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
-
-  hamburgerIcon.addEventListener("click", () => {
-    hamburgerMenu.classList.toggle("hidden");
-  });
-
-  window.addEventListener("click", (e) => {
-    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
-      hamburgerMenu.classList.add("hidden");
-    }
-  });
-
-  // Populate the player count dropdown
+  window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
+
+  // Populate the dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -726,17 +694,31 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
-  // Attach listeners for toggles and player select
+  // Attach listeners
   select.addEventListener("change", createPlayerInputs);
   document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
   document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
   document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
 
-  // Load previous game state if it exists
-  requestAnimationFrame(() => {
-    loadGameState();
+  // Hamburger menu logic
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  hamburgerIcon.addEventListener("click", () => {
+    hamburgerMenu.classList.toggle("hidden");
   });
+
+  document.addEventListener("click", function (event) {
+    if (!hamburgerMenu.contains(event.target) && !hamburgerIcon.contains(event.target)) {
+      hamburgerMenu.classList.add("hidden");
+    }
+  });
+
+  // Load saved game
+  loadGameState();
 });
+
+
 
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
