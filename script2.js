@@ -131,8 +131,6 @@ if (hamburger) hamburger.style.display = "block";
 
 }
 
-
-
 // ========== GAMEPLAY ==========
 
 function showHole() {
@@ -370,8 +368,7 @@ function updateScorecard() {
           const holeNum = i + start;
           const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
           const display = s === undefined || s === null ? "&nbsp;" : s;
-return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-
+          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
         }).join("")
       }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
@@ -379,8 +376,6 @@ return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive
 
   const renderSuddenDeath = () => {
     const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
-    if (maxHole <= 18) return;
-
     const sdHoles = [];
     for (let i = 19; i <= maxHole; i++) {
       const label = i <= 20 ? i : (i - 20);
@@ -392,18 +387,46 @@ return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive
 
     allPlayers.forEach(p => {
       const isTiedPlayer = players.some(tp => tp.name === p.name);
-const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
+      const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
       table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
-table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
-
+        let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
       }
       table += `</tr>`;
     });
   };
+
+  // 🔹 Always render Front Nine
+  renderSection("Front Nine", 1);
+
+  // 🔹 Show Back Nine only if hole 9 is completed
+  const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
+  if (allCompletedFront) renderSection("Back Nine", 10);
+
+  // 🔹 Show Sudden Death if active
+  if (suddenDeath) renderSuddenDeath();
+
+  table += "</table>";
+  container.innerHTML = table;
+
+  const activeCell = document.querySelector(".active-cell");
+  if (activeCell) {
+    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+
+  // Show winner message if game ends early (e.g. Shanghai win)
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+}
 
   renderSuddenDeath();
   if (currentHole > 9) renderSection("Back Nine", 10);
