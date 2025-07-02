@@ -694,13 +694,22 @@ if (document.getElementById("hazardPenalty")?.checked) {
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
-  // Populate the dropdown
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
-  }
+  // Add the default placeholder option first
+const defaultOption = document.createElement("option");
+defaultOption.value = "";
+defaultOption.textContent = "Select Players";
+defaultOption.disabled = true;
+defaultOption.selected = true;
+select.appendChild(defaultOption);
+
+// Then add 1–20 player options
+for (let i = 1; i <= 20; i++) {
+  const option = document.createElement("option");
+  option.value = i;
+  option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+  select.appendChild(option);
+}
+
 
   // Attach listeners
   select.addEventListener("change", createPlayerInputs);
