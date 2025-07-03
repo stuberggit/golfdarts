@@ -78,8 +78,6 @@ function createPlayerInputs() {
   document.getElementById("startBtn").style.display = "inline";
 }
 
-// ===== end of core block =====
-
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
 let scoreInputs;
