@@ -536,9 +536,6 @@ function endGame() {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  const scoreInputs = document.getElementById("scoreInputs");
-  scoreInputs.innerHTML = "<h2>Game complete!</h2>";
-
   // Game Stats Button (replaces Submit Score)
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
