@@ -448,15 +448,6 @@ function updateScorecard() {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
-  const scoreInputs = document.getElementById("scoreInputs");
-  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
-  }
-
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
   if (!leaderboardDetails) return;
