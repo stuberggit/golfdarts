@@ -720,20 +720,25 @@ for (let i = 1; i <= 20; i++) {
   document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
 
   // Hamburger menu listeners
-  const hamburgerIcon = document.getElementById("hamburgerIcon");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
+ // Hamburger Menu Setup
+const hamburgerIcon = document.getElementById("hamburgerIcon");
+const hamburgerMenu = document.getElementById("hamburgerMenu");
 
-  if (hamburgerIcon && hamburgerMenu) {
-    hamburgerIcon.addEventListener("click", () => {
-      hamburgerMenu.classList.toggle("hidden");
-    });
+if (hamburgerIcon && hamburgerMenu) {
+  hamburgerIcon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hamburgerMenu.classList.toggle("hidden");
+  });
 
-    document.addEventListener("click", function (event) {
-      if (!hamburgerMenu.contains(event.target) && !hamburgerIcon.contains(event.target)) {
-        hamburgerMenu.classList.add("hidden");
-      }
-    });
-  }
+  hamburgerMenu.addEventListener("click", (e) => {
+    e.stopPropagation(); // Prevent click inside the menu from closing it
+  });
+
+  document.addEventListener("click", () => {
+    hamburgerMenu.classList.add("hidden");
+  });
+}
+
 
   loadGameState();
 });
