@@ -369,14 +369,15 @@ function updateScorecard() {
     allPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
       const total = scores.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
-        scores.map((s, i) => {
-          const holeNum = i + start;
-          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-          const display = s === undefined || s === null ? "&nbsp;" : s;
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-        }).join("")
-      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>$
+        {
+          scores.map((s, i) => {
+            const holeNum = i + start;
+            const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+            const display = s === undefined || s === null ? "&nbsp;" : s;
+            return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+          }).join("")
+        }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
   };
 
@@ -405,14 +406,10 @@ function updateScorecard() {
     });
   };
 
-  // 🔹 Always render Front Nine
+  // Render sections
   renderSection("Front Nine", 1);
-
-  // 🔹 Show Back Nine only if hole 9 is completed
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
   if (allCompletedFront) renderSection("Back Nine", 10);
-
-  // 🔹 Show Sudden Death if active
   if (suddenDeath) renderSuddenDeath();
 
   table += "</table>";
@@ -432,19 +429,7 @@ function updateScorecard() {
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
   }
-
-  renderSuddenDeath();
-  if (currentHole > 9) renderSection("Back Nine", 10);
-  renderSection("Front Nine", 1);
-
-  table += "</table>";
-  container.innerHTML = table;
-
-  // Scroll to the active cell on mobile
-  activeCell = document.querySelector(".active-cell");
-  if (activeCell) {
-    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }
+}
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
