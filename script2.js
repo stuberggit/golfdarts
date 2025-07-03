@@ -670,52 +670,56 @@ if (document.getElementById("hazardPenalty")?.checked) {
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
-  // Add the default placeholder option first
-const defaultOption = document.createElement("option");
-defaultOption.value = "";
-defaultOption.textContent = "Select Players";
-defaultOption.disabled = true;
-defaultOption.selected = true;
-select.appendChild(defaultOption);
+  if (select) {
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "Select Players";
+    defaultOption.disabled = true;
+    defaultOption.selected = true;
+    select.appendChild(defaultOption);
 
-// Then add 1–20 player options
-for (let i = 1; i <= 20; i++) {
-  const option = document.createElement("option");
-  option.value = i;
-  option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-  select.appendChild(option);
-}
+    for (let i = 1; i <= 20; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+      select.appendChild(option);
+    }
 
+    select.addEventListener("change", createPlayerInputs);
+  }
 
-  // Attach listeners
-  select.addEventListener("change", createPlayerInputs);
-  document.getElementById("audioToggle").addEventListener("change", e => audioEnabled = e.target.checked);
-  document.getElementById("randomToggle").addEventListener("change", e => randomizedMode = e.target.checked);
-  document.getElementById("advancedToggle").addEventListener("change", e => advancedMode = e.target.checked);
+  // Settings toggles
+  const audioToggle = document.getElementById("audioToggle");
+  if (audioToggle) audioToggle.addEventListener("change", e => audioEnabled = e.target.checked);
+
+  const randomToggle = document.getElementById("randomToggle");
+  if (randomToggle) randomToggle.addEventListener("change", e => randomizedMode = e.target.checked);
+
+  const advancedToggle = document.getElementById("advancedToggle");
+  if (advancedToggle) advancedToggle.addEventListener("change", e => advancedMode = e.target.checked);
 
   // Hamburger menu listeners
- // Hamburger Menu Setup
-const hamburgerIcon = document.getElementById("hamburgerIcon");
-const hamburgerMenu = document.getElementById("hamburgerMenu");
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
 
-if (hamburgerIcon && hamburgerMenu) {
-  hamburgerIcon.addEventListener("click", (e) => {
-    e.stopPropagation();
-    hamburgerMenu.classList.toggle("hidden");
-  });
+  if (hamburgerIcon && hamburgerMenu) {
+    hamburgerIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hamburgerMenu.classList.toggle("hidden");
+    });
 
-  hamburgerMenu.addEventListener("click", (e) => {
-    e.stopPropagation(); // Prevent click inside the menu from closing it
-  });
+    hamburgerMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
 
-  document.addEventListener("click", () => {
-    hamburgerMenu.classList.add("hidden");
-  });
-}
-
+    document.addEventListener("click", () => {
+      hamburgerMenu.classList.add("hidden");
+    });
+  }
 
   loadGameState();
 });
+
 
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
