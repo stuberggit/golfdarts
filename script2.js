@@ -670,54 +670,44 @@ if (document.getElementById("hazardPenalty")?.checked) {
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
 
-  if (select) {
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "Select Players";
-    defaultOption.disabled = true;
-    defaultOption.selected = true;
-    select.appendChild(defaultOption);
-
-    for (let i = 1; i <= 20; i++) {
-      const option = document.createElement("option");
-      option.value = i;
-      option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-      select.appendChild(option);
-    }
-
-    select.addEventListener("change", createPlayerInputs);
+  // Populate the dropdown
+  for (let i = 1; i <= 20; i++) {
+    const option = document.createElement("option");
+    option.value = i;
+    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+    select.appendChild(option);
   }
 
-  // Settings toggles
-  const audioToggle = document.getElementById("audioToggle");
-  if (audioToggle) audioToggle.addEventListener("change", e => audioEnabled = e.target.checked);
+  // Add checkbox toggle listeners (check IDs match your HTML)
+  document.getElementById("audioToggle").addEventListener("change", (e) => {
+    audioEnabled = e.target.checked;
+  });
 
-  const randomToggle = document.getElementById("randomToggle");
-  if (randomToggle) randomToggle.addEventListener("change", e => randomizedMode = e.target.checked);
+  document.getElementById("randomToggle").addEventListener("change", (e) => {
+    randomizedMode = e.target.checked;
+  });
 
-  const advancedToggle = document.getElementById("advancedToggle");
-  if (advancedToggle) advancedToggle.addEventListener("change", e => advancedMode = e.target.checked);
+  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+    advancedMode = e.target.checked;
+  });
 
-  // Hamburger menu listeners
-  const hamburgerIcon = document.getElementById("hamburgerIcon");
-  const hamburgerMenu = document.getElementById("hamburgerMenu");
+  // Trigger name inputs when player count is selected
+  select.addEventListener("change", createPlayerInputs);
+});
 
-  if (hamburgerIcon && hamburgerMenu) {
-    hamburgerIcon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      hamburgerMenu.classList.toggle("hidden");
-    });
-
-    hamburgerMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-
-    document.addEventListener("click", () => {
-      hamburgerMenu.classList.add("hidden");
-    });
+// Add unload protection if a saved game is in progress
+window.addEventListener("beforeunload", function (e) {
+  const saved = localStorage.getItem("golfdartsState");
+  if (saved) {
+    e.preventDefault();
+    e.returnValue = ""; // Required for most browsers to show warning
   }
+});
 
-  loadGameState();
+// Load saved game state on full window load (after assets)
+window.addEventListener("DOMContentLoaded", () => {
+  requestAnimationFrame(() => {
+    loadGameState();
 });
 
 
