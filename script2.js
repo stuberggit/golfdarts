@@ -362,14 +362,23 @@ function updateScorecard() {
 
   const renderSection = (label, start) => {
     const highlight = (currentHole >= start && currentHole < start + 9);
-    table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
-  scores.map((s, i) => {
-    const holeNum = i + start;
-    const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-    const display = s === undefined || s === null ? "&nbsp;" : s;
-    return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-  }).join("")
-}<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+    table += `
+      <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
+    `;
+
+    allPlayers.forEach(p => {
+      const scores = p.scores.slice(start - 1, start + 8);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+
+      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
+        scores.map((s, i) => {
+          const holeNum = i + start;
+          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+          const display = s === undefined || s === null ? "&nbsp;" : s;
+          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+        }).join("")
+      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
   };
 
@@ -387,13 +396,16 @@ function updateScorecard() {
     allPlayers.forEach(p => {
       const isTiedPlayer = players.some(tp => tp.name === p.name);
       const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
+
       table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
+
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
         let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
         table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
       }
+
       table += `</tr>`;
     });
   };
@@ -422,6 +434,7 @@ function updateScorecard() {
     scoreInputs.appendChild(winText);
   }
 }
+
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
