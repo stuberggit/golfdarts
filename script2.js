@@ -165,6 +165,8 @@ function showHole() {
 
   // Optional: Highlight the hazard hole in the scorecard (visual feedback)
   highlightHazardHole(currentHole);
+  updateScorecard();
+
 }
 
 
@@ -197,6 +199,7 @@ function submitPlayerScore() {
 
   const player = players[currentPlayerIndex];
 
+  // Check for Shanghai
   if (hits === 6) {
     const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
@@ -205,9 +208,10 @@ function submitPlayerScore() {
     }
   }
 
+  // Get base score
   let score = getScore(hits);
 
-  // Check if hazard should be applied
+  // Hazard penalty if applicable
   const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
   if (
     advancedMode &&
@@ -221,6 +225,7 @@ function submitPlayerScore() {
 
   const allPlayer = allPlayers.find(p => p.name === player.name);
 
+  // Save score to player and allPlayers
   player.scores.push(score);
   if (allPlayer) allPlayer.scores.push(score);
 
@@ -232,6 +237,7 @@ function submitPlayerScore() {
   updateLeaderboard();
   updateScorecard();
 
+  // Move to next player or hole
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
@@ -278,8 +284,9 @@ function submitPlayerScore() {
     }
   }
 
-  showHole();
+  showHole(); // showHole must include updateScorecard!
 }
+
 
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
