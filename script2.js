@@ -170,6 +170,9 @@ function showHole() {
 
 }
 
+function highlightHazardHole(hole) {
+  // Placeholder for future Advanced Mode UI enhancement
+}
 
 function getScore(hits) {
   if (hits === 0) return 5;
