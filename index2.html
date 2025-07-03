@@ -107,7 +107,22 @@
     </div>
   </div>
 
+  <script>
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  hamburgerIcon.addEventListener("click", () => {
+    hamburgerMenu.classList.toggle("hidden");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+      hamburgerMenu.classList.add("hidden");
+    }
+  });
+</script>
+
   <!-- Make sure this is last -->
-  <script src="script2.js" defer></script>
+  <script src="script2.js"></script>
 </body>
 </html>
