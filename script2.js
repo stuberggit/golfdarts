@@ -19,6 +19,7 @@ function toggleHamburgerMenu() {
   menu.classList.toggle("hidden");
 }
 
+// ===== createPlayerInputs Function (Core: DO NOT OVERWRITE without discussion) =====
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -76,6 +77,7 @@ function createPlayerInputs() {
 
   document.getElementById("startBtn").style.display = "inline";
 }
+
 
 function handleNameDropdown(selectId, inputId) {
   const select = document.getElementById(selectId);
