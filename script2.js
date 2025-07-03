@@ -708,7 +708,9 @@ window.addEventListener("beforeunload", function (e) {
 window.addEventListener("DOMContentLoaded", () => {
   requestAnimationFrame(() => {
     loadGameState();
+  });
 });
+
 
 
 window.addEventListener("beforeunload", function (e) {
