@@ -437,7 +437,7 @@ function updateScorecard() {
   container.innerHTML = table;
 
   // Scroll to the active cell on mobile
-  const activeCell = document.querySelector(".active-cell");
+  activeCell = document.querySelector(".active-cell");
   if (activeCell) {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
