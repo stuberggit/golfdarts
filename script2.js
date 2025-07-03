@@ -451,8 +451,6 @@ function updateScorecard() {
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
   }
-}
-
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
