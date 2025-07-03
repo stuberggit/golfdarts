@@ -428,7 +428,6 @@ function updateScorecard() {
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
   }
-}
 
   renderSuddenDeath();
   if (currentHole > 9) renderSection("Back Nine", 10);
