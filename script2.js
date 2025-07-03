@@ -165,6 +165,7 @@ function showHole() {
 
   // Optional: Highlight the hazard hole in the scorecard (visual feedback)
   highlightHazardHole(currentHole);
+  document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 
 }
