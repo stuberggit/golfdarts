@@ -291,7 +291,8 @@ function submitPlayerScore() {
 } else {
   currentHole++;
 }
-
+  }
+                               
 showHole();
 
 
