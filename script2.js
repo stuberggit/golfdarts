@@ -251,6 +251,7 @@ function submitPlayerScore() {
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
 
+    // Regular game end
     if (currentHole === 18) {
       if (tied.length > 1) {
         players = tied;
@@ -266,29 +267,21 @@ function submitPlayerScore() {
         return;
       } else {
         endGame();
-        updateScorecard();
         return;
       }
     }
 
-        if (suddenDeath) {
+    // Sudden death mode
+    if (suddenDeath) {
       const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
       const min = Math.min(...lastHoleScores);
       const winners = players.filter((p, i) => lastHoleScores[i] === min);
 
       if (winners.length === 1) {
         players = [winners[0]];
-        endGame(); // ✅ Ends game immediately if 1 winner
+        endGame();
         return;
       }
-
-      // More than 1 tied – advance to next sudden death hole
-      players = winners;
-      currentHole = currentHole === 20 ? 1 : currentHole + 1;
-      showHole(); // ✅ Only showHole if game didn’t end
-      return;
-    }
-
 
       players = winners;
       currentHole = currentHole === 20 ? 1 : currentHole + 1;
@@ -297,8 +290,9 @@ function submitPlayerScore() {
     }
   }
 
-  showHole(); // showHole must include updateScorecard!
+  showHole();
 }
+
 
 
   function undoHole() {
