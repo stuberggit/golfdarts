@@ -266,6 +266,7 @@ function submitPlayerScore() {
         return;
       } else {
         endGame();
+        updateScorecard();
         return;
       }
     }
@@ -424,15 +425,15 @@ function updateScorecard() {
   // Render sections
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
-if (currentHole >= 10 && allCompletedFront) {
-  renderSection("Back Nine", 10);
-  renderSection("Front Nine", 1);
-} else {
-  renderSection("Front Nine", 1);
-  if (allCompletedFront) renderSection("Back Nine", 10);
-}
+  if (suddenDeath) renderSuddenDeath();  // ✅ Sudden Death shown on top
 
-  if (suddenDeath) renderSuddenDeath();
+  if (currentHole >= 10 && allCompletedFront) {
+    renderSection("Back Nine", 10);
+    renderSection("Front Nine", 1);
+  } else {
+    renderSection("Front Nine", 1);
+    if (allCompletedFront) renderSection("Back Nine", 10);
+  }
 
   table += "</table>";
   container.innerHTML = table;
@@ -452,7 +453,6 @@ if (currentHole >= 10 && allCompletedFront) {
     scoreInputs.appendChild(winText);
   }
 }
-
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
