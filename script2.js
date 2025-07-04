@@ -271,16 +271,24 @@ function submitPlayerScore() {
       }
     }
 
-    if (suddenDeath) {
+        if (suddenDeath) {
       const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
       const min = Math.min(...lastHoleScores);
       const winners = players.filter((p, i) => lastHoleScores[i] === min);
 
       if (winners.length === 1) {
         players = [winners[0]];
-        endGame();
+        endGame(); // ✅ Ends game immediately if 1 winner
         return;
       }
+
+      // More than 1 tied – advance to next sudden death hole
+      players = winners;
+      currentHole = currentHole === 20 ? 1 : currentHole + 1;
+      showHole(); // ✅ Only showHole if game didn’t end
+      return;
+    }
+
 
       players = winners;
       currentHole = currentHole === 20 ? 1 : currentHole + 1;
