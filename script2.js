@@ -294,7 +294,7 @@ function submitPlayerScore() {
   }
                                
 showHole();
-
+}
 
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
