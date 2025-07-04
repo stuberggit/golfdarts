@@ -273,26 +273,26 @@ function submitPlayerScore() {
 
     // Sudden death mode
     if (suddenDeath) {
-      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
-      const min = Math.min(...lastHoleScores);
-      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+  const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+  if (allPlayersCompletedHole) {
+    const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+    const min = Math.min(...lastHoleScores);
+    const winners = players.filter((p, i) => lastHoleScores[i] === min);
 
-      if (winners.length === 1) {
-        players = [winners[0]];
-        endGame();
-        return;
-      }
-
-      players = winners;
-      currentHole = currentHole === 20 ? 1 : currentHole + 1;
-    } else {
-      currentHole++;
+    if (winners.length === 1) {
+      players = [winners[0]];
+      endGame();
+      return;
     }
-  }
 
-  showHole();
+    players = winners;
+    currentHole = currentHole === 20 ? 1 : currentHole + 1;
+  }
+} else {
+  currentHole++;
 }
 
+showHole();
 
 
   function undoHole() {
