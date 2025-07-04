@@ -422,9 +422,16 @@ function updateScorecard() {
   };
 
   // Render sections
-  renderSection("Front Nine", 1);
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
+
+if (currentHole >= 10 && allCompletedFront) {
+  renderSection("Back Nine", 10);
+  renderSection("Front Nine", 1);
+} else {
+  renderSection("Front Nine", 1);
   if (allCompletedFront) renderSection("Back Nine", 10);
+}
+
   if (suddenDeath) renderSuddenDeath();
 
   table += "</table>";
