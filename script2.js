@@ -576,27 +576,17 @@ function endGame() {
   gameStarted = false;
 
   if (suddenDeath) players = allPlayers;
-
-  updateLeaderboard(); // keep "true" removed
+  updateLeaderboard();
   updateScorecard();
-  document.getElementById("leaderboard").style.display = "block";
   localStorage.removeItem("golfdartsState");
 
   const scoreInputs = document.getElementById("scoreInputs");
-
-if (scoreInputs) {
-  // Winner announcement
-  const winner = players.length === 1 ? players[0].name : null;
-  if (winner) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${winner} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    winText.style.textAlign = "center";
-    scoreInputs.appendChild(winText);
+  if (!scoreInputs) {
+    console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
+    return;
   }
 
-  // Game Stats button
+  // Game Stats Button
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -604,7 +594,7 @@ if (scoreInputs) {
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  // Start New Round button
+  // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
@@ -624,8 +614,16 @@ if (scoreInputs) {
   };
   scoreInputs.appendChild(startNewBtn);
 
+  // Declare winner if only one player left
+  if (players.length === 1) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+
   document.body.removeAttribute("id");
-}
 }
 
 function showStats() {
