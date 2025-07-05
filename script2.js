@@ -234,10 +234,36 @@ function submitPlayerScore() {
   if (allPlayer) allPlayer.scores.push(score);
 
   saveGameState();
+  
+const { label, color } = getScoreLabelAndColor(hits);
 
-  const { label, color } = getScoreLabelAndColor(hits);
+// Don't show animation if this was the final game-ending move
+let gameWillEnd = false;
+
+// Check for regular game end
+if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
+  const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+  const lowest = Math.min(...totals);
+  const tied = players.filter((p, i) => totals[i] === lowest);
+  if (tied.length === 1) gameWillEnd = true;
+}
+
+// Check for sudden death end
+if (suddenDeath) {
+  const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+  if (allPlayersCompletedHole) {
+    const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+    const min = Math.min(...lastHoleScores);
+    const winners = players.filter((p, i) => lastHoleScores[i] === min);
+    if (winners.length === 1) gameWillEnd = true;
+  }
+}
+
+if (!gameWillEnd) {
   showScoreAnimation(`${player.name}: ${label}!`, color);
+}
 
+  
   updateLeaderboard();
   updateScorecard();
 
