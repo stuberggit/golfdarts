@@ -633,6 +633,14 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
+  // Leaderboard Button
+const lbBtn = document.createElement("button");
+lbBtn.innerText = "Show Leaderboard";
+lbBtn.className = "primary-button full-width";
+lbBtn.onclick = () => toggleLeaderboard(true);
+scoreInputs.appendChild(lbBtn);
+
+
   document.body.removeAttribute("id");
 }
 
