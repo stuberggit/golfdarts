@@ -419,7 +419,13 @@ function updateScorecard() {
       const scores = p.scores.slice(start - 1, start + 8);
       const total = scores.reduce((s, v) => s + (v ?? 0), 0);
 
-      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
+      const isActiveInSuddenDeath = !suddenDeath || players.some(sp => sp.name === p.name);
+const playerNameCell = isActiveInSuddenDeath
+  ? `<td style="border: 1px solid #ccc">${p.name}</td>`
+  : `<td style="border: 1px solid #ccc; text-decoration: line-through; opacity: 0.6">${p.name}</td>`;
+
+table += `<tr>${playerNameCell}${
+
         scores.map((s, i) => {
           const holeNum = i + start;
           const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
