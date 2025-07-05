@@ -543,7 +543,7 @@ function endGame() {
   gameStarted = false;
 
   if (suddenDeath) players = allPlayers;
-  updateLeaderboard(true);
+  updateLeaderboard();
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
