@@ -572,44 +572,55 @@ function endGame() {
   gameStarted = false;
 
   if (suddenDeath) players = allPlayers;
-  updateLeaderboard();
+
+  updateLeaderboard(); // keep "true" removed
   updateScorecard();
+  document.getElementById("leaderboard").style.display = "block";
   localStorage.removeItem("golfdartsState");
 
   const scoreInputs = document.getElementById("scoreInputs");
-  if (scoreInputs) {
-    // Game Stats Button (replaces Submit Score)
-    const statsBtn = document.createElement("button");
-    statsBtn.innerText = "Game Stats";
-    statsBtn.className = "primary-button full-width";
-    statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
-    statsBtn.onclick = () => showStats();
-    scoreInputs.appendChild(statsBtn);
 
-    // Start New Round Button
-    const startNewBtn = document.createElement("button");
-    startNewBtn.innerText = "Start New Round";
-    startNewBtn.className = "primary-button full-width";
-    startNewBtn.onclick = () => {
-      if (confirm("Start new round with same players?")) {
-        players.forEach(p => p.scores = []);
-        currentHole = 1;
-        currentPlayerIndex = 0;
-        gameStarted = true;
-        saveGameState();
-        showHole();
-        updateLeaderboard();
-        updateScorecard();
-      } else {
-        location.reload();
-      }
-    };
-    scoreInputs.appendChild(startNewBtn);
+  // Winner announcement
+  const winner = players.length === 1 ? players[0].name : null;
+  if (winner) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${winner} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    winText.style.textAlign = "center";
+    scoreInputs.appendChild(winText);
   }
+
+  // Game Stats button
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+  statsBtn.onclick = () => showStats();
+  scoreInputs.appendChild(statsBtn);
+
+  // Start New Round button
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.onclick = () => {
+    if (confirm("Start new round with same players?")) {
+      players.forEach(p => p.scores = []);
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      gameStarted = true;
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+  scoreInputs.appendChild(startNewBtn);
 
   document.body.removeAttribute("id");
 }
-
 
 
 function showStats() {
