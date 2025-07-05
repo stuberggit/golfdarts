@@ -575,7 +575,11 @@ function loadGameState() {
 function endGame() {
   gameStarted = false;
 
-  if (suddenDeath) players = allPlayers;
+  // ✅ Only restore allPlayers if still tied (players.length > 1)
+  if (suddenDeath && players.length > 1) {
+    players = allPlayers;
+  }
+
   updateLeaderboard();
   updateScorecard();
   localStorage.removeItem("golfdartsState");
@@ -584,6 +588,15 @@ function endGame() {
   if (!scoreInputs) {
     console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
     return;
+  }
+
+  // Declare winner if only one player left
+  if (players.length === 1) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
   }
 
   // Game Stats Button
@@ -614,17 +627,9 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
-  // Declare winner if only one player left
-  if (players.length === 1) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
-  }
-
   document.body.removeAttribute("id");
 }
+
 
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
