@@ -227,10 +227,14 @@ function submitPlayerScore() {
     player.hazards = (player.hazards || 0) + 1;
   }
 
+  if (player) {
   const allPlayer = allPlayers.find(p => p.name === player.name);
-
   player.scores.push(score);
   if (allPlayer) allPlayer.scores.push(score);
+} else {
+  console.warn("No current player found during score submission.");
+  return;
+}
 
   saveGameState();
 
@@ -580,6 +584,7 @@ function endGame() {
 
   const scoreInputs = document.getElementById("scoreInputs");
 
+if (scoreInputs) {
   // Winner announcement
   const winner = players.length === 1 ? players[0].name : null;
   if (winner) {
@@ -595,7 +600,7 @@ function endGame() {
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
-  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+  statsBtn.style.borderColor = "#ffcc00";
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
