@@ -547,36 +547,40 @@ function endGame() {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  // Game Stats Button (replaces Submit Score)
-  const statsBtn = document.createElement("button");
-  statsBtn.innerText = "Game Stats";
-  statsBtn.className = "primary-button full-width";
-  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
-  statsBtn.onclick = () => showStats();
-  scoreInputs.appendChild(statsBtn);
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (scoreInputs) {
+    // Game Stats Button (replaces Submit Score)
+    const statsBtn = document.createElement("button");
+    statsBtn.innerText = "Game Stats";
+    statsBtn.className = "primary-button full-width";
+    statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+    statsBtn.onclick = () => showStats();
+    scoreInputs.appendChild(statsBtn);
+
+    // Start New Round Button
+    const startNewBtn = document.createElement("button");
+    startNewBtn.innerText = "Start New Round";
+    startNewBtn.className = "primary-button full-width";
+    startNewBtn.onclick = () => {
+      if (confirm("Start new round with same players?")) {
+        players.forEach(p => p.scores = []);
+        currentHole = 1;
+        currentPlayerIndex = 0;
+        gameStarted = true;
+        saveGameState();
+        showHole();
+        updateLeaderboard();
+        updateScorecard();
+      } else {
+        location.reload();
+      }
+    };
+    scoreInputs.appendChild(startNewBtn);
+  }
 
   document.body.removeAttribute("id");
-
-  // Start New Round Button
-  const startNewBtn = document.createElement("button");
-  startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button full-width";
-  startNewBtn.onclick = () => {
-    if (confirm("Start new round with same players?")) {
-      players.forEach(p => p.scores = []);
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      gameStarted = true;
-      saveGameState();
-      showHole();
-      updateLeaderboard();
-      updateScorecard();
-    } else {
-      location.reload();
-    }
-  };
-  scoreInputs.appendChild(startNewBtn);
 }
+
 
 
 function showStats() {
