@@ -626,7 +626,7 @@ if (scoreInputs) {
 
   document.body.removeAttribute("id");
 }
-
+}
 
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
