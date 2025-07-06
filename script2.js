@@ -612,14 +612,18 @@ function endGame() {
     return;
   }
 
-  // Save winner before restoring full player list
+  // ✅ Clone full player list before any filtering
+  const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
+
+  // Save winner if applicable
   let winner = null;
   if (players.length === 1) {
     winner = players[0];
   }
 
-  // ✅ Always restore all players (not just after sudden death)
-  players = allPlayers;
+  // ✅ Restore full player list
+  players = fullPlayerList;
+  allPlayers = fullPlayerList;
 
   updateLeaderboard();
   updateScorecard();
@@ -648,10 +652,9 @@ function endGame() {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
-      // ✅ Rotate players: move LAST player to the FRONT
+      // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
 
-      // Reset scores and state
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
@@ -660,7 +663,6 @@ function endGame() {
       tiedPlayers = [];
       gameStarted = true;
 
-      // Clear UI
       scoreInputs.innerHTML = "";
 
       saveGameState();
@@ -673,8 +675,13 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
+  // ✅ Ensure leaderboard remains visible
+  const leaderboard = document.getElementById("leaderboard");
+  if (leaderboard) leaderboard.style.display = "block";
+
   document.body.removeAttribute("id");
 }
+
 
 
 
