@@ -606,11 +606,7 @@ function loadGameState() {
 function endGame() {
   gameStarted = false;
 
-  // ✅ Only restore allPlayers if still tied (players.length > 1)
-  if (suddenDeath && players.length > 1) {
-    players = allPlayers;
-  }
-
+  if (suddenDeath) players = allPlayers;
   updateLeaderboard();
   updateScorecard();
   localStorage.removeItem("golfdartsState");
@@ -619,15 +615,6 @@ function endGame() {
   if (!scoreInputs) {
     console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
     return;
-  }
-
-  // Declare winner if only one player left
-  if (players.length === 1) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
   }
 
   // Game Stats Button
@@ -639,44 +626,46 @@ function endGame() {
   scoreInputs.appendChild(statsBtn);
 
   // Start New Round Button
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
-  if (confirm("Start new round with same players?")) {
-    // Rotate players (first player goes to the end)
-    players.push(players.shift());
+    if (confirm("Start new round with same players?")) {
+      // Rotate players: first player goes to the end
+      players.push(players.shift());
 
-    // Reset scores
-    players.forEach(p => p.scores = []);
-    allPlayers = JSON.parse(JSON.stringify(players));  // Sync allPlayers
+      // Reset scores
+      players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
 
-    // Reset state
-    currentHole = 1;
-    currentPlayerIndex = 0;
-    suddenDeath = false;
-    tiedPlayers = [];
-    gameStarted = true;
+      // Reset game state
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
 
-    // Clear scoreInputs section
-    const scoreInputs = document.getElementById("scoreInputs");
-    if (scoreInputs) scoreInputs.innerHTML = "";
+      // Clear end-of-game buttons
+      scoreInputs.innerHTML = "";
 
-    saveGameState();
-    showHole();
-    updateLeaderboard();
-    updateScorecard();
-  } else {
-    location.reload();
-  }
-};
-
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
   scoreInputs.appendChild(startNewBtn);
 
-  // Leaderboard Button
-const lbBtn = document.createElement("button");
-lbBtn.innerText = "Show Leaderboard";
-lbBtn.className = "primary-button full-width";
-lbBtn.onclick = () => toggleLeaderboard(true);
-scoreInputs.appendChild(lbBtn);
-
+  // Declare winner if only one player left
+  if (players.length === 1) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
 
   document.body.removeAttribute("id");
 }
