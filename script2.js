@@ -606,21 +606,31 @@ function loadGameState() {
 function endGame() {
   gameStarted = false;
 
-  if (suddenDeath) players = allPlayers;
-  updateLeaderboard();
-  updateScorecard();
-  localStorage.removeItem("golfdartsState");
-
   const scoreInputs = document.getElementById("scoreInputs");
   if (!scoreInputs) {
     console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
     return;
   }
 
-  // Declare winner if only one player left
+  // Save winner before restoring full player list (for sudden death)
+  let winner = null;
   if (players.length === 1) {
+    winner = players[0];
+  }
+
+  // Restore all players if sudden death had filtered them
+  if (suddenDeath) {
+    players = allPlayers;
+  }
+
+  updateLeaderboard();
+  updateScorecard();
+  localStorage.removeItem("golfdartsState");
+
+  // Declare winner if only one player was remaining
+  if (winner) {
     const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
+    winText.textContent = `${winner.name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
@@ -667,6 +677,7 @@ function endGame() {
 
   document.body.removeAttribute("id");
 }
+
 
 
 function showStats() {
