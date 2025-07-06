@@ -415,25 +415,36 @@ function updateScorecard() {
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
     `;
 
-    allPlayers.forEach(p => {
-      const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+    const isSudden = suddenDeath;
+const competingNames = isSudden ? players.map(p => p.name) : [];
 
-      const isActiveInSuddenDeath = !suddenDeath || players.some(sp => sp.name === p.name);
-const playerNameCell = isActiveInSuddenDeath
-  ? `<td style="border: 1px solid #ccc">${p.name}</td>`
-  : `<td style="border: 1px solid #ccc; text-decoration: line-through; opacity: 0.6">${p.name}</td>`;
+const sortedPlayers = [...allPlayers].sort((a, b) => {
+  const aIn = competingNames.includes(a.name);
+  const bIn = competingNames.includes(b.name);
+  return bIn - aIn; // Competing players first
+});
 
-table += `<tr>${playerNameCell}${
+sortedPlayers.forEach(p => {
+  const scores = p.scores.slice(start - 1, start + 8);
+  const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+  const isCompeting = competingNames.includes(p.name);
 
-        scores.map((s, i) => {
-          const holeNum = i + start;
-          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-          const display = s === undefined || s === null ? "&nbsp;" : s;
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-        }).join("")
-      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
-    });
+  const playerNameStyle = isSudden && !isCompeting
+    ? 'text-decoration: line-through; color: gray'
+    : '';
+
+  table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
+    scores.map((s, i) => {
+      const holeNum = i + start;
+      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+      const display = (s === undefined || s === null)
+        ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+        : s;
+      return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+    }).join("")
+  }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+});
+
   };
 
   const renderSuddenDeath = () => {
