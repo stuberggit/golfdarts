@@ -448,32 +448,46 @@ sortedPlayers.forEach(p => {
   };
 
   const renderSuddenDeath = () => {
-    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
-    const sdHoles = [];
-    for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20);
-      sdHoles.push(label);
+  const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
+  const sdHoles = [];
+  for (let i = 19; i <= maxHole; i++) {
+    const label = i <= 20 ? i : (i - 20);
+    sdHoles.push(label);
+  }
+
+  table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+  table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+
+  const competingNames = players.map(p => p.name);
+
+  const sortedPlayers = [...allPlayers].sort((a, b) => {
+    const aIn = competingNames.includes(a.name);
+    const bIn = competingNames.includes(b.name);
+    return bIn - aIn; // Active players first
+  });
+
+  sortedPlayers.forEach(p => {
+    const isTiedPlayer = competingNames.includes(p.name);
+    const sdScores = p.scores.slice(18); // From hole 19 onward
+
+    const nameCellStyle = isTiedPlayer
+      ? 'class="sudden-death-cell"'
+      : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
+
+    table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
+
+    for (let i = 0; i < sdHoles.length; i++) {
+      const holeNum = i + 19;
+      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+      let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+
+      table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    table += `</tr>`;
+  });
+};
 
-    allPlayers.forEach(p => {
-      const isTiedPlayer = players.some(tp => tp.name === p.name);
-      const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
-
-      table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
-
-      for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19;
-        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-        let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
-      }
-
-      table += `</tr>`;
-    });
-  };
 
   // Render sections
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
