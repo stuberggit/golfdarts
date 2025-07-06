@@ -617,6 +617,15 @@ function endGame() {
     return;
   }
 
+  // Declare winner if only one player left
+  if (players.length === 1) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+
   // Game Stats Button
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
@@ -634,18 +643,16 @@ function endGame() {
       // Rotate players: first player goes to the end
       players.push(players.shift());
 
-      // Reset scores
+      // Reset scores and state
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
-
-      // Reset game state
       currentHole = 1;
       currentPlayerIndex = 0;
       suddenDeath = false;
       tiedPlayers = [];
       gameStarted = true;
 
-      // Clear end-of-game buttons
+      // Clear previous buttons and winner text
       scoreInputs.innerHTML = "";
 
       saveGameState();
@@ -657,15 +664,6 @@ function endGame() {
     }
   };
   scoreInputs.appendChild(startNewBtn);
-
-  // Declare winner if only one player left
-  if (players.length === 1) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
-  }
 
   document.body.removeAttribute("id");
 }
