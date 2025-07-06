@@ -612,22 +612,20 @@ function endGame() {
     return;
   }
 
-  // Save winner before restoring full player list (for sudden death)
+  // Save winner before restoring full player list
   let winner = null;
   if (players.length === 1) {
     winner = players[0];
   }
 
-  // Restore all players if sudden death had filtered them
-  if (suddenDeath) {
-    players = allPlayers;
-  }
+  // ✅ Always restore all players (not just after sudden death)
+  players = allPlayers;
 
   updateLeaderboard();
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  // Declare winner if only one player was remaining
+  // Declare winner
   if (winner) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
@@ -650,8 +648,8 @@ function endGame() {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
-      // Rotate players: first player goes to the end
-      players.push(players.shift());
+      // ✅ Rotate players: move LAST player to the FRONT
+      players.unshift(players.pop());
 
       // Reset scores and state
       players.forEach(p => p.scores = []);
@@ -662,7 +660,7 @@ function endGame() {
       tiedPlayers = [];
       gameStarted = true;
 
-      // Clear previous buttons and winner text
+      // Clear UI
       scoreInputs.innerHTML = "";
 
       saveGameState();
@@ -677,6 +675,7 @@ function endGame() {
 
   document.body.removeAttribute("id");
 }
+
 
 
 
