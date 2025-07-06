@@ -639,23 +639,35 @@ function endGame() {
   scoreInputs.appendChild(statsBtn);
 
   // Start New Round Button
-  const startNewBtn = document.createElement("button");
-  startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
-    if (confirm("Start new round with same players?")) {
-      players.forEach(p => p.scores = []);
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      gameStarted = true;
-      saveGameState();
-      showHole();
-      updateLeaderboard();
-      updateScorecard();
-    } else {
-      location.reload();
-    }
-  };
+  if (confirm("Start new round with same players?")) {
+    // Rotate players (first player goes to the end)
+    players.push(players.shift());
+
+    // Reset scores
+    players.forEach(p => p.scores = []);
+    allPlayers = JSON.parse(JSON.stringify(players));  // Sync allPlayers
+
+    // Reset state
+    currentHole = 1;
+    currentPlayerIndex = 0;
+    suddenDeath = false;
+    tiedPlayers = [];
+    gameStarted = true;
+
+    // Clear scoreInputs section
+    const scoreInputs = document.getElementById("scoreInputs");
+    if (scoreInputs) scoreInputs.innerHTML = "";
+
+    saveGameState();
+    showHole();
+    updateLeaderboard();
+    updateScorecard();
+  } else {
+    location.reload();
+  }
+};
+
   scoreInputs.appendChild(startNewBtn);
 
   // Leaderboard Button
