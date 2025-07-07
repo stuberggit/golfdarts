@@ -677,7 +677,11 @@ function endGame() {
 
   // ✅ Ensure leaderboard remains visible
   const leaderboard = document.getElementById("leaderboard");
-  if (leaderboard) leaderboard.style.display = "block";
+if (leaderboard) {
+  leaderboard.classList.remove("hidden");
+  leaderboard.style.display = "block";
+}
+
 
   document.body.removeAttribute("id");
 }
