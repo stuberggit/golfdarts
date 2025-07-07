@@ -629,6 +629,23 @@ function endGame() {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
+  // Save this game's results to local history
+const previousHistory = JSON.parse(localStorage.getItem("golfdartsHistory")) || [];
+
+const gameSummary = {
+  date: new Date().toISOString(),
+  players: allPlayers.map(p => ({
+    name: p.name,
+    scores: [...p.scores],
+    total: p.scores.reduce((sum, s) => sum + s, 0),
+  })),
+  suddenDeath: suddenDeath,
+  advancedMode: advancedMode
+};
+
+previousHistory.push(gameSummary);
+localStorage.setItem("golfdartsHistory", JSON.stringify(previousHistory));
+
   // Declare winner
   if (winner) {
     const winText = document.createElement("h2");
@@ -645,6 +662,13 @@ function endGame() {
   statsBtn.style.borderColor = "#ffcc00";
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
+
+  const historyBtn = document.createElement("button");
+historyBtn.innerText = "View History";
+historyBtn.className = "primary-button full-width";
+historyBtn.onclick = () => showHistory();
+scoreInputs.appendChild(historyBtn);
+
 
   // Start New Round Button
   const startNewBtn = document.createElement("button");
@@ -682,12 +706,40 @@ if (leaderboard) {
   leaderboard.style.display = "block";
 }
 
-
   document.body.removeAttribute("id");
 }
 
+function showHistory() {
+  const container = document.getElementById("historyDetails");
+  container.innerHTML = "";
 
+  const history = JSON.parse(localStorage.getItem("golfdartsHistory")) || [];
 
+  if (history.length === 0) {
+    container.innerHTML = "<p>No past games saved.</p>";
+    showModal("historyModal");
+    return;
+  }
+
+  history.reverse().forEach((game, index) => {
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+    const header = document.createElement("h3");
+    header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
+    container.appendChild(header);
+
+    const list = document.createElement("ul");
+    game.players.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+      list.appendChild(li);
+    });
+    container.appendChild(list);
+  });
+
+  showModal("historyModal");
+}
 
 
 function showStats() {
