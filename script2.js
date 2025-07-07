@@ -12,6 +12,11 @@ let hazardHoles = [];
 
 console.log("script2.js loaded");
 
+// Identify environment and set storage key
+const isPreProd = location.pathname.includes("index2.html") || location.pathname.includes("script2.js");
+const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
