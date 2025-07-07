@@ -721,10 +721,13 @@ function showHistory() {
     return;
   }
 
-  history.reverse().forEach((game, index) => {
+  const latestGames = history.slice(-10).reverse(); // Get last 10 games, newest first
+
+  latestGames.forEach((game, index) => {
     const date = new Date(game.date).toLocaleString();
     const mode = game.advancedMode ? "Advanced" : "Standard";
     const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
     const header = document.createElement("h3");
     header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
     container.appendChild(header);
@@ -736,11 +739,22 @@ function showHistory() {
       list.appendChild(li);
     });
     container.appendChild(list);
+
+    container.appendChild(document.createElement("hr")); // visual divider
   });
+
+  // Add "More Rounds" link if history has more than 10
+  if (history.length > 10) {
+    const moreLink = document.createElement("a");
+    moreLink.href = "history.html";
+    moreLink.textContent = "➡️ View More Rounds";
+    moreLink.style.display = "block";
+    moreLink.style.marginTop = "10px";
+    container.appendChild(moreLink);
+  }
 
   showModal("historyModal");
 }
-
 
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
