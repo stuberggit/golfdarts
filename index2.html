@@ -16,14 +16,15 @@
   </div>
 
   <div class="hamburger-menu hidden" id="hamburgerMenu">
-    <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
-    <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
-    <button onclick="showHistory()">📚 View History</button>
-    <label><input type="checkbox" id="audioToggle" checked> Audio</label>
-    <label><input type="checkbox" id="randomToggle"> Random</label>
-    <label><input type="checkbox" id="advancedToggle"> Advanced</label>
-    <button onclick="localStorage.removeItem('golfdartsHistory'); alert('History cleared!')">Clear History</button>
-  </div>
+  <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+  <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="#" onclick="showHistory()">📚 View History</a>
+  <label><input type="checkbox" id="audioToggle" checked> Audio</label>
+  <label><input type="checkbox" id="randomToggle"> Random</label>
+  <label><input type="checkbox" id="advancedToggle"> Advanced</label>
+  <button onclick="localStorage.removeItem('golfdartsHistory'); alert('History cleared!')">Clear History</button>
+</div>
+
 
   <!-- Setup Screen -->
   <div id="setup">
