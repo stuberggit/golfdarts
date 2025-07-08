@@ -761,6 +761,12 @@ function showHistory() {
   showModal("historyModal");
 }
 
+function clearHistory() {
+  localStorage.removeItem(historyKey);
+  alert("History cleared!");
+}
+
+
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
   if (!modal) return;
