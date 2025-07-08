@@ -3,27 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GolfDarts History</title>
-  <link rel="stylesheet" href="style2.css">
+  <title>GolfDarts</title>
+  <link rel="stylesheet" href="style2.css" />
 </head>
-<body class="history-page">
-  <h1>📚 GolfDarts Game History</h1>
+<body>
+  <header>
+    <div class="title-bar">
+      <button class="hamburger" onclick="toggleMenu()">☰</button>
+      <h1>🏌️‍♂️ GolfDarts ⛳</h1>
+    </div>
+    <div class="hamburger-menu hidden" id="hamburgerMenu">
+      <a href="index2.html">🏠 Home</a>
+      <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+      <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+      <a href="history.html">📚 View History</a>
+      <label><input type="checkbox" id="audioToggle" checked> Audio</label>
+      <label><input type="checkbox" id="randomToggle"> Random</label>
+      <label><input type="checkbox" id="advancedToggle"> Advanced</label>
+      <button onclick="localStorage.removeItem(historyKey); alert('History cleared!')">Clear History</button>
+    </div>
+  </header>
 
-  <label for="playerFilter">Filter by player:</label>
-  <select id="playerFilter" onchange="renderHistory()">
-    <option value="">-- All Players --</option>
-  </select>
+  <main style="padding: 20px;">
+    <h2 style="text-align: center; font-weight: bold;">Game History</h2>
 
-  <div id="historyContainer"></div>
+    <label for="playerFilter" style="display: block; margin: 10px auto; text-align: center;">
+      Filter by player:
+    </label>
+    <select id="playerFilter" onchange="renderHistory()" style="display: block; margin: 0 auto 20px; padding: 6px 10px; font-size: 16px;"></select>
+
+    <div id="historyContainer"></div>
+  </main>
+
+  <div class="modal hidden" id="rulesModal">
+    <div class="modal-content">
+      <h2>Rules</h2>
+      <p>Coming soon...</p>
+      <button onclick="closeModal('rulesModal')">Close</button>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="scoringModal">
+    <div class="modal-content">
+      <h2>Scoring</h2>
+      <p>Coming soon...</p>
+      <button onclick="closeModal('scoringModal')">Close</button>
+    </div>
+  </div>
 
   <script>
-    const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2");
+    const isPreProd = location.pathname.includes("2");
     const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
     const history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-    const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
-    const filterSelect = document.getElementById("playerFilter");
+    function toggleMenu() {
+      document.getElementById("hamburgerMenu").classList.toggle("hidden");
+    }
 
+    function showModal(id) {
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+
+    const filterSelect = document.getElementById("playerFilter");
+    const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+    filterSelect.innerHTML = '<option value="">-- All Players --</option>';
     uniquePlayers.sort().forEach(name => {
       const option = document.createElement("option");
       option.value = name;
@@ -34,38 +81,36 @@
     function renderHistory() {
       const container = document.getElementById("historyContainer");
       container.innerHTML = "";
-      const selectedPlayer = filterSelect.value;
+      const selectedPlayer = document.getElementById("playerFilter").value;
 
       const filtered = history.slice().reverse().filter(game => {
         return !selectedPlayer || game.players.some(p => p.name === selectedPlayer);
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = "<p>No games match this filter.</p>";
+        container.innerHTML = "<p style='text-align:center;'>No games match this filter.</p>";
         return;
       }
 
       filtered.forEach((game, index) => {
-        const block = document.createElement("div");
-        block.className = "game-block";
-
+        const div = document.createElement("div");
+        div.className = "game-block";
         const date = new Date(game.date).toLocaleString();
         const mode = game.advancedMode ? "Advanced" : "Standard";
         const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+        div.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
 
-        block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
-
-        const list = document.createElement("ul");
+        const ul = document.createElement("ul");
         game.players.forEach(p => {
           if (!selectedPlayer || p.name === selectedPlayer) {
             const li = document.createElement("li");
             li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-            list.appendChild(li);
+            ul.appendChild(li);
           }
         });
 
-        block.appendChild(list);
-        container.appendChild(block);
+        div.appendChild(ul);
+        container.appendChild(div);
       });
     }
 
