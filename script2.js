@@ -635,7 +635,7 @@ function endGame() {
   localStorage.removeItem("golfdartsState");
 
   // Save this game's results to local history
-const previousHistory = JSON.parse(localStorage.getItem(historykey)) || [];
+const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
 const gameSummary = {
   date: new Date().toISOString(),
@@ -649,7 +649,7 @@ const gameSummary = {
 };
 
 previousHistory.push(gameSummary);
-localStorage.setItem(historykey, JSON.stringify(previousHistory));
+localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
   // Declare winner
   if (winner) {
@@ -718,7 +718,7 @@ function showHistory() {
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
-  const history = JSON.parse(localStorage.getItem(historykey)) || [];
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
   if (history.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
