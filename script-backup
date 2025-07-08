@@ -12,6 +12,11 @@ let hazardHoles = [];
 
 console.log("script2.js loaded");
 
+// Identify environment and set storage key
+const isPreProd = location.pathname.includes("index2.html") || location.pathname.includes("script2.js");
+const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
@@ -606,25 +611,50 @@ function loadGameState() {
 function endGame() {
   gameStarted = false;
 
-  // ✅ Only restore allPlayers if still tied (players.length > 1)
-  if (suddenDeath && players.length > 1) {
-    players = allPlayers;
-  }
-
-  updateLeaderboard();
-  updateScorecard();
-  localStorage.removeItem("golfdartsState");
-
   const scoreInputs = document.getElementById("scoreInputs");
   if (!scoreInputs) {
     console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
     return;
   }
 
-  // Declare winner if only one player left
+  // ✅ Clone full player list before any filtering
+  const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
+
+  // Save winner if applicable
+  let winner = null;
   if (players.length === 1) {
+    winner = players[0];
+  }
+
+  // ✅ Restore full player list
+  players = fullPlayerList;
+  allPlayers = fullPlayerList;
+
+  updateLeaderboard();
+  updateScorecard();
+  localStorage.removeItem("golfdartsState");
+
+  // Save this game's results to local history
+const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+const gameSummary = {
+  date: new Date().toISOString(),
+  players: allPlayers.map(p => ({
+    name: p.name,
+    scores: [...p.scores],
+    total: p.scores.reduce((sum, s) => sum + s, 0),
+  })),
+  suddenDeath: suddenDeath,
+  advancedMode: advancedMode
+};
+
+previousHistory.push(gameSummary);
+localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
+  // Declare winner
+  if (winner) {
     const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
+    winText.textContent = `${winner.name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
@@ -638,16 +668,32 @@ function endGame() {
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
+  const historyBtn = document.createElement("button");
+historyBtn.innerText = "View History";
+historyBtn.className = "primary-button full-width";
+historyBtn.onclick = () => showHistory();
+scoreInputs.appendChild(historyBtn);
+
+
   // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
+      // Rotate players: move LAST to FRONT
+      players.unshift(players.pop());
+
       players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
       currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
       gameStarted = true;
+
+      scoreInputs.innerHTML = "";
+
       saveGameState();
       showHole();
       updateLeaderboard();
@@ -658,15 +704,66 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
-  // Leaderboard Button
-const lbBtn = document.createElement("button");
-lbBtn.innerText = "Show Leaderboard";
-lbBtn.className = "primary-button full-width";
-lbBtn.onclick = () => toggleLeaderboard(true);
-scoreInputs.appendChild(lbBtn);
-
+  // ✅ Ensure leaderboard remains visible
+  const leaderboard = document.getElementById("leaderboard");
+if (leaderboard) {
+  leaderboard.classList.remove("hidden");
+  leaderboard.style.display = "block";
+}
 
   document.body.removeAttribute("id");
+}
+
+function showHistory() {
+  const container = document.getElementById("historyDetails");
+  container.innerHTML = "";
+
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+  if (history.length === 0) {
+    container.innerHTML = "<p>No past games saved.</p>";
+    showModal("historyModal");
+    return;
+  }
+
+  const latestGames = history.slice(-10).reverse(); // Get last 10 games, newest first
+
+  latestGames.forEach((game, index) => {
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+    const header = document.createElement("h3");
+    header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
+    container.appendChild(header);
+
+    const list = document.createElement("ul");
+    game.players.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+      list.appendChild(li);
+    });
+    container.appendChild(list);
+
+    container.appendChild(document.createElement("hr")); // visual divider
+  });
+
+  // Add "More Rounds" link if history has more than 10
+  if (history.length > 10) {
+    const moreLink = document.createElement("a");
+    moreLink.href = "history.html";
+    moreLink.textContent = "➡️ View More Rounds";
+    moreLink.style.display = "block";
+    moreLink.style.marginTop = "10px";
+    container.appendChild(moreLink);
+  }
+
+  showModal("historyModal");
+}
+
+function clearHistory() {
+  localStorage.removeItem(historyKey);
+  alert("History cleared!");
 }
 
 
