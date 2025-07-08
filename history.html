@@ -5,59 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GolfDarts</title>
   <link rel="stylesheet" href="style2.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <div class="title-bar">
-      <button class="hamburger" onclick="toggleMenu()">☰</button>
-      <h1>🏌️‍♂️ GolfDarts ⛳</h1>
-    </div>
-    <div class="hamburger-menu hidden" id="hamburgerMenu">
-      <a href="index2.html">🏠 Home</a>
-      <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
-      <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
-      <a href="history.html">📚 View History</a>
-      <label><input type="checkbox" id="audioToggle" checked> Audio</label>
-      <label><input type="checkbox" id="randomToggle"> Random</label>
-      <label><input type="checkbox" id="advancedToggle"> Advanced</label>
-      <button onclick="localStorage.removeItem(historyKey); alert('History cleared!')">Clear History</button>
-    </div>
-  </header>
+  <!-- Header and Hamburger -->
+  <div class="header-bar">
+    <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+    <div class="hamburger" id="hamburgerIcon">☰</div>
+  </div>
 
-  <main style="padding: 20px;">
-    <h2 style="text-align: center; font-weight: bold;">Game History</h2>
+  <div class="hamburger-menu hidden" id="hamburgerMenu">
+    <a href="index2.html">🏠 Home</a>
+    <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+    <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+    <a href="#" onclick="showHistory()">📚 View History</a>
+  </div>
 
-    <label for="playerFilter" style="display: block; margin: 10px auto; text-align: center;">
-      Filter by player:
-    </label>
-    <select id="playerFilter" onchange="renderHistory()" style="display: block; margin: 0 auto 20px; padding: 6px 10px; font-size: 16px;"></select>
+  <!-- Title -->
+  <h2 class="section-title">Game History</h2>
 
-    <div id="historyContainer"></div>
-  </main>
+  <!-- Filter -->
+  <label for="playerFilter" class="dropdown-label">Filter by player:</label>
+  <select id="playerFilter" onchange="renderHistory()" class="large-select">
+    <option value="">-- All Players --</option>
+  </select>
 
-  <div class="modal hidden" id="rulesModal">
+  <div id="historyContainer" class="history-wrapper"></div>
+
+  <!-- Optional Modals -->
+  <div id="rulesModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2>Rules</h2>
-      <p>Coming soon...</p>
+      <h2>📜 Rules</h2>
+      <p>Darts, played like golf... (same rules as main site)</p>
       <button onclick="closeModal('rulesModal')">Close</button>
     </div>
   </div>
 
-  <div class="modal hidden" id="scoringModal">
+  <div id="scoringModal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2>Scoring</h2>
-      <p>Coming soon...</p>
+      <h2>📊 Scoring</h2>
+      <p>(same scoring rules as main site)</p>
       <button onclick="closeModal('scoringModal')">Close</button>
     </div>
   </div>
 
+  <!-- Scripts -->
   <script>
-    const isPreProd = location.pathname.includes("2");
+    const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2") || location.href.includes("preprod");
     const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
     const history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-    function toggleMenu() {
-      document.getElementById("hamburgerMenu").classList.toggle("hidden");
+    function populateDropdown() {
+      const filterSelect = document.getElementById("playerFilter");
+      const names = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+      names.sort().forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        filterSelect.appendChild(opt);
+      });
+    }
+
+    function renderHistory() {
+      const container = document.getElementById("historyContainer");
+      const selectedPlayer = document.getElementById("playerFilter").value;
+      container.innerHTML = "";
+
+      const filtered = history.slice().reverse().filter(game => {
+        return !selectedPlayer || game.players.some(p => p.name === selectedPlayer);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No games match this filter.</p>";
+        return;
+      }
+
+      filtered.forEach((game, index) => {
+        const div = document.createElement("div");
+        div.className = "history-block";
+
+        const date = new Date(game.date).toLocaleString();
+        const mode = game.advancedMode ? "Advanced" : "Standard";
+        const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+        div.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+
+        const list = document.createElement("ul");
+        game.players.forEach(p => {
+          if (!selectedPlayer || p.name === selectedPlayer) {
+            const li = document.createElement("li");
+            li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+            list.appendChild(li);
+          }
+        });
+
+        div.appendChild(list);
+        container.appendChild(div);
+      });
     }
 
     function showModal(id) {
@@ -68,52 +113,22 @@
       document.getElementById(id).classList.add("hidden");
     }
 
-    const filterSelect = document.getElementById("playerFilter");
-    const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
-    filterSelect.innerHTML = '<option value="">-- All Players --</option>';
-    uniquePlayers.sort().forEach(name => {
-      const option = document.createElement("option");
-      option.value = name;
-      option.textContent = name;
-      filterSelect.appendChild(option);
+    // Hamburger logic
+    const hamburgerIcon = document.getElementById("hamburgerIcon");
+    const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+    hamburgerIcon.addEventListener("click", () => {
+      hamburgerMenu.classList.toggle("hidden");
     });
 
-    function renderHistory() {
-      const container = document.getElementById("historyContainer");
-      container.innerHTML = "";
-      const selectedPlayer = document.getElementById("playerFilter").value;
-
-      const filtered = history.slice().reverse().filter(game => {
-        return !selectedPlayer || game.players.some(p => p.name === selectedPlayer);
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = "<p style='text-align:center;'>No games match this filter.</p>";
-        return;
+    window.addEventListener("click", (e) => {
+      if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+        hamburgerMenu.classList.add("hidden");
       }
+    });
 
-      filtered.forEach((game, index) => {
-        const div = document.createElement("div");
-        div.className = "game-block";
-        const date = new Date(game.date).toLocaleString();
-        const mode = game.advancedMode ? "Advanced" : "Standard";
-        const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-        div.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
-
-        const ul = document.createElement("ul");
-        game.players.forEach(p => {
-          if (!selectedPlayer || p.name === selectedPlayer) {
-            const li = document.createElement("li");
-            li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-            ul.appendChild(li);
-          }
-        });
-
-        div.appendChild(ul);
-        container.appendChild(div);
-      });
-    }
-
+    // Initialize
+    populateDropdown();
     renderHistory();
   </script>
 </body>
