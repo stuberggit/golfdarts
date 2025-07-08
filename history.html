@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GolfDarts History</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+    }
+    select {
+      display: block;
+      margin: 0 auto 20px;
+      padding: 5px 10px;
+      font-size: 16px;
+    }
+    .game-block {
+      background: white;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .game-block h3 {
+      margin-top: 0;
+    }
+    .game-block ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    .game-block li {
+      padding: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 GolfDarts Game History</h1>
+  <label for="playerFilter">Filter by player:</label>
+  <select id="playerFilter" onchange="renderHistory()">
+    <option value="">-- All Players --</option>
+  </select>
+
+  <div id="historyContainer"></div>
+
+  <script>
+    const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2");
+    const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
+    const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+    const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+
+    const filterSelect = document.getElementById("playerFilter");
+    uniquePlayers.sort().forEach(name => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      filterSelect.appendChild(option);
+    });
+
+    function renderHistory() {
+      const container = document.getElementById("historyContainer");
+      container.innerHTML = "";
+      const selectedPlayer = document.getElementById("playerFilter").value;
+
+      const filtered = history.slice().reverse().filter(game => {
+        return !selectedPlayer || game.players.some(p => p.name === selectedPlayer);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = "<p>No games match this filter.</p>";
+        return;
+      }
+
+      filtered.forEach((game, index) => {
+        const block = document.createElement("div");
+        block.className = "game-block";
+
+        const date = new Date(game.date).toLocaleString();
+        const mode = game.advancedMode ? "Advanced" : "Standard";
+        const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+        block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+
+        const list = document.createElement("ul");
+        game.players.forEach(p => {
+          if (!selectedPlayer || p.name === selectedPlayer) {
+            const li = document.createElement("li");
+            li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+            list.appendChild(li);
+          }
+        });
+
+        block.appendChild(list);
+        container.appendChild(block);
+      });
+    }
+
+    renderHistory();
+  </script>
+</body>
+</html>
 
