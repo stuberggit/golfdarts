@@ -878,7 +878,6 @@ if (document.getElementById("hazardPenalty")?.checked) {
 }
 
 // Identify which storage to use
-const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2") || location.href.includes("preprod");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
 // History Page Setup
