@@ -883,44 +883,35 @@ if (document.getElementById("hazardPenalty")?.checked) {
 
 // History Page Setup
 function initHistoryPage() {
-  const filterSelect = document.getElementById("playerFilter");
-  const container = document.getElementById("historyContainer");
-  if (!filterSelect || !container) {
-    console.warn("Not on history.html or missing elements");
-    return;
-  }
+  // Only run on history.html
+  filterSelect = document.getElementById("playerFilter");
+  container = document.getElementById("historyContainer");
 
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
-  console.log("Loaded history:", history);
+  if (!filterSelect || !container) return;
 
-  const playerNames = [...new Set(history.flatMap(game => {
-    if (!game.players) return [];
-    return game.players.map(p => p.name);
-  }))];
+  const isPreProd = location.href.includes("index2") || location.href.includes("script2");
+  const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
-  if (playerNames.length === 0) {
-    console.warn("No player names found in history data");
-  }
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  playerNames.sort().forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    filterSelect.appendChild(opt);
+  // 🔍 Populate dropdown
+  const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+  filterSelect.innerHTML = '<option value="">-- All Players --</option>'; // Reset first
+
+  uniquePlayers.sort().forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    filterSelect.appendChild(option);
   });
 
   filterSelect.addEventListener("change", renderHistory);
   renderHistory();
 }
 
-
   function renderHistory() {
-  const container = document.getElementById("historyContainer");
-  const filterSelect = document.getElementById("playerFilter");
-  const selected = filterSelect.value;
-
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
   container.innerHTML = "";
+  const selected = filterSelect.value;
 
   const filtered = history.slice().reverse().filter(game =>
     !selected || game.players.some(p => p.name === selected)
@@ -955,16 +946,19 @@ function initHistoryPage() {
   });
 }
 
+
 // Run if on history.html
-document.addEventListener("DOMContentLoaded", initHistoryPage);
-
-
 // ========== EVENT LISTENERS ==========
 
+// History Page Logic (only runs on history.html)
+document.addEventListener("DOMContentLoaded", initHistoryPage);
+
+// Main Game Page Logic (only runs if #playerCount exists)
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
-  if (!select) return; // Only run this block on the main game page
+  if (!select) return; // Abort if not on main game page
 
+  // Populate player count dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -972,45 +966,32 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
-  document.getElementById("audioToggle").addEventListener("change", (e) => {
+  // Toggle settings
+  document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
 
-  document.getElementById("randomToggle").addEventListener("change", (e) => {
+  document.getElementById("randomToggle")?.addEventListener("change", (e) => {
     randomizedMode = e.target.checked;
   });
 
-  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+  document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
   });
 
+  // Watch for player count change
   select.addEventListener("change", createPlayerInputs);
+
+  // Load saved game state (after assets load)
+  requestAnimationFrame(loadGameState);
 });
 
-
-// Add unload protection if a saved game is in progress
-window.addEventListener("beforeunload", function (e) {
+// Unload protection (prevent accidental page exit if game is in progress)
+window.addEventListener("beforeunload", (e) => {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
     e.preventDefault();
-    e.returnValue = ""; // Required for most browsers to show warning
-  }
-});
-
-// Load saved game state on full window load (after assets)
-window.addEventListener("DOMContentLoaded", () => {
-  requestAnimationFrame(() => {
-    loadGameState();
-  });
-});
-
-
-
-window.addEventListener("beforeunload", function (e) {
-  const saved = localStorage.getItem("golfdartsState");
-  if (saved) {
-    e.preventDefault();
-    e.returnValue = "";
+    e.returnValue = ""; // Required for confirmation dialog in most browsers
   }
 });
 
