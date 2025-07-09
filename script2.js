@@ -915,40 +915,45 @@ function initHistoryPage() {
 
 
   function renderHistory() {
-    const container = document.getElementById("historyContainer");
-    const selected = filterSelect.value;
-    const filtered = history.slice().reverse().filter(g =>
-      !selected || g.players.some(p => p.name === selected)
-    );
+  const container = document.getElementById("historyContainer");
+  const filterSelect = document.getElementById("playerFilter");
+  const selected = filterSelect.value;
 
-    if (filtered.length === 0) {
-      container.innerHTML = "<p>No games match this filter.</p>";
-      return;
-    }
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  container.innerHTML = "";
 
-    filtered.forEach((game, index) => {
-      const block = document.createElement("div");
-      block.className = "history-block";
+  const filtered = history.slice().reverse().filter(game =>
+    !selected || game.players.some(p => p.name === selected)
+  );
 
-      const date = new Date(game.date).toLocaleString();
-      const mode = game.advancedMode ? "Advanced" : "Standard";
-      const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
-      block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
-
-      const ul = document.createElement("ul");
-      game.players.forEach(p => {
-        if (!selected || p.name === selected) {
-          const li = document.createElement("li");
-          li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-          ul.appendChild(li);
-        }
-      });
-
-      block.appendChild(ul);
-      container.appendChild(block);
-    });
+  if (filtered.length === 0) {
+    container.innerHTML = "<p>No games match this filter.</p>";
+    return;
   }
+
+  filtered.forEach((game, index) => {
+    const block = document.createElement("div");
+    block.className = "history-block";
+
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+    block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+
+    const ul = document.createElement("ul");
+    game.players.forEach(p => {
+      if (!selected || p.name === selected) {
+        const li = document.createElement("li");
+        li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+        ul.appendChild(li);
+      }
+    });
+
+    block.appendChild(ul);
+    container.appendChild(block);
+  });
+}
 
 // Run if on history.html
 document.addEventListener("DOMContentLoaded", initHistoryPage);
