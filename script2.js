@@ -9,6 +9,9 @@ let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
+let history = [];
+let filterSelect;
+let container;
 
 console.log("script2.js loaded");
 
@@ -881,9 +884,9 @@ if (document.getElementById("hazardPenalty")?.checked) {
 function initHistoryPage() {
   if (!document.getElementById("historyContainer")) return;
 
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
-  const filterSelect = document.getElementById("playerFilter");
-  const container = document.getElementById("historyContainer");
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  filterSelect = document.getElementById("playerFilter");
+  container = document.getElementById("historyContainer");
 
   const uniquePlayers = [...new Set(history.flatMap(g => g.players.map(p => p.name)))];
   uniquePlayers.sort().forEach(name => {
