@@ -898,6 +898,7 @@ function initHistoryPage() {
 
   filterSelect.addEventListener("change", renderHistory);
   renderHistory();
+}
 
   function renderHistory() {
     container.innerHTML = "";
