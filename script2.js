@@ -1,3 +1,4 @@
+// Global state
 let players = [];
 let allPlayers = [];
 let currentHole = 1;
@@ -13,13 +14,12 @@ let history = [];
 let filterSelect;
 let container;
 
-console.log("script2.js loaded");
-console.log("Parsed History:", history);
-
-// Identify environment and set storage key
-const isPreProd = location.pathname.includes("index2.html") || location.pathname.includes("script2.js");
+// Determine environment once
+const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
+console.log("script2.js loaded");
+console.log("Parsed History:", history);
 
 // ========== GAME SETUP ==========
 
@@ -888,9 +888,6 @@ function initHistoryPage() {
   container = document.getElementById("historyContainer");
 
   if (!filterSelect || !container) return;
-
-  const isPreProd = location.href.includes("index2") || location.href.includes("script2");
-  const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
   history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
