@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GolfDarts</title>
   <link rel="stylesheet" href="style2.css" />
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
 
   <!-- Filter -->
   <label for="playerFilter" class="dropdown-label">Filter by player:</label>
-  <select id="playerFilter" onchange="renderHistory()" class="large-select">
+  <select id="playerFilter" class="large-select">
     <option value="">-- All Players --</option>
   </select>
 
@@ -49,88 +49,6 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script>
-    const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2") || location.href.includes("preprod");
-    const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
-
-    const history = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-    function populateDropdown() {
-      const filterSelect = document.getElementById("playerFilter");
-      const names = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
-      names.sort().forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        filterSelect.appendChild(opt);
-      });
-    }
-
-    function renderHistory() {
-      const container = document.getElementById("historyContainer");
-      const selectedPlayer = document.getElementById("playerFilter").value;
-      container.innerHTML = "";
-
-      const filtered = history.slice().reverse().filter(game => {
-        return !selectedPlayer || game.players.some(p => p.name === selectedPlayer);
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = "<p>No games match this filter.</p>";
-        return;
-      }
-
-      filtered.forEach((game, index) => {
-        const div = document.createElement("div");
-        div.className = "history-block";
-
-        const date = new Date(game.date).toLocaleString();
-        const mode = game.advancedMode ? "Advanced" : "Standard";
-        const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
-        div.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
-
-        const list = document.createElement("ul");
-        game.players.forEach(p => {
-          if (!selectedPlayer || p.name === selectedPlayer) {
-            const li = document.createElement("li");
-            li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-            list.appendChild(li);
-          }
-        });
-
-        div.appendChild(list);
-        container.appendChild(div);
-      });
-    }
-
-    function showModal(id) {
-      document.getElementById(id).classList.remove("hidden");
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add("hidden");
-    }
-
-    // Hamburger logic
-    const hamburgerIcon = document.getElementById("hamburgerIcon");
-    const hamburgerMenu = document.getElementById("hamburgerMenu");
-
-    hamburgerIcon.addEventListener("click", () => {
-      hamburgerMenu.classList.toggle("hidden");
-    });
-
-    window.addEventListener("click", (e) => {
-      if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
-        hamburgerMenu.classList.add("hidden");
-      }
-    });
-
-    // Initialize
-    populateDropdown();
-    renderHistory();
-  </script>
   <!-- Make sure this is last -->
   <script src="script2.js"></script>
 </body>
