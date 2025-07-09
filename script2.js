@@ -10,6 +10,8 @@ let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
+let isPreProd;
+let historyKey;
 let history = [];
 let filterSelect;
 let container;
