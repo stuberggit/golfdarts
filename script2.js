@@ -932,7 +932,6 @@ function initHistoryPage() {
       container.appendChild(block);
     });
   }
-}
 
 // Run if on history.html
 document.addEventListener("DOMContentLoaded", initHistoryPage);
