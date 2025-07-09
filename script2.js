@@ -894,7 +894,7 @@ function initHistoryPage() {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
-    filterSelect.appendChild(opt);
+    filterSelect.appendChild(option);
   });
 
   filterSelect.addEventListener("change", renderHistory);
@@ -945,16 +945,15 @@ document.addEventListener("DOMContentLoaded", initHistoryPage);
 
 window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
+  if (!select) return; // Only run this block on the main game page
 
-  // Populate the dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    filterSelect.appendChild(opt);
+    select.appendChild(option);
   }
 
-  // Add checkbox toggle listeners (check IDs match your HTML)
   document.getElementById("audioToggle").addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
@@ -967,9 +966,9 @@ window.addEventListener("DOMContentLoaded", () => {
     advancedMode = e.target.checked;
   });
 
-  // Trigger name inputs when player count is selected
   select.addEventListener("change", createPlayerInputs);
 });
+
 
 // Add unload protection if a saved game is in progress
 window.addEventListener("beforeunload", function (e) {
