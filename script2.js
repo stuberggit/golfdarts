@@ -877,6 +877,70 @@ if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
 
+// Identify which storage to use
+const isPreProd = location.pathname.includes("index2") || location.pathname.includes("script2") || location.href.includes("preprod");
+const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
+// History Page Setup
+function initHistoryPage() {
+  if (!document.getElementById("historyContainer")) return;
+
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const filterSelect = document.getElementById("playerFilter");
+  const container = document.getElementById("historyContainer");
+
+  const uniquePlayers = [...new Set(history.flatMap(g => g.players.map(p => p.name)))];
+  uniquePlayers.sort().forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    filterSelect.appendChild(opt);
+  });
+
+  filterSelect.addEventListener("change", renderHistory);
+  renderHistory();
+
+  function renderHistory() {
+    container.innerHTML = "";
+    const selected = filterSelect.value;
+    const filtered = history.slice().reverse().filter(g =>
+      !selected || g.players.some(p => p.name === selected)
+    );
+
+    if (filtered.length === 0) {
+      container.innerHTML = "<p>No games match this filter.</p>";
+      return;
+    }
+
+    filtered.forEach((game, index) => {
+      const block = document.createElement("div");
+      block.className = "history-block";
+
+      const date = new Date(game.date).toLocaleString();
+      const mode = game.advancedMode ? "Advanced" : "Standard";
+      const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+      block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+
+      const ul = document.createElement("ul");
+      game.players.forEach(p => {
+        if (!selected || p.name === selected) {
+          const li = document.createElement("li");
+          li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+          ul.appendChild(li);
+        }
+      });
+
+      block.appendChild(ul);
+      container.appendChild(block);
+    });
+  }
+}
+
+// Run if on history.html
+document.addEventListener("DOMContentLoaded", initHistoryPage);
+
+
 // ========== EVENT LISTENERS ==========
 
 window.addEventListener("DOMContentLoaded", () => {
