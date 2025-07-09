@@ -882,11 +882,12 @@ if (document.getElementById("hazardPenalty")?.checked) {
 
 // History Page Setup
 function initHistoryPage() {
-  if (!document.getElementById("historyContainer")) return;
-
-  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  // Only run on history.html
   filterSelect = document.getElementById("playerFilter");
   container = document.getElementById("historyContainer");
+  if (!filterSelect || !container) return;  // Abort if not on history page
+
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
   const uniquePlayers = [...new Set(history.flatMap(g => g.players.map(p => p.name)))];
   uniquePlayers.sort().forEach(name => {
