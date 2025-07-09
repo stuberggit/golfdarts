@@ -898,7 +898,7 @@ function initHistoryPage() {
 }
 
   function renderHistory() {
-    container.innerHTML = "";
+    const container = document.getElementById("historyContainer");
     const selected = filterSelect.value;
     const filtered = history.slice().reverse().filter(g =>
       !selected || g.players.some(p => p.name === selected)
