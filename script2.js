@@ -951,7 +951,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const option = document.createElement("option");
     option.value = i;
     option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
+    filterSelect.appendChild(opt);
   }
 
   // Add checkbox toggle listeners (check IDs match your HTML)
