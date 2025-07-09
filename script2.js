@@ -895,7 +895,7 @@ function initHistoryPage() {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
-    filterSelect.appendChild(option);
+    filterSelect.appendChild(opt);
   });
 
   filterSelect.addEventListener("change", renderHistory);
