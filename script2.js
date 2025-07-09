@@ -883,15 +883,26 @@ if (document.getElementById("hazardPenalty")?.checked) {
 
 // History Page Setup
 function initHistoryPage() {
-  // Only run on history.html
-  filterSelect = document.getElementById("playerFilter");
-  container = document.getElementById("historyContainer");
-  if (!filterSelect || !container) return;  // Abort if not on history page
+  const filterSelect = document.getElementById("playerFilter");
+  const container = document.getElementById("historyContainer");
+  if (!filterSelect || !container) {
+    console.warn("Not on history.html or missing elements");
+    return;
+  }
 
-  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  console.log("Loaded history:", history);
 
-  const uniquePlayers = [...new Set(history.flatMap(g => g.players.map(p => p.name)))];
-  uniquePlayers.sort().forEach(name => {
+  const playerNames = [...new Set(history.flatMap(game => {
+    if (!game.players) return [];
+    return game.players.map(p => p.name);
+  }))];
+
+  if (playerNames.length === 0) {
+    console.warn("No player names found in history data");
+  }
+
+  playerNames.sort().forEach(name => {
     const opt = document.createElement("option");
     opt.value = name;
     opt.textContent = name;
@@ -901,6 +912,7 @@ function initHistoryPage() {
   filterSelect.addEventListener("change", renderHistory);
   renderHistory();
 }
+
 
   function renderHistory() {
     const container = document.getElementById("historyContainer");
