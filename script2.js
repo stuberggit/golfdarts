@@ -877,9 +877,6 @@ if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
 
-// Identify which storage to use
-const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
-
 // History Page Setup
 function initHistoryPage() {
   if (!document.getElementById("historyContainer")) return;
