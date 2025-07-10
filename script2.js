@@ -23,6 +23,24 @@ console.log("script2.js loaded");
 console.log("script2.js loaded");
 console.log("Parsed History:", history);
 
+// ========== FIREBASE SETUP ==========
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDEeniEEJH0QO0CGd5uMM11HZ_IwL3VB_8",
+  authDomain: "golfdarts-b1427.firebaseapp.com",
+  projectId: "golfdarts-b1427",
+  storageBucket: "golfdarts-b1427.appspot.com",
+  messagingSenderId: "1034273954702",
+  appId: "1:1034273954702:web:c6046e312f4c0a2b7fe2df",
+  measurementId: "G-QVPLJ9YNEC"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
