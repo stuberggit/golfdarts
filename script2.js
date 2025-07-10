@@ -990,6 +990,12 @@ function renderHistory() {
   });
 }
 
+window.startGame = startGame;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.showHistory = showHistory;
+
+
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
   // History page init
