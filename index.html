@@ -8,21 +8,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
 </head>
 <body>
-  
-<!-- Hamburger Menu -->
-<div class="header-bar">
-  <h1>🏌️‍♂️ GolfDarts 🎯</h1>
-  <div class="hamburger" id="hamburgerIcon">☰</div>
-</div>
 
-<div class="hamburger-menu hidden" id="hamburgerMenu">
+  <!-- Header and Hamburger -->
+  <div class="header-bar">
+    <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+    <div class="hamburger" id="hamburgerIcon">☰</div>
+  </div>
+
+  <div class="hamburger-menu hidden" id="hamburgerMenu">
   <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
   <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="#" onclick="showHistory()">📚 View History</a>
   <label><input type="checkbox" id="audioToggle" checked> Audio</label>
   <label><input type="checkbox" id="randomToggle"> Random</label>
   <label><input type="checkbox" id="advancedToggle"> Advanced</label>
+  <button onclick="clearHistory()">Clear History</button>
 </div>
-  
+
+
+  <!-- Setup Screen -->
   <div id="setup">
     <div class="form-group">
       <label for="playerCount">Number of Players:</label>
@@ -30,23 +34,23 @@
         <option value="" disabled selected>Select Players</option>
       </select>
     </div>
-    
     <div id="nameInputs"></div>
     <button id="startBtn" class="primary-button" onclick="startGame()" style="display:none;">Start Game</button>
   </div>
 
+  <!-- Game Screen -->
   <div id="game" style="display:none;">
     <h2 id="holeHeader">Hole 1</h2>
     <div id="scoreInputs"></div>
-  
 
-  <div class="form-actions">
-  <button class="primary-button" onclick="submitPlayerScore()">Submit Score</button>
-  <button class="primary-button small-button" onclick="undoHole()" style="border-color: red;">Undo Last Hole</button>
-  <button class="button-leaderboard small-button" onclick="showModal('leaderboardModal')">Leaderboard</button>
-</div>
+    <div class="form-actions">
+      <button class="primary-button" onclick="submitPlayerScore()">Submit Score</button>
+      <button class="primary-button small-button" onclick="undoHole()" style="border-color: red;">Undo Last Hole</button>
+      <button class="button-leaderboard small-button" onclick="showModal('leaderboardModal')">Leaderboard</button>
+    </div>
 
     <div id="scoreAnimation"></div>
+
     <h3>Scorecard</h3>
     <div id="scorecardWrapper">
       <div id="scorecard"></div>
@@ -58,13 +62,13 @@
     <div class="modal-content">
       <h2>📜 Rules</h2>
       <p>
-        Darts, played like golf. <br><br>
+        Darts, played like golf.<br><br>
         Each player throws all 3 of their darts at the "hole" number, entering the total number of hits.<br><br>
         After all players have completed the hole, all players advance to the next hole.<br><br>
         Repeat this process until all players complete hole 18.<br><br>
         Every hole is scored as a par three.<br><br>
         The person with the lowest score wins the round.<br><br>
-        See the "scoring" summary for how scoring is calculated.<br><br>
+        See the "scoring" summary for how scoring is calculated.
       </p>
       <button onclick="closeModal('rulesModal')">Close</button>
     </div>
@@ -99,13 +103,22 @@
   </div>
 
   <div id="gameStatsModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📈 Game Stats</h2>
+      <div id="statsDetails"></div>
+      <button onclick="closeModal('gameStatsModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="historyModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <h2>📈 Game Stats</h2>
-    <div id="statsDetails"></div>
-    <button onclick="closeModal('gameStatsModal')">Close</button>
+    <h2>📚 Game History</h2>
+    <div id="historyDetails"></div>
+    <button onclick="closeModal('historyModal')">Close</button>
   </div>
 </div>
-  
+
+
   <script>
   const hamburgerIcon = document.getElementById("hamburgerIcon");
   const hamburgerMenu = document.getElementById("hamburgerMenu");
@@ -121,11 +134,8 @@
   });
 </script>
 
-
-
-  
-  <!-- Modal handling script -->
-<script src="script.js?v=4"></script>
+  <!-- Make sure this is last -->
+  <script src="script.js"></script>
 
 </body>
 </html>
