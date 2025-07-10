@@ -1007,6 +1007,7 @@ function renderHistory() {
 }
 
 
+
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
