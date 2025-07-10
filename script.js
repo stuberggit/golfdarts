@@ -684,7 +684,7 @@ scoreInputs.appendChild(historyBtn);
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
-    if (confirm("Start new round with same players?")) {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
       // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
 
