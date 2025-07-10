@@ -1,3 +1,4 @@
+// Global state
 let players = [];
 let allPlayers = [];
 let currentHole = 1;
@@ -8,7 +9,17 @@ let tiedPlayers = [];
 let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
+let hazardHoles = [];
 
+const isPreProd = location.href.includes("index2") || location.href.includes("script2");
+const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
+let history = [];
+let filterSelect;
+let container;
+
+console.log("script.js loaded");
+console.log("Parsed History:", history);
 
 // ========== GAME SETUP ==========
 
@@ -17,23 +28,7 @@ function toggleHamburgerMenu() {
   menu.classList.toggle("hidden");
 }
 
-// Close hamburger when clicking outside of it
-document.addEventListener("DOMContentLoaded", function () {
-  const menu = document.getElementById("hamburgerMenu");
-  const icon = document.getElementById("hamburgerIcon");
-
-  // Listen for clicks anywhere on the page
-  document.addEventListener("click", function (event) {
-    // Only close if the menu is open and the click is outside both icon and menu
-    if (!menu.classList.contains("hidden") &&
-        !menu.contains(event.target) &&
-        !icon.contains(event.target)) {
-      menu.classList.add("hidden");
-    }
-  });
-});
-
-
+// ===== createPlayerInputs Function (Core: DO NOT OVERWRITE without discussion) =====
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -92,6 +87,11 @@ function createPlayerInputs() {
   document.getElementById("startBtn").style.display = "inline";
 }
 
+// Fix duplicate declaration error by using single declaration for shared variables
+let activeCell;
+let scoreInputs;
+
+
 function handleNameDropdown(selectId, inputId) {
   const select = document.getElementById(selectId);
   const input = document.getElementById(inputId);
@@ -146,8 +146,6 @@ if (hamburger) hamburger.style.display = "block";
 
 }
 
-
-
 // ========== GAMEPLAY ==========
 
 function showHole() {
@@ -155,6 +153,7 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
+  // Start with hits input
   container.innerHTML = `
     <div class="input-group">
       <label>${player.name} hits:</label>
@@ -164,6 +163,24 @@ function showHole() {
       </select>
     </div>
   `;
+
+  // Append hazard checkbox only if this is a hazard hole in advanced mode
+  if (advancedMode && hazardHoles.includes(currentHole)) {
+    const hazardWrapper = document.createElement("div");
+    hazardWrapper.className = "hazard-toggle";
+    hazardWrapper.innerHTML = `<label><input type="checkbox" class="hazardCheckbox"> Hit Hazard</label>`;
+    container.appendChild(hazardWrapper);
+  }
+
+  // Optional: Highlight the hazard hole in the scorecard (visual feedback)
+  highlightHazardHole(currentHole);
+  document.getElementById("scorecardWrapper").style.display = "block";
+  updateScorecard();
+
+}
+
+function highlightHazardHole(hole) {
+  // Placeholder for future Advanced Mode UI enhancement
 }
 
 function getScore(hits) {
@@ -192,33 +209,84 @@ function submitPlayerScore() {
     alert("Enter a valid number of hits.");
     return;
   }
-  const player = players[currentPlayerIndex];
-if (hits === 6) {
-  const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
-  if (isShanghai) {
-    showShanghaiWin(player.name);
-    return; // skip rest of the scoring logic
-  }
-}
-  const score = getScore(hits);
-  const allPlayer = allPlayers.find(p => p.name === player.name);
 
-  // Push score to both current and full player lists
+  const player = players[currentPlayerIndex];
+
+  // Check for Shanghai
+  if (hits === 6) {
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    if (isShanghai) {
+      showShanghaiWin(player.name);
+      return;
+    }
+  }
+
+  // Get base score
+  let score = getScore(hits);
+
+  // Hazard penalty if applicable
+  const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
+  if (
+    advancedMode &&
+    hazardHoles.includes(currentHole) &&
+    hazardCheckboxes[currentPlayerIndex] &&
+    hazardCheckboxes[currentPlayerIndex].checked
+  ) {
+    score += 1;
+    player.hazards = (player.hazards || 0) + 1;
+  }
+
+  if (player) {
+  const allPlayer = allPlayers.find(p => p.name === player.name);
   player.scores.push(score);
   if (allPlayer) allPlayer.scores.push(score);
+} else {
+  console.warn("No current player found during score submission.");
+  return;
+}
 
   saveGameState();
 
   const { label, color } = getScoreLabelAndColor(hits);
+
+  // Determine if game is about to end
+  let gameWillEnd = false;
+  let winnerName = "";
+
+  if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
+    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+    const lowest = Math.min(...totals);
+    const tied = players.filter((p, i) => totals[i] === lowest);
+    if (tied.length === 1) {
+      winnerName = tied[0].name;
+      players = [tied[0]];
+      endGame();
+      return;
+    }
+  }
+
+  if (suddenDeath) {
+    const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+    if (allPlayersCompletedHole) {
+      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+      const min = Math.min(...lastHoleScores);
+      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+      if (winners.length === 1) {
+        players = [winners[0]];
+        endGame();
+        return;
+      }
+    }
+  }
+
+  // Only show animation if game is NOT ending
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
   updateScorecard();
 
-  // Advance to next player
   currentPlayerIndex++;
 
-  // If all players completed this hole
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
@@ -226,7 +294,6 @@ if (hits === 6) {
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
 
-    // Handle end of regular game
     if (currentHole === 18) {
       if (tied.length > 1) {
         players = tied;
@@ -238,7 +305,6 @@ if (hits === 6) {
         document.getElementById("scoreInputs").innerHTML = `
           <h2>${names} tie! On to Sudden Death!</h2>
           <button onclick="showHole()" class="primary-button full-width">Continue</button>
-
         `;
         return;
       } else {
@@ -247,20 +313,22 @@ if (hits === 6) {
       }
     }
 
-    // Handle sudden death
     if (suddenDeath) {
-      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
-      const min = Math.min(...lastHoleScores);
-      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+      const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+      if (allPlayersCompletedHole) {
+        const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+        const min = Math.min(...lastHoleScores);
+        const winners = players.filter((p, i) => lastHoleScores[i] === min);
 
-      if (winners.length === 1) {
-        players = [winners[0]];
-        endGame();
-        return;
+        if (winners.length === 1) {
+          players = [winners[0]];
+          endGame();
+          return;
+        }
+
+        players = winners;
+        currentHole = currentHole === 20 ? 1 : currentHole + 1;
       }
-
-      players = winners;
-      currentHole = currentHole === 20 ? 1 : currentHole + 1;
     } else {
       currentHole++;
     }
@@ -268,6 +336,7 @@ if (hits === 6) {
 
   showHole();
 }
+
 
   function undoHole() {
   if (currentHole === 1 && currentPlayerIndex === 0) {
@@ -354,62 +423,103 @@ function updateScorecard() {
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
       <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
     `;
-    allPlayers.forEach(p => {
-      const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
-      table += `<tr><td style="border: 1px solid #ccc">${p.name}</td>${
-        scores.map((s, i) => {
-          const holeNum = i + start;
-          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-          const display = s === undefined || s === null ? "&nbsp;" : s;
-return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
 
-        }).join("")
-      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
-    });
+    const isSudden = suddenDeath;
+const competingNames = isSudden ? players.map(p => p.name) : [];
+
+const sortedPlayers = [...allPlayers].sort((a, b) => {
+  const aIn = competingNames.includes(a.name);
+  const bIn = competingNames.includes(b.name);
+  return bIn - aIn; // Competing players first
+});
+
+sortedPlayers.forEach(p => {
+  const scores = p.scores.slice(start - 1, start + 8);
+  const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+  const isCompeting = competingNames.includes(p.name);
+
+  const playerNameStyle = isSudden && !isCompeting
+    ? 'text-decoration: line-through; color: gray'
+    : '';
+
+  table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
+    scores.map((s, i) => {
+      const holeNum = i + start;
+      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+      const display = (s === undefined || s === null)
+        ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+        : s;
+      return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+    }).join("")
+  }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+});
+
   };
 
   const renderSuddenDeath = () => {
-    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
-    if (maxHole <= 18) return;
+  const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
+  const sdHoles = [];
+  for (let i = 19; i <= maxHole; i++) {
+    const label = i <= 20 ? i : (i - 20);
+    sdHoles.push(label);
+  }
 
-    const sdHoles = [];
-    for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20);
-      sdHoles.push(label);
+  table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+  table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+
+  const competingNames = players.map(p => p.name);
+
+  const sortedPlayers = [...allPlayers].sort((a, b) => {
+    const aIn = competingNames.includes(a.name);
+    const bIn = competingNames.includes(b.name);
+    return bIn - aIn; // Active players first
+  });
+
+  sortedPlayers.forEach(p => {
+    const isTiedPlayer = competingNames.includes(p.name);
+    const sdScores = p.scores.slice(18); // From hole 19 onward
+
+    const nameCellStyle = isTiedPlayer
+      ? 'class="sudden-death-cell"'
+      : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
+
+    table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
+
+    for (let i = 0; i < sdHoles.length; i++) {
+      const holeNum = i + 19;
+      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+      let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+
+      table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    table += `</tr>`;
+  });
+};
 
-    allPlayers.forEach(p => {
-      const isTiedPlayer = players.some(tp => tp.name === p.name);
-const sdScores = isTiedPlayer ? p.scores.slice(18) : [];
-      table += `<tr class="sudden-death-row"><td class="sudden-death-cell">${p.name}</td>`;
-      for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19;
-        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
-table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
 
-      }
-      table += `</tr>`;
-    });
-  };
+  // Render sections
+  const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
-  renderSuddenDeath();
-  if (currentHole > 9) renderSection("Back Nine", 10);
-  renderSection("Front Nine", 1);
+  if (suddenDeath) renderSuddenDeath();  // ✅ Sudden Death shown on top
+
+  if (currentHole >= 10 && allCompletedFront) {
+    renderSection("Back Nine", 10);
+    renderSection("Front Nine", 1);
+  } else {
+    renderSection("Front Nine", 1);
+    if (allCompletedFront) renderSection("Back Nine", 10);
+  }
 
   table += "</table>";
   container.innerHTML = table;
 
-  // Scroll to the active cell on mobile
   const activeCell = document.querySelector(".active-cell");
   if (activeCell) {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
+  // Show winner message if game ends early (e.g. Shanghai win)
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
@@ -419,7 +529,6 @@ table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active
     scoreInputs.appendChild(winText);
   }
 }
-
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
@@ -506,23 +615,69 @@ function loadGameState() {
 function endGame() {
   gameStarted = false;
 
-  if (suddenDeath) players = allPlayers;
-  updateLeaderboard(true);
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (!scoreInputs) {
+    console.warn("scoreInputs container not found. Skipping stats and winner buttons.");
+    return;
+  }
+
+  // ✅ Clone full player list before any filtering
+  const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
+
+  // Save winner if applicable
+  let winner = null;
+  if (players.length === 1) {
+    winner = players[0];
+  }
+
+  // ✅ Restore full player list
+  players = fullPlayerList;
+  allPlayers = fullPlayerList;
+
+  updateLeaderboard();
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  const scoreInputs = document.getElementById("scoreInputs");
-  scoreInputs.innerHTML = "<h2>Game complete!</h2>";
+  // Save this game's results to local history
+const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  // Game Stats Button (replaces Submit Score)
+const gameSummary = {
+  date: new Date().toISOString(),
+  players: allPlayers.map(p => ({
+    name: p.name,
+    scores: [...p.scores],
+    total: p.scores.reduce((sum, s) => sum + s, 0),
+  })),
+  suddenDeath: suddenDeath,
+  advancedMode: advancedMode
+};
+
+previousHistory.push(gameSummary);
+localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
+  // Declare winner
+  if (winner) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${winner.name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
+
+  // Game Stats Button
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
-  statsBtn.style.borderColor = "#ffcc00"; // Sudden death yellow border
+  statsBtn.style.borderColor = "#ffcc00";
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  document.body.removeAttribute("id");
+  const historyBtn = document.createElement("button");
+historyBtn.innerText = "View History";
+historyBtn.className = "primary-button full-width";
+historyBtn.onclick = () => showHistory();
+scoreInputs.appendChild(historyBtn);
+
 
   // Start New Round Button
   const startNewBtn = document.createElement("button");
@@ -530,10 +685,19 @@ function endGame() {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Start new round with same players?")) {
+      // Rotate players: move LAST to FRONT
+      players.unshift(players.pop());
+
       players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
       currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
       gameStarted = true;
+
+      scoreInputs.innerHTML = "";
+
       saveGameState();
       showHole();
       updateLeaderboard();
@@ -543,6 +707,65 @@ function endGame() {
     }
   };
   scoreInputs.appendChild(startNewBtn);
+
+  // ✅ Ensure leaderboard remains visible
+  const leaderboard = document.getElementById("leaderboard");
+if (leaderboard) {
+  leaderboard.classList.remove("hidden");
+  leaderboard.style.display = "block";
+}
+
+  document.body.removeAttribute("id");
+}
+
+function showHistory() {
+  const container = document.getElementById("historyDetails");
+  container.innerHTML = "";
+
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+  if (history.length === 0) {
+    container.innerHTML = "<p>No past games saved.</p>";
+    showModal("historyModal");
+    return;
+  }
+
+  const latestGames = history.slice(-10).reverse(); // Last 10 games, newest first
+
+  latestGames.forEach((game, index) => {
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+    const header = document.createElement("h3");
+    header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
+    container.appendChild(header);
+
+    const list = document.createElement("ul");
+    game.players.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+      list.appendChild(li);
+    });
+    container.appendChild(list);
+    container.appendChild(document.createElement("hr"));
+  });
+
+  if (history.length > 10) {
+    const moreLink = document.createElement("a");
+    moreLink.href = "history.html";
+    moreLink.textContent = "➡️ View More Rounds";
+    moreLink.className = "more-link";
+    container.appendChild(moreLink);
+  }
+
+  showModal("historyModal");
+}
+
+
+function clearHistory() {
+  localStorage.removeItem(historyKey);
+  alert("History cleared!");
 }
 
 
@@ -612,10 +835,126 @@ function closeModal(id) {
 window.showModal = showModal;
 window.closeModal = closeModal;
 
-window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
 
-  // Populate the dropdown
+// ========== ADVANCED MODE ==========
+
+const dartboardNeighbors = {
+  1: [20, 18],
+  2: [17, 15],
+  3: [19, 17],
+  4: [18, 13],
+  5: [12, 20],
+  6: [10, 13],
+  7: [16, 19],
+  8: [11, 16],
+  9: [14, 12],
+  10: [6, 15],
+  11: [8, 14],
+  12: [9, 5],
+  13: [6, 4],
+  14: [11, 9],
+  15: [2, 10],
+  16: [7, 8],
+  17: [3, 2],
+  18: [1, 4],
+  19: [7, 3],
+  20: [5, 1],
+};
+
+function selectHazardHoles() {
+  const allHoles = [...Array(18)].map((_, i) => i + 1);
+  hazardHoles = allHoles.sort(() => 0.5 - Math.random()).slice(0, 6);
+}
+
+const dartHits = [
+  { number: 20, multiplier: 2 },
+  { number: 1, multiplier: 1 },
+  { number: 1, multiplier: 1 },
+];
+
+function checkHazardPenalty(hole, dartHits) {
+  const neighbors = dartboardNeighbors[hole];
+  return dartHits.some(d => neighbors.includes(d.number) && d.multiplier >= 2);
+}
+
+if (document.getElementById("hazardPenalty")?.checked) {
+  score += 1;
+}
+
+// ================= HISTORY FUNCTIONS =================
+
+function initHistoryPage() {
+  filterSelect = document.getElementById("playerFilter");
+  container = document.getElementById("historyContainer");
+  if (!filterSelect || !container) return;
+
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+
+  filterSelect.innerHTML = '<option value="">-- All Players --</option>';
+  uniquePlayers.sort().forEach(name => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    filterSelect.appendChild(option);
+  });
+
+  filterSelect.addEventListener("change", renderHistory);
+  renderHistory();
+
+  console.log("🎯 initHistoryPage running...");
+  console.log("History:", history);
+  console.log("Player Filter:", filterSelect);
+  console.log("Parsed Names:", uniquePlayers);
+}
+
+function renderHistory() {
+  container.innerHTML = "";
+  const selected = filterSelect.value;
+
+  const filtered = history.slice().reverse().filter(game =>
+    !selected || game.players.some(p => p.name === selected)
+  );
+
+  if (filtered.length === 0) {
+    container.innerHTML = "<p>No games match this filter.</p>";
+    return;
+  }
+
+  filtered.forEach((game, index) => {
+    const block = document.createElement("div");
+    block.className = "history-block";
+
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+    block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+
+    const ul = document.createElement("ul");
+    game.players.forEach(p => {
+      if (!selected || p.name === selected) {
+        const li = document.createElement("li");
+        li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+        ul.appendChild(li);
+      }
+    });
+
+    block.appendChild(ul);
+    container.appendChild(block);
+  });
+}
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
+  // History page init
+  if (document.getElementById("playerFilter")) {
+    initHistoryPage();
+  }
+
+  const select = document.getElementById("playerCount");
+  if (!select) return;
+
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -623,35 +962,28 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
-  // Add checkbox toggle listeners (check IDs match your HTML)
-  document.getElementById("audioToggle").addEventListener("change", (e) => {
+  document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
-
-  document.getElementById("randomToggle").addEventListener("change", (e) => {
+  document.getElementById("randomToggle")?.addEventListener("change", (e) => {
     randomizedMode = e.target.checked;
   });
-
-  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+  document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
   });
 
-  // Trigger name inputs when player count is selected
   select.addEventListener("change", createPlayerInputs);
+
+  requestAnimationFrame(() => {
+    loadGameState();
+  });
 });
 
-// Add unload protection if a saved game is in progress
+// ========== SAFETY: WARN IF GAME IN PROGRESS ==========
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
     e.preventDefault();
-    e.returnValue = ""; // Required for most browsers to show warning
+    e.returnValue = "";
   }
-});
-
-// Load saved game state on full window load (after assets)
-window.addEventListener("DOMContentLoaded", () => {
-  requestAnimationFrame(() => {
-    loadGameState();
-  });
 });
