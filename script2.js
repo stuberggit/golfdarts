@@ -1011,6 +1011,7 @@ window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showHistory = showHistory;
+window.submitPlayerScore = submitPlayerScore;
 
 
 // ========== EVENT LISTENERS ==========
