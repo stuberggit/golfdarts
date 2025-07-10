@@ -10,15 +10,15 @@ let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
-let isPreProd;
-let historyKey;
+
+const isPreProd = location.href.includes("index2") || location.href.includes("script2");
+const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+
 let history = [];
 let filterSelect;
 let container;
 
-// Determine environment once
-const isPreProd = location.href.includes("index2") || location.href.includes("script2");
-const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+console.log("script2.js loaded");
 
 console.log("script2.js loaded");
 console.log("Parsed History:", history);
