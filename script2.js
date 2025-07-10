@@ -724,7 +724,7 @@ function showHistory() {
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
 
   if (history.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
