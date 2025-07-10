@@ -883,20 +883,17 @@ if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
 
-// History Page Setup
+// ================= HISTORY FUNCTIONS =================
+
 function initHistoryPage() {
-  // Only run on history.html
   filterSelect = document.getElementById("playerFilter");
   container = document.getElementById("historyContainer");
-
   if (!filterSelect || !container) return;
 
   history = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-  // 🔍 Populate dropdown
   const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
-  filterSelect.innerHTML = '<option value="">-- All Players --</option>'; // Reset first
 
+  filterSelect.innerHTML = '<option value="">-- All Players --</option>';
   uniquePlayers.sort().forEach(name => {
     const option = document.createElement("option");
     option.value = name;
@@ -906,15 +903,14 @@ function initHistoryPage() {
 
   filterSelect.addEventListener("change", renderHistory);
   renderHistory();
-  
-console.log("🎯 initHistoryPage running...");
-console.log("History:", history);
-console.log("Player Filter:", filterSelect);
-console.log("Parsed Names:", uniquePlayers);
 
+  console.log("🎯 initHistoryPage running...");
+  console.log("History:", history);
+  console.log("Player Filter:", filterSelect);
+  console.log("Parsed Names:", uniquePlayers);
 }
 
-  function renderHistory() {
+function renderHistory() {
   container.innerHTML = "";
   const selected = filterSelect.value;
 
@@ -951,19 +947,16 @@ console.log("Parsed Names:", uniquePlayers);
   });
 }
 
-
-// Run if on history.html
 // ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
+  // History page init
+  if (document.getElementById("playerFilter")) {
+    initHistoryPage();
+  }
 
-// History Page Logic (only runs on history.html)
-document.addEventListener("DOMContentLoaded", initHistoryPage);
-
-// Main Game Page Logic (only runs if #playerCount exists)
-window.addEventListener("DOMContentLoaded", () => {
   const select = document.getElementById("playerCount");
-  if (!select) return; // Abort if not on main game page
+  if (!select) return;
 
-  // Populate player count dropdown
   for (let i = 1; i <= 20; i++) {
     const option = document.createElement("option");
     option.value = i;
@@ -971,32 +964,29 @@ window.addEventListener("DOMContentLoaded", () => {
     select.appendChild(option);
   }
 
-  // Toggle settings
   document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
-
   document.getElementById("randomToggle")?.addEventListener("change", (e) => {
     randomizedMode = e.target.checked;
   });
-
   document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
   });
 
-  // Watch for player count change
   select.addEventListener("change", createPlayerInputs);
 
-  // Load saved game state (after assets load)
-  requestAnimationFrame(loadGameState);
+  requestAnimationFrame(() => {
+    loadGameState();
+  });
 });
 
-// Unload protection (prevent accidental page exit if game is in progress)
-window.addEventListener("beforeunload", (e) => {
+// ========== SAFETY: WARN IF GAME IN PROGRESS ==========
+window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
     e.preventDefault();
-    e.returnValue = ""; // Required for confirmation dialog in most browsers
+    e.returnValue = "";
   }
 });
 
