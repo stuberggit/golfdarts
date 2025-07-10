@@ -820,6 +820,7 @@ function showHistory() {
   showModal("historyModal");
 }
 
+
 function clearHistory() {
   localStorage.removeItem(historyKey);
   alert("History cleared!");
