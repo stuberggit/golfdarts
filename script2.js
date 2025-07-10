@@ -742,7 +742,23 @@ function showHistory() {
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
-  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  // Save this game's results to local history
+const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+const gameSummary = {
+  date: new Date().toISOString(),
+  players: allPlayers.map(p => ({
+    name: p.name,
+    scores: [...p.scores],
+    total: p.scores.reduce((sum, s) => sum + s, 0),
+  })),
+  suddenDeath: suddenDeath,
+  advancedMode: advancedMode
+};
+
+previousHistory.push(gameSummary);
+localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
 
   if (history.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
@@ -903,14 +919,23 @@ if (document.getElementById("hazardPenalty")?.checked) {
 
 // ================= HISTORY FUNCTIONS =================
 
-function initHistoryPage() {
+async function initHistoryPage() {
   filterSelect = document.getElementById("playerFilter");
   container = document.getElementById("historyContainer");
   if (!filterSelect || !container) return;
 
-  history = JSON.parse(localStorage.getItem(historyKey)) || [];
-  const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+  history = [];
+  try {
+    const querySnapshot = await getDocs(collection(db, "games"));
+    querySnapshot.forEach((doc) => {
+      history.push(doc.data());
+    });
+    console.log("📥 Loaded history from Firestore:", history);
+  } catch (e) {
+    console.error("❌ Failed to load history:", e);
+  }
 
+  const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
   filterSelect.innerHTML = '<option value="">-- All Players --</option>';
   uniquePlayers.sort().forEach(name => {
     const option = document.createElement("option");
