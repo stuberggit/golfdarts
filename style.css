@@ -604,3 +604,22 @@ button:hover {
   text-align: center;
   background-color: #f9f9f9;
 }
+
+.mini-scorecard {
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.mini-scorecard th,
+.mini-scorecard td {
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.mini-scorecard th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
