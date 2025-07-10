@@ -976,19 +976,36 @@ function renderHistory() {
 
     block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
 
-    const ul = document.createElement("ul");
     game.players.forEach(p => {
       if (!selected || p.name === selected) {
-        const li = document.createElement("li");
-        li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-        ul.appendChild(li);
+        const scores = p.scores;
+        const front9 = scores.slice(0, 9);
+        const back9 = scores.slice(9, 18);
+        const subtotal = front9.reduce((sum, n) => sum + n, 0);
+        const total = back9.reduce((sum, n) => sum + n, 0) + subtotal;
+
+        const table = document.createElement("table");
+        table.className = "history-scorecard";
+
+        table.innerHTML = `
+          <thead>
+            <tr><th colspan="10">${p.name} - Total: ${total}</th></tr>
+            <tr><td>Holes</td>${[...Array(9)].map((_, i) => `<td>${i + 1}</td>`).join("")}</tr>
+            <tr><td>Scores</td>${front9.map(n => `<td>${n}</td>`).join("")}</tr>
+            <tr><td>Subtotal</td><td colspan="9">${subtotal}</td></tr>
+            <tr><td>Holes</td>${[...Array(9)].map((_, i) => `<td>${i + 10}</td>`).join("")}</tr>
+            <tr><td>Scores</td>${back9.map(n => `<td>${n}</td>`).join("")}</tr>
+          </thead>
+        `;
+
+        block.appendChild(table);
       }
     });
 
-    block.appendChild(ul);
     container.appendChild(block);
   });
 }
+
 
 window.startGame = startGame;
 window.showModal = showModal;
