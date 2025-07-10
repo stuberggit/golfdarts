@@ -906,6 +906,12 @@ function initHistoryPage() {
 
   filterSelect.addEventListener("change", renderHistory);
   renderHistory();
+  
+console.log("🎯 initHistoryPage running...");
+console.log("History:", history);
+console.log("Player Filter:", filterSelect);
+console.log("Parsed Names:", uniquePlayers);
+
 }
 
   function renderHistory() {
