@@ -722,15 +722,29 @@ function showHistory() {
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
-  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  if (history.length === 0) {
+  const gameSummary = {
+    date: new Date().toISOString(),
+    players: allPlayers.map(p => ({
+      name: p.name,
+      scores: [...p.scores],
+      total: p.scores.reduce((sum, s) => sum + s, 0),
+    })),
+    suddenDeath: suddenDeath,
+    advancedMode: advancedMode
+  };
+
+  previousHistory.push(gameSummary);
+  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
+  if (previousHistory.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
     showModal("historyModal");
     return;
   }
 
-  const latestGames = history.slice(-10).reverse(); // Last 10 games, newest first
+  const latestGames = previousHistory.slice(-10).reverse();
 
   latestGames.forEach((game, index) => {
     const date = new Date(game.date).toLocaleString();
@@ -738,20 +752,47 @@ function showHistory() {
     const sudden = game.suddenDeath ? " (Sudden Death)" : "";
 
     const header = document.createElement("h3");
-    header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
+    header.textContent = `Game ${previousHistory.length - index} – ${date} – ${mode}${sudden}`;
     container.appendChild(header);
 
-    const list = document.createElement("ul");
-    game.players.forEach(p => {
-      const li = document.createElement("li");
-      li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-      list.appendChild(li);
+    game.players.forEach(player => {
+      const table = document.createElement("table");
+      table.className = "mini-scorecard";
+
+      const nameRow = document.createElement("tr");
+      const nameCell = document.createElement("th");
+      nameCell.colSpan = 11;
+      nameCell.textContent = player.name;
+      nameRow.appendChild(nameCell);
+      table.appendChild(nameRow);
+
+      const front9 = player.scores.slice(0, 9);
+      const back9 = player.scores.slice(9, 18);
+      const subtotal = front9.reduce((sum, s) => sum + s, 0);
+
+      const frontRow = document.createElement("tr");
+      frontRow.innerHTML = "<td>1–9</td>" + front9.map(s => `<td>${s}</td>`).join("");
+      table.appendChild(frontRow);
+
+      const subtotalRow = document.createElement("tr");
+      subtotalRow.innerHTML = `<td>Subtotal</td><td colspan="9">${subtotal}</td>`;
+      table.appendChild(subtotalRow);
+
+      const backRow = document.createElement("tr");
+      backRow.innerHTML = "<td>10–18</td>" + back9.map(s => `<td>${s}</td>`).join("");
+      table.appendChild(backRow);
+
+      const totalRow = document.createElement("tr");
+      totalRow.innerHTML = `<td>Total</td><td colspan="9">${player.total}</td>`;
+      table.appendChild(totalRow);
+
+      container.appendChild(table);
     });
-    container.appendChild(list);
+
     container.appendChild(document.createElement("hr"));
   });
 
-  if (history.length > 10) {
+  if (previousHistory.length > 10) {
     const moreLink = document.createElement("a");
     moreLink.href = "history.html";
     moreLink.textContent = "➡️ View More Rounds";
