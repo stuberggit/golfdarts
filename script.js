@@ -875,10 +875,6 @@ function closeModal(id) {
   if (modal) modal.classList.add('hidden');
 }
 
-window.showModal = showModal;
-window.closeModal = closeModal;
-window.showHistory = showHistory;
-
 
 // ========== ADVANCED MODE ==========
 
@@ -988,6 +984,12 @@ function renderHistory() {
     container.appendChild(block);
   });
 }
+
+window.startGame = startGame;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.showHistory = showHistory;
+window.submitPlayerScore = submitPlayerScore;
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
