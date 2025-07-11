@@ -723,9 +723,7 @@ function showHistory() {
 
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
-  const container = document.getElementById("historyDetails");
-  container.innerHTML = "";
-
+ 
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
   const gameSummary = {
