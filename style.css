@@ -605,10 +605,11 @@ button:hover {
   background-color: #f9f9f9;
 }
 
+/* Mini Scorecard Table */
 .mini-scorecard {
   border-collapse: collapse;
-  margin-bottom: 1rem;
   width: 100%;
+  margin-bottom: 1rem;
 }
 
 .mini-scorecard th,
@@ -622,4 +623,20 @@ button:hover {
   background-color: #f0f0f0;
   font-weight: bold;
 }
+
+/* Make history modal scrollable */
+#historyModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Optional: Style the link */
+.more-link {
+  display: block;
+  margin-top: 1rem;
+  text-align: right;
+  color: #0066cc;
+  font-weight: bold;
+}
+
 
