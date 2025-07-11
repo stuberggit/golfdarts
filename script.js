@@ -875,6 +875,7 @@ function closeModal(id) {
 
 window.showModal = showModal;
 window.closeModal = closeModal;
+window.showHistory = showHistory;
 
 
 // ========== ADVANCED MODE ==========
