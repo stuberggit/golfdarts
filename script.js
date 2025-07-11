@@ -1020,7 +1020,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// ========== SAFETY: WARN IF GAME IN PROGRESS ==========
+// Warn if game in progress on tab close
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
@@ -1028,3 +1028,14 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
+
+// Allow closing history modal by clicking outside it
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("historyModal");
+  const content = modal?.querySelector(".modal-content");
+
+  if (modal && !modal.classList.contains("hidden") && !content.contains(e.target)) {
+    closeModal("historyModal");
+  }
+});
+
