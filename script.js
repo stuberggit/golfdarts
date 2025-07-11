@@ -1025,8 +1025,18 @@ document.addEventListener("DOMContentLoaded", () => {
   showHistory();
 });
 
+ const viewHistoryLink = document.getElementById("viewHistoryLink");
+  if (viewHistoryLink) {
+    console.log("🧷 View History listener attached"); // <== should log on page load
+    viewHistoryLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("🖱️ View History clicked"); // <== should log when clicked
+      showHistory(); // <== should trigger your function
+    });
+  }
+
   requestAnimationFrame(() => {
-    loadGameState();
+    loadGameState?.();
   });
 });
 
