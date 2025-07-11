@@ -1020,6 +1020,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   select.addEventListener("change", createPlayerInputs);
 
+  document.getElementById("viewHistoryLink")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  showHistory();
+});
+
   requestAnimationFrame(() => {
     loadGameState();
   });
