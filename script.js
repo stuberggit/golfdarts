@@ -719,6 +719,10 @@ if (leaderboard) {
 }
 
 function showHistory() {
+  console.log("📚 showHistory() was called");
+
+  const container = document.getElementById("historyDetails");
+  container.innerHTML = "";
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
