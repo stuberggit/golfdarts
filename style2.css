@@ -1,6 +1,6 @@
 /* === Base Styles === */
 body {
-  background-color: #10216b;
+  background-color: #10216B;
   color: white;
   font-family: 'Prata', serif;
   text-align: center;
@@ -603,7 +603,9 @@ button:hover {
   padding: 5px;
   text-align: center;
   background-color: #f9f9f9;
-}/* Mini Scorecard Table */
+}
+
+/* Mini Scorecard Table */
 .mini-scorecard {
   border-collapse: collapse;
   width: 100%;
@@ -636,7 +638,3 @@ button:hover {
   color: #0066cc;
   font-weight: bold;
 }
-
-
-
-
