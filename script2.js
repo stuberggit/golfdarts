@@ -18,28 +18,8 @@ let history = [];
 let filterSelect;
 let container;
 
-console.log("script2.js loaded");
-
-console.log("script2.js loaded");
+console.log("script.js loaded");
 console.log("Parsed History:", history);
-
-// ========== FIREBASE SETUP ==========
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDEeniEEJH0QO0CGd5uMM11HZ_IwL3VB_8",
-  authDomain: "golfdarts-b1427.firebaseapp.com",
-  projectId: "golfdarts-b1427",
-  storageBucket: "golfdarts-b1427.appspot.com",
-  messagingSenderId: "1034273954702",
-  appId: "1:1034273954702:web:c6046e312f4c0a2b7fe2df",
-  measurementId: "G-QVPLJ9YNEC"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
 
 // ========== GAME SETUP ==========
 
@@ -704,7 +684,7 @@ scoreInputs.appendChild(historyBtn);
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
-    if (confirm("Start new round with same players?")) {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
       // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
 
@@ -738,7 +718,92 @@ if (leaderboard) {
   document.body.removeAttribute("id");
 }
 
+function showHistory() {
+  console.log("📚 showHistory() was called");
 
+  const container = document.getElementById("historyDetails");
+  container.innerHTML = "";
+ 
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+  const gameSummary = {
+    date: new Date().toISOString(),
+    players: allPlayers.map(p => ({
+      name: p.name,
+      scores: [...p.scores],
+      total: p.scores.reduce((sum, s) => sum + s, 0),
+    })),
+    suddenDeath: suddenDeath,
+    advancedMode: advancedMode
+  };
+
+  previousHistory.push(gameSummary);
+  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
+  if (previousHistory.length === 0) {
+    container.innerHTML = "<p>No past games saved.</p>";
+    showModal("historyModal");
+    return;
+  }
+
+  const latestGames = previousHistory.slice(-10).reverse();
+
+  latestGames.forEach((game, index) => {
+    const date = new Date(game.date).toLocaleString();
+    const mode = game.advancedMode ? "Advanced" : "Standard";
+    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+
+    const header = document.createElement("h3");
+    header.textContent = `Game ${previousHistory.length - index} – ${date} – ${mode}${sudden}`;
+    container.appendChild(header);
+
+    game.players.forEach(player => {
+      const table = document.createElement("table");
+      table.className = "mini-scorecard";
+
+      const nameRow = document.createElement("tr");
+      const nameCell = document.createElement("th");
+      nameCell.colSpan = 11;
+      nameCell.textContent = player.name;
+      nameRow.appendChild(nameCell);
+      table.appendChild(nameRow);
+
+      const front9 = player.scores.slice(0, 9);
+      const back9 = player.scores.slice(9, 18);
+      const subtotal = front9.reduce((sum, s) => sum + s, 0);
+
+      const frontRow = document.createElement("tr");
+      frontRow.innerHTML = "<td>1–9</td>" + front9.map(s => `<td>${s}</td>`).join("");
+      table.appendChild(frontRow);
+
+      const subtotalRow = document.createElement("tr");
+      subtotalRow.innerHTML = `<td>Subtotal</td><td colspan="9">${subtotal}</td>`;
+      table.appendChild(subtotalRow);
+
+      const backRow = document.createElement("tr");
+      backRow.innerHTML = "<td>10–18</td>" + back9.map(s => `<td>${s}</td>`).join("");
+      table.appendChild(backRow);
+
+      const totalRow = document.createElement("tr");
+      totalRow.innerHTML = `<td>Total</td><td colspan="9">${player.total}</td>`;
+      table.appendChild(totalRow);
+
+      container.appendChild(table);
+    });
+
+    container.appendChild(document.createElement("hr"));
+  });
+
+  if (previousHistory.length > 10) {
+    const moreLink = document.createElement("a");
+    moreLink.href = "history.html";
+    moreLink.textContent = "➡️ View More Rounds";
+    moreLink.className = "more-link";
+    container.appendChild(moreLink);
+  }
+
+  showModal("historyModal");
+}
 
 
 function clearHistory() {
@@ -810,9 +875,6 @@ function closeModal(id) {
   if (modal) modal.classList.add('hidden');
 }
 
-window.showModal = showModal;
-window.closeModal = closeModal;
-
 
 // ========== ADVANCED MODE ==========
 
@@ -861,23 +923,14 @@ if (document.getElementById("hazardPenalty")?.checked) {
 
 // ================= HISTORY FUNCTIONS =================
 
-async function initHistoryPage() {
+function initHistoryPage() {
   filterSelect = document.getElementById("playerFilter");
   container = document.getElementById("historyContainer");
   if (!filterSelect || !container) return;
 
-  history = [];
-  try {
-    const querySnapshot = await getDocs(collection(db, "games"));
-    querySnapshot.forEach((doc) => {
-      history.push(doc.data());
-    });
-    console.log("📥 Loaded history from Firestore:", history);
-  } catch (e) {
-    console.error("❌ Failed to load history:", e);
-  }
-
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
   const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+
   filterSelect.innerHTML = '<option value="">-- All Players --</option>';
   uniquePlayers.sort().forEach(name => {
     const option = document.createElement("option");
@@ -918,44 +971,25 @@ function renderHistory() {
 
     block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
 
+    const ul = document.createElement("ul");
     game.players.forEach(p => {
       if (!selected || p.name === selected) {
-        const scores = p.scores;
-        const front9 = scores.slice(0, 9);
-        const back9 = scores.slice(9, 18);
-        const subtotal = front9.reduce((sum, n) => sum + n, 0);
-        const total = back9.reduce((sum, n) => sum + n, 0) + subtotal;
-
-        const table = document.createElement("table");
-        table.className = "history-scorecard";
-
-        table.innerHTML = `
-          <thead>
-            <tr><th colspan="10">${p.name} - Total: ${total}</th></tr>
-            <tr><td>Holes</td>${[...Array(9)].map((_, i) => `<td>${i + 1}</td>`).join("")}</tr>
-            <tr><td>Scores</td>${front9.map(n => `<td>${n}</td>`).join("")}</tr>
-            <tr><td>Subtotal</td><td colspan="9">${subtotal}</td></tr>
-            <tr><td>Holes</td>${[...Array(9)].map((_, i) => `<td>${i + 10}</td>`).join("")}</tr>
-            <tr><td>Scores</td>${back9.map(n => `<td>${n}</td>`).join("")}</tr>
-          </thead>
-        `;
-
-        block.appendChild(table);
+        const li = document.createElement("li");
+        li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
+        ul.appendChild(li);
       }
     });
 
+    block.appendChild(ul);
     container.appendChild(block);
   });
 }
-
-
 
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
-
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
@@ -986,8 +1020,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   select.addEventListener("change", createPlayerInputs);
 
+  document.getElementById("viewHistoryLink")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  showHistory();
+});
+
+ const viewHistoryLink = document.getElementById("viewHistoryLink");
+  if (viewHistoryLink) {
+    console.log("🧷 View History listener attached"); // <== should log on page load
+    viewHistoryLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("🖱️ View History clicked"); // <== should log when clicked
+      showHistory(); // <== should trigger your function
+    });
+  }
+
   requestAnimationFrame(() => {
-    loadGameState();
+    loadGameState?.();
   });
 });
 
@@ -1009,4 +1058,3 @@ window.addEventListener("click", (e) => {
     closeModal("historyModal");
   }
 });
-
