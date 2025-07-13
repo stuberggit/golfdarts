@@ -595,14 +595,23 @@ button:hover {
   border-collapse: collapse;
   margin: 10px 0;
   font-size: 0.9rem;
+  padding: 4px;
+  min-width: 30px;
 }
 
 .history-scorecard th,
 .history-scorecard td {
   border: 1px solid #ccc;
-  padding: 5px;
+  padding: 4px;
   text-align: center;
   background-color: #f9f9f9;
+  min-width: 30px;
+}
+
+.history-scorecard td:first-child,
+.history-scorecard th:first-child {
+  text-align: left;
+  white-space: nowrap;
 }
 
 /* Mini Scorecard Table */
