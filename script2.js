@@ -748,6 +748,8 @@ function showHistory() {
 
   const latestGames = previousHistory.slice(-10).reverse();
 
+const latestGames = previousHistory.slice(-10).reverse();
+  
   latestGames.forEach((game, index) => {
     const date = new Date(game.date).toLocaleString();
     const mode = game.advancedMode ? "Advanced" : "Standard";
