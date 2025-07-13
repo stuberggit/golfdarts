@@ -594,15 +594,17 @@ button:hover {
   width: 100%;
   border-collapse: collapse;
   margin: 10px 0;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  overflow-x: auto;
 }
 
 .history-scorecard th,
 .history-scorecard td {
   border: 1px solid #ccc;
-  padding: 5px;
   text-align: center;
   background-color: #f9f9f9;
+  padding: 4px;
+  min-width: 30px;
 }
 
 /* Mini Scorecard Table */
