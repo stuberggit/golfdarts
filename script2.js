@@ -723,22 +723,8 @@ function showHistory() {
 
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
- 
+
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-  const gameSummary = {
-    date: new Date().toISOString(),
-    players: allPlayers.map(p => ({
-      name: p.name,
-      scores: [...p.scores],
-      total: p.scores.reduce((sum, s) => sum + s, 0),
-    })),
-    suddenDeath: suddenDeath,
-    advancedMode: advancedMode
-  };
-
-  previousHistory.push(gameSummary);
-  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
   if (previousHistory.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
@@ -746,15 +732,13 @@ function showHistory() {
     return;
   }
 
-  const latestGames = previousHistory.slice(-10).reverse();
-  
+  const latestGames = previousHistory.slice(-10).reverse(); // show 10 most recent
+
   latestGames.forEach((game, index) => {
     const date = new Date(game.date).toLocaleString();
-    const mode = game.advancedMode ? "Advanced" : "Standard";
-    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
+    const suffix = game.suddenDeath ? " (Sudden Death)" : "";
     const header = document.createElement("h3");
-    header.textContent = `Game ${previousHistory.length - index} – ${date} – ${mode}${sudden}`;
+    header.textContent = `Game ${previousHistory.length - index} – ${date}${suffix}`;
     container.appendChild(header);
 
     game.players.forEach(player => {
@@ -804,7 +788,6 @@ function showHistory() {
 
   showModal("historyModal");
 }
-
 
 function clearHistory() {
   localStorage.removeItem(historyKey);
