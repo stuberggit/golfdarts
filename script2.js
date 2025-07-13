@@ -985,6 +985,88 @@ function renderHistory() {
   });
 }
 
+function renderHistoryScorecard(game, index, totalGames) {
+  const block = document.createElement("div");
+  block.className = "game-block";
+
+  const date = new Date(game.date).toLocaleDateString();
+  const modeSuffix = game.suddenDeath ? " – Sudden Death" : "";
+
+  const title = document.createElement("h3");
+  title.textContent = `Game ${totalGames - index} – ${date}${modeSuffix}`;
+  block.appendChild(title);
+
+  const table = document.createElement("table");
+  table.className = "history-scorecard";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+
+  const headers = [
+    "Player", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Out",
+    "10", "11", "12", "13", "14", "15", "16", "17", "18", "In", "Total"
+  ];
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  game.players.forEach(player => {
+    const row = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = player.name;
+    row.appendChild(tdName);
+
+    const front = player.scores.slice(0, 9);
+    const back = player.scores.slice(9, 18);
+    const out = front.reduce((sum, s) => sum + s, 0);
+    const inTotal = back.reduce((sum, s) => sum + s, 0);
+    const total = out + inTotal;
+
+    front.forEach(score => {
+      const td = document.createElement("td");
+      td.textContent = score;
+      row.appendChild(td);
+    });
+
+    const tdOut = document.createElement("td");
+    tdOut.textContent = out;
+    row.appendChild(tdOut);
+
+    back.forEach(score => {
+      const td = document.createElement("td");
+      td.textContent = score;
+      row.appendChild(td);
+    });
+
+    const tdIn = document.createElement("td");
+    tdIn.textContent = inTotal;
+    row.appendChild(tdIn);
+
+    const tdTotal = document.createElement("td");
+    tdTotal.textContent = total;
+    row.appendChild(tdTotal);
+
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(tbody);
+  block.appendChild(table);
+
+  return block;
+}
+
+latestGames.forEach((game, index) => {
+  const scorecard = renderHistoryScorecard(game, index, latestGames.length);
+  container.appendChild(scorecard);
+});
+
+
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
