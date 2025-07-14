@@ -1042,11 +1042,6 @@ function renderHistoryScorecard(game, index, totalGames) {
   block.appendChild(table);
 
   return block;
-}
-
-latestGames.forEach((game, index) => {
-  const scorecard = renderHistoryScorecard(game, index, latestGames.length);
-  container.appendChild(scorecard);
 });
 
 
