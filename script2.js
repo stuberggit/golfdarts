@@ -787,9 +787,6 @@ container.appendChild(scorecard);
     container.appendChild(moreLink);
   }
 
-  showModal("historyModal");
-}
-
 function clearHistory() {
   localStorage.removeItem(historyKey);
   alert("History cleared!");
