@@ -969,6 +969,38 @@ function renderHistory() {
   });
 }
 
+function loadHistoryPage() {
+  const container = document.getElementById("historyContainer");
+  const filter = document.getElementById("playerFilter");
+  if (!container || !filter) return;
+
+  const history = JSON.parse(localStorage.getItem("golfdartsHistory") || "[]").reverse();
+
+  // Populate dropdown with unique player names
+  const uniqueNames = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+  uniqueNames.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    filter.appendChild(opt);
+  });
+
+  // Filter and render
+  function renderFilteredHistory() {
+    const selected = filter.value;
+    container.innerHTML = "";
+    history.forEach((game, index) => {
+      if (selected && !game.players.some(p => p.name === selected)) return;
+      const scorecard = renderHistoryScorecard(game, index, history.length);
+      container.appendChild(scorecard);
+    });
+  }
+
+  filter.addEventListener("change", renderFilteredHistory);
+  renderFilteredHistory();
+}
+
+
 function renderHistoryScorecard(game, index, totalGames) {
   const block = document.createElement("div");
   block.className = "game-block";
@@ -1045,8 +1077,6 @@ function renderHistoryScorecard(game, index, totalGames) {
   return block;
 }
 
-
-
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
@@ -1054,6 +1084,12 @@ window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
 
 // ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("playerFilter")) {
+    loadHistoryPage();
+  }
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   // History page init
   if (document.getElementById("playerFilter")) {
