@@ -672,10 +672,11 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  const historyBtn = document.createElement("button");
+  const historyBtn = document.createElement("a");
 historyBtn.innerText = "View History";
+historyBtn.href = "history.html";
+historyBtn.target = "_blank";
 historyBtn.className = "primary-button full-width";
-historyBtn.onclick = () => showHistory();
 scoreInputs.appendChild(historyBtn);
 
 
