@@ -737,49 +737,9 @@ function showHistory() {
 
   latestGames.forEach((game, index) => {
     const gameNumber = previousHistory.length - index;
-  const scorecard = renderHistoryScorecard(game, gameNumber);
-  container.appendChild(scorecard);const date = new Date(game.date).toLocaleString();
-    const suffix = game.suddenDeath ? " (Sudden Death)" : "";
-    const header = document.createElement("h3");
-    header.textContent = `Game ${previousHistory.length - index} – ${date}${suffix}`;
-    container.appendChild(header);
-
-    const scorecard = renderHistoryScorecard(game, index, history.length);
-container.appendChild(scorecard);
-
-
-      const nameRow = document.createElement("tr");
-      const nameCell = document.createElement("th");
-      nameCell.colSpan = 11;
-      nameCell.textContent = player.name;
-      nameRow.appendChild(nameCell);
-      table.appendChild(nameRow);
-
-      const front9 = player.scores.slice(0, 9);
-      const back9 = player.scores.slice(9, 18);
-      const subtotal = front9.reduce((sum, s) => sum + s, 0);
-
-      const frontRow = document.createElement("tr");
-      frontRow.innerHTML = "<td>1–9</td>" + front9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(frontRow);
-
-      const subtotalRow = document.createElement("tr");
-      subtotalRow.innerHTML = `<td>Subtotal</td><td colspan="9">${subtotal}</td>`;
-      table.appendChild(subtotalRow);
-
-      const backRow = document.createElement("tr");
-      backRow.innerHTML = "<td>10–18</td>" + back9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(backRow);
-
-      const totalRow = document.createElement("tr");
-      totalRow.innerHTML = `<td>Total</td><td colspan="9">${player.total}</td>`;
-      table.appendChild(totalRow);
-
-      container.appendChild(table);
-    });
-
-    container.appendChild(document.createElement("hr"));
-  };
+    const scorecard = renderHistoryScorecard(game, gameNumber);
+    container.appendChild(scorecard);
+  });
 
   if (previousHistory.length > 10) {
     const moreLink = document.createElement("a");
@@ -788,6 +748,9 @@ container.appendChild(scorecard);
     moreLink.className = "more-link";
     container.appendChild(moreLink);
   }
+
+  showModal("historyModal");
+}
 
 function clearHistory() {
   localStorage.removeItem(historyKey);
