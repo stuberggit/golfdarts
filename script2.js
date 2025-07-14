@@ -1042,7 +1042,8 @@ function renderHistoryScorecard(game, index, totalGames) {
   block.appendChild(table);
 
   return block;
-});
+}
+
 
 
 window.startGame = startGame;
