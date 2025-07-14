@@ -533,11 +533,13 @@ button:hover {
 .history-page {
   font-family: sans-serif;
   padding: 20px;
-  background-color: #10216b;
+  background-color: #10216b; /* ✅ Good */
+  color: white;
 }
 
 .history-page h1 {
   text-align: center;
+  color: white;
 }
 
 .history-page select {
@@ -547,103 +549,50 @@ button:hover {
   font-size: 16px;
 }
 
-.history-page .game-block {
-  background: white;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-.history-page .game-block h3 {
-  margin-top: 0;
-}
-
-.history-page .game-block ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.history-page .game-block li {
-  padding: 2px 0;
-}
-
+/* Game blocks that wrap each scorecard */
 .history-block {
-  background: white;
-  padding: 12px;
-  margin: 12px 0;
+  background: #2a4f0c; /* ✅ slightly darker green */
+  padding: 16px;
+  margin: 16px 0;
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  color: white;
 }
 
 .history-block h3 {
   margin-top: 0;
-  font-size: 1.1em;
+  font-size: 1.2rem;
+  color: #ffff66; /* soft yellow for title */
 }
 
-.history-block ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.history-block li {
-  padding: 3px 0;
-}
-
+/* Scorecard table inside history blocks */
 .history-scorecard {
   width: 100%;
   border-collapse: collapse;
-  margin: 10px 0;
   font-size: 0.9rem;
-  padding: 4px;
-  min-width: 30px;
+  margin-top: 10px;
+  background-color: white;
+  color: black;
 }
 
 .history-scorecard th,
 .history-scorecard td {
   border: 1px solid #ccc;
-  padding: 4px;
+  padding: 6px;
   text-align: center;
-  background-color: #f9f9f9;
-  min-width: 30px;
+  background-color: white;
 }
 
-.history-scorecard td:first-child,
-.history-scorecard th:first-child {
-  text-align: left;
-  white-space: nowrap;
+.history-scorecard th:first-child,
+.history-scorecard td:first-child {
+  text-align: left;
+  white-space: nowrap;
 }
 
-/* Mini Scorecard Table */
-.mini-scorecard {
-  border-collapse: collapse;
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.mini-scorecard th,
-.mini-scorecard td {
-  border: 1px solid #ccc;
-  padding: 4px 6px;
-  text-align: center;
-}
-
-.mini-scorecard th {
-  background-color: #f0f0f0;
-  font-weight: bold;
-}
-
-/* Make history modal scrollable */
+/* Make history modal scrollable (if reused elsewhere) */
 #historyModal .modal-content {
   max-height: 80vh;
   overflow-y: auto;
 }
 
-/* Optional: Style the link */
-.more-link {
-  display: block;
-  margin-top: 1rem;
-  text-align: right;
-  color: #0066cc;
-  font-weight: bold;
-}
