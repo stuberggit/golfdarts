@@ -736,7 +736,9 @@ function showHistory() {
   const latestGames = previousHistory.slice(-10).reverse(); // show 10 most recent
 
   latestGames.forEach((game, index) => {
-    const date = new Date(game.date).toLocaleString();
+    const gameNumber = previousHistory.length - index;
+  const scorecard = renderHistoryScorecard(game, gameNumber);
+  container.appendChild(scorecard);const date = new Date(game.date).toLocaleString();
     const suffix = game.suddenDeath ? " (Sudden Death)" : "";
     const header = document.createElement("h3");
     header.textContent = `Game ${previousHistory.length - index} – ${date}${suffix}`;
@@ -946,22 +948,76 @@ function renderHistory() {
     const block = document.createElement("div");
     block.className = "history-block";
 
-    const date = new Date(game.date).toLocaleString();
-    const mode = game.advancedMode ? "Advanced" : "Standard";
-    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
+    const date = new Date(game.date).toLocaleDateString();
+    const suffix = game.suddenDeath ? " – Sudden Death" : "";
 
-    block.innerHTML = `<h3>Game ${history.length - index} – ${date} – ${mode}${sudden}</h3>`;
+    const gameNumber = history.length - index;
+    const title = document.createElement("h3");
+    title.textContent = `Game ${gameNumber} – ${date}${suffix}`;
+    block.appendChild(title);
 
-    const ul = document.createElement("ul");
+    const table = document.createElement("table");
+    table.className = "history-scorecard";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const headers = [
+      "Player", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Out",
+      "10", "11", "12", "13", "14", "15", "16", "17", "18", "In", "Total"
+    ];
+    headers.forEach(h => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
     game.players.forEach(p => {
       if (!selected || p.name === selected) {
-        const li = document.createElement("li");
-        li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-        ul.appendChild(li);
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.textContent = p.name;
+        row.appendChild(nameCell);
+
+        const front9 = p.scores.slice(0, 9);
+        const back9 = p.scores.slice(9, 18);
+        const out = front9.reduce((a, b) => a + b, 0);
+        const inn = back9.reduce((a, b) => a + b, 0);
+        const total = out + inn;
+
+        front9.forEach(score => {
+          const td = document.createElement("td");
+          td.textContent = score;
+          row.appendChild(td);
+        });
+
+        const outTd = document.createElement("td");
+        outTd.textContent = out;
+        row.appendChild(outTd);
+
+        back9.forEach(score => {
+          const td = document.createElement("td");
+          td.textContent = score;
+          row.appendChild(td);
+        });
+
+        const inTd = document.createElement("td");
+        inTd.textContent = inn;
+        row.appendChild(inTd);
+
+        const totalTd = document.createElement("td");
+        totalTd.textContent = total;
+        row.appendChild(totalTd);
+
+        tbody.appendChild(row);
       }
     });
 
-    block.appendChild(ul);
+    table.appendChild(tbody);
+    block.appendChild(table);
     container.appendChild(block);
   });
 }
