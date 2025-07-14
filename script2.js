@@ -742,9 +742,9 @@ function showHistory() {
     header.textContent = `Game ${previousHistory.length - index} – ${date}${suffix}`;
     container.appendChild(header);
 
-    game.players.forEach(player => {
-      const table = document.createElement("table");
-      table.className = "mini-scorecard";
+    const scorecard = renderHistoryScorecard(game, index, history.length);
+container.appendChild(scorecard);
+
 
       const nameRow = document.createElement("tr");
       const nameCell = document.createElement("th");
