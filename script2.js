@@ -777,7 +777,7 @@ container.appendChild(scorecard);
     });
 
     container.appendChild(document.createElement("hr"));
-  });
+  };
 
   if (previousHistory.length > 10) {
     const moreLink = document.createElement("a");
