@@ -1101,27 +1101,68 @@ window.submitPlayerScore = submitPlayerScore;
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("playerFilter")) {
-    loadHistoryPage();
-  }
-});
+  const isHistoryPage = !!document.getElementById("playerFilter");
+  const isPreprod = location.href.includes("index2") || location.href.includes("script2.js");
 
-document.addEventListener("DOMContentLoaded", () => {
-  // History page init
-  if (document.getElementById("playerFilter")) {
-    initHistoryPage();
+  // 1. History page logic
+  if (isHistoryPage) {
+    loadHistoryPage?.();
+    initHistoryPage?.();
   }
 
+  // 2. Hamburger menu toggle
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+  if (hamburgerIcon && hamburgerMenu) {
+    hamburgerIcon.addEventListener("click", () => {
+      hamburgerMenu.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+        hamburgerMenu.classList.add("hidden");
+      }
+    });
+  }
+
+  // 3. Conditionally show Clear History (preprod only)
+  const clearLink = document.getElementById("clearHistoryLink");
+  if (clearLink && isPreprod) {
+    clearLink.classList.remove("hidden");
+    clearLink.addEventListener("click", () => {
+      if (confirm("Are you sure you want to clear all saved game history? This cannot be undone.")) {
+        localStorage.removeItem("golfdartsHistory");
+        alert("Game history has been cleared.");
+        location.reload();
+      }
+    });
+  }
+
+  // 4. View History button
+  const viewHistoryLink = document.getElementById("viewHistoryLink");
+  if (viewHistoryLink) {
+    console.log("🧷 View History listener attached");
+    viewHistoryLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("🖱️ View History clicked");
+      showHistory?.();
+    });
+  }
+
+  // 5. Game setup dropdown logic
   const select = document.getElementById("playerCount");
-  if (!select) return;
+  if (select) {
+    for (let i = 1; i <= 20; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+      select.appendChild(option);
+    }
 
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
+    select.addEventListener("change", createPlayerInputs);
   }
 
+  // 6. Toggles
   document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
@@ -1132,29 +1173,13 @@ document.addEventListener("DOMContentLoaded", () => {
     advancedMode = e.target.checked;
   });
 
-  select.addEventListener("change", createPlayerInputs);
-
-  document.getElementById("viewHistoryLink")?.addEventListener("click", (e) => {
-  e.preventDefault();
-  showHistory();
-});
-
- const viewHistoryLink = document.getElementById("viewHistoryLink");
-  if (viewHistoryLink) {
-    console.log("🧷 View History listener attached"); // <== should log on page load
-    viewHistoryLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log("🖱️ View History clicked"); // <== should log when clicked
-      showHistory(); // <== should trigger your function
-    });
-  }
-
+  // 7. Load previous game if any
   requestAnimationFrame(() => {
     loadGameState?.();
   });
 });
 
-// Warn if game in progress on tab close
+// 8. Warn on tab close if game in progress
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
@@ -1163,12 +1188,12 @@ window.addEventListener("beforeunload", function (e) {
   }
 });
 
-// Allow closing history modal by clicking outside it
+// 9. Dismiss modal by clicking outside
 window.addEventListener("click", (e) => {
   const modal = document.getElementById("historyModal");
   const content = modal?.querySelector(".modal-content");
-
   if (modal && !modal.classList.contains("hidden") && !content.contains(e.target)) {
     closeModal("historyModal");
   }
 });
+
