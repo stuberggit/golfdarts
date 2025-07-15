@@ -1110,7 +1110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initHistoryPage?.();
   }
 
-  // 2. Hamburger menu toggle
+  // 2. Hamburger menu toggle (works everywhere)
   const hamburgerIcon = document.getElementById("hamburgerIcon");
   const hamburgerMenu = document.getElementById("hamburgerMenu");
   if (hamburgerIcon && hamburgerMenu) {
@@ -1125,17 +1125,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Conditionally show Clear History (preprod only)
+  // 3. Conditionally show Clear History (preprod only, history.html only)
   const clearLink = document.getElementById("clearHistoryLink");
-  if (clearLink && isPreprod) {
-    clearLink.classList.remove("hidden");
-    clearLink.addEventListener("click", () => {
-      if (confirm("Are you sure you want to clear all saved game history? This cannot be undone.")) {
-        localStorage.removeItem("golfdartsHistory");
-        alert("Game history has been cleared.");
-        location.reload();
-      }
-    });
+  if (clearLink) {
+    if (isPreprod && isHistoryPage) {
+      clearLink.classList.remove("hidden");
+      clearLink.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all saved game history? This cannot be undone.")) {
+          localStorage.removeItem("golfdartsHistory");
+          alert("Game history has been cleared.");
+          location.reload();
+        }
+      });
+    } else {
+      clearLink.classList.add("hidden"); // stays hidden on prod
+    }
   }
 
   // 4. View History button
@@ -1145,11 +1149,11 @@ document.addEventListener("DOMContentLoaded", () => {
     viewHistoryLink.addEventListener("click", (e) => {
       e.preventDefault();
       console.log("🖱️ View History clicked");
-      showHistory?.();
+      showHistory?.(); // Should fallback gracefully if undefined
     });
   }
 
-  // 5. Game setup dropdown logic
+  // 5. Game setup dropdown logic (index2 only)
   const select = document.getElementById("playerCount");
   if (select) {
     for (let i = 1; i <= 20; i++) {
@@ -1188,12 +1192,13 @@ window.addEventListener("beforeunload", function (e) {
   }
 });
 
-// 9. Dismiss modal by clicking outside
+// 9. Dismiss modal by clicking outside (for any modal)
 window.addEventListener("click", (e) => {
-  const modal = document.getElementById("historyModal");
+  const modal = document.querySelector(".modal-overlay:not(.hidden)");
   const content = modal?.querySelector(".modal-content");
-  if (modal && !modal.classList.contains("hidden") && !content.contains(e.target)) {
-    closeModal("historyModal");
+  if (modal && content && !content.contains(e.target)) {
+    modal.classList.add("hidden");
   }
 });
+
 
