@@ -1102,23 +1102,33 @@ window.submitPlayerScore = submitPlayerScore;
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ DOMContentLoaded fired");
+
   const isHistoryPage = !!document.getElementById("playerFilter");
   const isPreprod = location.href.includes("index2") || location.href.includes("script2.js");
 
   // 1. Hamburger logic (shared)
   const hamburgerIcon = document.getElementById("hamburgerIcon");
   const hamburgerMenu = document.getElementById("hamburgerMenu");
+  console.log("🔎 hamburgerIcon:", !!hamburgerIcon);
+  console.log("🔎 hamburgerMenu:", !!hamburgerMenu);
+
   if (hamburgerIcon && hamburgerMenu) {
+    console.log("🍔 Hamburger elements found — attaching listener");
     hamburgerIcon.addEventListener("click", () => {
+      console.log("👆 Hamburger clicked");
       hamburgerMenu.classList.toggle("hidden");
     });
 
     document.addEventListener("click", (e) => {
       if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+        console.log("📦 Outside hamburger click — hiding menu");
         hamburgerMenu.classList.add("hidden");
       }
     });
+  } else {
+    console.warn("🚫 Hamburger elements NOT found");
   }
+    });
 
   // 2. History Page logic
   if (isHistoryPage) {
