@@ -1128,7 +1128,6 @@ document.addEventListener("DOMContentLoaded", () => {
   } else {
     console.warn("🚫 Hamburger elements NOT found");
   }
-    });
 
   // 2. History Page logic
   if (isHistoryPage) {
@@ -1170,6 +1169,8 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
       loadGameState?.();
     });
-  };
+  }
+});
+
 
 
