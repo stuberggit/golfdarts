@@ -1,3 +1,4 @@
+// Global state
 let players = [];
 let allPlayers = [];
 let currentHole = 1;
@@ -10,12 +11,15 @@ let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 
-console.log("script2.js loaded");
-
-// Identify environment and set storage key
-const isPreProd = location.pathname.includes("index2.html") || location.pathname.includes("script2.js");
+const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
+let history = [];
+let filterSelect;
+let container;
+
+console.log("script.js loaded");
+console.log("Parsed History:", history);
 
 // ========== GAME SETUP ==========
 
@@ -668,10 +672,11 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  const historyBtn = document.createElement("button");
+  const historyBtn = document.createElement("a");
 historyBtn.innerText = "View History";
+historyBtn.href = "history.html";
+historyBtn.target = "_blank";
 historyBtn.className = "primary-button full-width";
-historyBtn.onclick = () => showHistory();
 scoreInputs.appendChild(historyBtn);
 
 
@@ -680,7 +685,7 @@ scoreInputs.appendChild(historyBtn);
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
-    if (confirm("Start new round with same players?")) {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
       // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
 
@@ -715,46 +720,32 @@ if (leaderboard) {
 }
 
 function showHistory() {
+  console.log("📚 showHistory() was called");
+
   const container = document.getElementById("historyDetails");
   container.innerHTML = "";
 
-  const history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  if (history.length === 0) {
+  if (previousHistory.length === 0) {
     container.innerHTML = "<p>No past games saved.</p>";
     showModal("historyModal");
     return;
   }
 
-  const latestGames = history.slice(-10).reverse(); // Get last 10 games, newest first
+  const latestGames = previousHistory.slice(-10).reverse(); // show 10 most recent
 
   latestGames.forEach((game, index) => {
-    const date = new Date(game.date).toLocaleString();
-    const mode = game.advancedMode ? "Advanced" : "Standard";
-    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
-    const header = document.createElement("h3");
-    header.textContent = `Game ${history.length - index} – ${date} – ${mode}${sudden}`;
-    container.appendChild(header);
-
-    const list = document.createElement("ul");
-    game.players.forEach(p => {
-      const li = document.createElement("li");
-      li.textContent = `${p.name}: ${p.total} (${p.scores.join(", ")})`;
-      list.appendChild(li);
-    });
-    container.appendChild(list);
-
-    container.appendChild(document.createElement("hr")); // visual divider
+    const gameNumber = previousHistory.length - index;
+    const scorecard = renderHistoryScorecard(game, gameNumber);
+    container.appendChild(scorecard);
   });
 
-  // Add "More Rounds" link if history has more than 10
-  if (history.length > 10) {
+  if (previousHistory.length > 10) {
     const moreLink = document.createElement("a");
     moreLink.href = "history.html";
     moreLink.textContent = "➡️ View More Rounds";
-    moreLink.style.display = "block";
-    moreLink.style.marginTop = "10px";
+    moreLink.className = "more-link";
     container.appendChild(moreLink);
   }
 
@@ -830,9 +821,6 @@ function closeModal(id) {
   if (modal) modal.classList.add('hidden');
 }
 
-window.showModal = showModal;
-window.closeModal = closeModal;
-
 
 // ========== ADVANCED MODE ==========
 
@@ -879,58 +867,336 @@ if (document.getElementById("hazardPenalty")?.checked) {
   score += 1;
 }
 
-// ========== EVENT LISTENERS ==========
+// ================= HISTORY FUNCTIONS =================
 
-window.addEventListener("DOMContentLoaded", () => {
-  const select = document.getElementById("playerCount");
+function initHistoryPage() {
+  filterSelect = document.getElementById("playerFilter");
+  container = document.getElementById("historyContainer");
+  if (!filterSelect || !container) return;
 
-  // Populate the dropdown
-  for (let i = 1; i <= 20; i++) {
+  history = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const uniquePlayers = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+
+  filterSelect.innerHTML = '<option value="">-- All Players --</option>';
+  uniquePlayers.sort().forEach(name => {
     const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
+    option.value = name;
+    option.textContent = name;
+    filterSelect.appendChild(option);
+  });
+
+  filterSelect.addEventListener("change", renderHistory);
+  renderHistory();
+
+  console.log("🎯 initHistoryPage running...");
+  console.log("History:", history);
+  console.log("Player Filter:", filterSelect);
+  console.log("Parsed Names:", uniquePlayers);
+}
+
+function renderHistory() {
+  container.innerHTML = "";
+  const selected = filterSelect.value;
+
+  const filtered = history.slice().reverse().filter(game =>
+    !selected || game.players.some(p => p.name === selected)
+  );
+
+  if (filtered.length === 0) {
+    container.innerHTML = "<p>No games match this filter.</p>";
+    return;
   }
 
-  // Add checkbox toggle listeners (check IDs match your HTML)
-  document.getElementById("audioToggle").addEventListener("change", (e) => {
+  filtered.forEach((game, index) => {
+    const block = document.createElement("div");
+    block.className = "history-block";
+
+    const date = new Date(game.date).toLocaleDateString();
+    const suffix = game.suddenDeath ? " – Sudden Death" : "";
+
+    const gameNumber = history.length - index;
+    const title = document.createElement("h3");
+    title.textContent = `Game ${gameNumber} – ${date}${suffix}`;
+    block.appendChild(title);
+
+    const table = document.createElement("table");
+    table.className = "history-scorecard";
+
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const headers = [
+      "Player", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Out",
+      "10", "11", "12", "13", "14", "15", "16", "17", "18", "In", "Total"
+    ];
+    headers.forEach(h => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    game.players.forEach(p => {
+      if (!selected || p.name === selected) {
+        const row = document.createElement("tr");
+        const nameCell = document.createElement("td");
+        nameCell.textContent = p.name;
+        row.appendChild(nameCell);
+
+        const front9 = p.scores.slice(0, 9);
+        const back9 = p.scores.slice(9, 18);
+        const out = front9.reduce((a, b) => a + b, 0);
+        const inn = back9.reduce((a, b) => a + b, 0);
+        const total = out + inn;
+
+        front9.forEach(score => {
+          const td = document.createElement("td");
+          td.textContent = score;
+          row.appendChild(td);
+        });
+
+        const outTd = document.createElement("td");
+        outTd.textContent = out;
+        row.appendChild(outTd);
+
+        back9.forEach(score => {
+          const td = document.createElement("td");
+          td.textContent = score;
+          row.appendChild(td);
+        });
+
+        const inTd = document.createElement("td");
+        inTd.textContent = inn;
+        row.appendChild(inTd);
+
+        const totalTd = document.createElement("td");
+        totalTd.textContent = total;
+        row.appendChild(totalTd);
+
+        tbody.appendChild(row);
+      }
+    });
+
+    table.appendChild(tbody);
+    block.appendChild(table);
+    container.appendChild(block);
+  });
+}
+
+function loadHistoryPage() {
+  const container = document.getElementById("historyContainer");
+  const filter = document.getElementById("playerFilter");
+  if (!container || !filter) return;
+
+  const history = JSON.parse(localStorage.getItem("golfdartsHistory") || "[]").reverse();
+
+  // Populate dropdown with unique player names
+  const uniqueNames = [...new Set(history.flatMap(game => game.players.map(p => p.name)))];
+  uniqueNames.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    filter.appendChild(opt);
+  });
+
+  // Filter and render
+  function renderFilteredHistory() {
+    const selected = filter.value;
+    container.innerHTML = "";
+    history.forEach((game, index) => {
+      if (selected && !game.players.some(p => p.name === selected)) return;
+      const scorecard = renderHistoryScorecard(game, index, history.length);
+      container.appendChild(scorecard);
+    });
+  }
+
+  filter.addEventListener("change", renderFilteredHistory);
+  renderFilteredHistory();
+}
+
+
+function renderHistoryScorecard(game, index, totalGames) {
+  const block = document.createElement("div");
+  block.className = "game-block";
+
+  const date = new Date(game.date).toLocaleDateString();
+  const modeSuffix = game.suddenDeath ? " – Sudden Death" : "";
+
+  const title = document.createElement("h3");
+  title.textContent = `Game ${totalGames - index} – ${date}${modeSuffix}`;
+  block.appendChild(title);
+
+  const table = document.createElement("table");
+  table.className = "history-scorecard";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+
+  const headers = [
+    "Player", "1", "2", "3", "4", "5", "6", "7", "8", "9", "Out",
+    "10", "11", "12", "13", "14", "15", "16", "17", "18", "In", "Total"
+  ];
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  game.players.forEach(player => {
+    const row = document.createElement("tr");
+    const tdName = document.createElement("td");
+    tdName.textContent = player.name;
+    row.appendChild(tdName);
+
+    const front = player.scores.slice(0, 9);
+    const back = player.scores.slice(9, 18);
+    const out = front.reduce((sum, s) => sum + s, 0);
+    const inTotal = back.reduce((sum, s) => sum + s, 0);
+    const total = out + inTotal;
+
+    front.forEach(score => {
+      const td = document.createElement("td");
+      td.textContent = score;
+      row.appendChild(td);
+    });
+
+    const tdOut = document.createElement("td");
+    tdOut.textContent = out;
+    row.appendChild(tdOut);
+
+    back.forEach(score => {
+      const td = document.createElement("td");
+      td.textContent = score;
+      row.appendChild(td);
+    });
+
+    const tdIn = document.createElement("td");
+    tdIn.textContent = inTotal;
+    row.appendChild(tdIn);
+
+    const tdTotal = document.createElement("td");
+    tdTotal.textContent = total;
+    row.appendChild(tdTotal);
+
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(tbody);
+  block.appendChild(table);
+
+  return block;
+}
+
+window.startGame = startGame;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.showHistory = showHistory;
+window.submitPlayerScore = submitPlayerScore;
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
+  const isHistoryPage = !!document.getElementById("playerFilter");
+  const isPreprod = location.href.includes("index2") || location.href.includes("script2.js");
+
+  // 1. History page logic
+  if (isHistoryPage) {
+    loadHistoryPage?.();
+    initHistoryPage?.();
+  }
+
+  // 2. Hamburger menu toggle (works everywhere)
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+  if (hamburgerIcon && hamburgerMenu) {
+    hamburgerIcon.addEventListener("click", () => {
+      hamburgerMenu.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+        hamburgerMenu.classList.add("hidden");
+      }
+    });
+  }
+
+  // 3. Conditionally show Clear History (preprod only, history.html only)
+  const clearLink = document.getElementById("clearHistoryLink");
+  if (clearLink) {
+    if (isPreprod && isHistoryPage) {
+      clearLink.classList.remove("hidden");
+      clearLink.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all saved game history? This cannot be undone.")) {
+          localStorage.removeItem("golfdartsHistory");
+          alert("Game history has been cleared.");
+          location.reload();
+        }
+      });
+    } else {
+      clearLink.classList.add("hidden"); // stays hidden on prod
+    }
+  }
+
+  // 4. View History button
+  const viewHistoryLink = document.getElementById("viewHistoryLink");
+  if (viewHistoryLink) {
+    console.log("🧷 View History listener attached");
+    viewHistoryLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("🖱️ View History clicked");
+      showHistory?.(); // Should fallback gracefully if undefined
+    });
+  }
+
+  // 5. Game setup dropdown logic (index2 only)
+  const select = document.getElementById("playerCount");
+  if (select) {
+    for (let i = 1; i <= 20; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+      select.appendChild(option);
+    }
+
+    select.addEventListener("change", createPlayerInputs);
+  }
+
+  // 6. Toggles
+  document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
-
-  document.getElementById("randomToggle").addEventListener("change", (e) => {
+  document.getElementById("randomToggle")?.addEventListener("change", (e) => {
     randomizedMode = e.target.checked;
   });
-
-  document.getElementById("advancedToggle").addEventListener("change", (e) => {
+  document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
   });
 
-  // Trigger name inputs when player count is selected
-  select.addEventListener("change", createPlayerInputs);
-});
-
-// Add unload protection if a saved game is in progress
-window.addEventListener("beforeunload", function (e) {
-  const saved = localStorage.getItem("golfdartsState");
-  if (saved) {
-    e.preventDefault();
-    e.returnValue = ""; // Required for most browsers to show warning
-  }
-});
-
-// Load saved game state on full window load (after assets)
-window.addEventListener("DOMContentLoaded", () => {
+  // 7. Load previous game if any
   requestAnimationFrame(() => {
-    loadGameState();
+    loadGameState?.();
   });
 });
 
-
-
+// 8. Warn on tab close if game in progress
 window.addEventListener("beforeunload", function (e) {
   const saved = localStorage.getItem("golfdartsState");
   if (saved) {
     e.preventDefault();
     e.returnValue = "";
+  }
+});
+
+// 9. Dismiss modal by clicking outside (for any modal)
+window.addEventListener("click", (e) => {
+  const modal = document.querySelector(".modal-overlay:not(.hidden)");
+  const content = modal?.querySelector(".modal-content");
+  if (modal && content && !content.contains(e.target)) {
+    modal.classList.add("hidden");
   }
 });
