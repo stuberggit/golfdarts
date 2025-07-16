@@ -1104,13 +1104,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const isHistoryPage = !!document.getElementById("playerFilter");
   const isPreprod = location.href.includes("index2") || location.href.includes("script2.js");
 
-  // 1. History page logic
-  if (isHistoryPage) {
-    loadHistoryPage?.();
-    initHistoryPage?.();
-  }
-
-  // 2. Hamburger menu toggle (works everywhere)
+  // 1. Hamburger logic (shared)
   const hamburgerIcon = document.getElementById("hamburgerIcon");
   const hamburgerMenu = document.getElementById("hamburgerMenu");
   if (hamburgerIcon && hamburgerMenu) {
@@ -1125,10 +1119,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Conditionally show Clear History (preprod only, history.html only)
-  const clearLink = document.getElementById("clearHistoryLink");
-  if (clearLink) {
-    if (isPreprod && isHistoryPage) {
+  // 2. History Page logic
+  if (isHistoryPage) {
+    initHistoryPage?.();
+    const clearLink = document.getElementById("clearHistoryLink");
+    if (clearLink && isPreprod) {
       clearLink.classList.remove("hidden");
       clearLink.addEventListener("click", () => {
         if (confirm("Are you sure you want to clear all saved game history? This cannot be undone.")) {
@@ -1137,23 +1132,10 @@ document.addEventListener("DOMContentLoaded", () => {
           location.reload();
         }
       });
-    } else {
-      clearLink.classList.add("hidden"); // stays hidden on prod
     }
   }
 
-  // 4. View History button
-  const viewHistoryLink = document.getElementById("viewHistoryLink");
-  if (viewHistoryLink) {
-    console.log("🧷 View History listener attached");
-    viewHistoryLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log("🖱️ View History clicked");
-      showHistory?.(); // Should fallback gracefully if undefined
-    });
-  }
-
-  // 5. Game setup dropdown logic (index2 only)
+  // 3. Index2-only logic (game setup)
   const select = document.getElementById("playerCount");
   if (select) {
     for (let i = 1; i <= 20; i++) {
@@ -1164,40 +1146,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     select.addEventListener("change", createPlayerInputs);
-  }
+    document.getElementById("audioToggle")?.addEventListener("change", (e) => {
+      audioEnabled = e.target.checked;
+    });
+    document.getElementById("randomToggle")?.addEventListener("change", (e) => {
+      randomizedMode = e.target.checked;
+    });
+    document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
+      advancedMode = e.target.checked;
+    });
 
-  // 6. Toggles
-  document.getElementById("audioToggle")?.addEventListener("change", (e) => {
-    audioEnabled = e.target.checked;
-  });
-  document.getElementById("randomToggle")?.addEventListener("change", (e) => {
-    randomizedMode = e.target.checked;
-  });
-  document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
-    advancedMode = e.target.checked;
-  });
-
-  // 7. Load previous game if any
-  requestAnimationFrame(() => {
-    loadGameState?.();
-  });
-});
-
-// 8. Warn on tab close if game in progress
-window.addEventListener("beforeunload", function (e) {
-  const saved = localStorage.getItem("golfdartsState");
-  if (saved) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
-
-// 9. Dismiss modal by clicking outside (for any modal)
-window.addEventListener("click", (e) => {
-  const modal = document.querySelector(".modal-overlay:not(.hidden)");
-  const content = modal?.querySelector(".modal-content");
-  if (modal && content && !content.contains(e.target)) {
-    modal.classList.add("hidden");
+    requestAnimationFrame(() => {
+      loadGameState?.();
+    });
   }
 });
 
