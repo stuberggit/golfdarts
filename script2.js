@@ -1101,6 +1101,7 @@ window.submitPlayerScore = submitPlayerScore;
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ DOMContentLoaded fired");
   const isHistoryPage = !!document.getElementById("playerFilter");
   const isPreprod = location.href.includes("index2") || location.href.includes("script2.js");
 
