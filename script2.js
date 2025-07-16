@@ -1112,6 +1112,11 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("🔎 hamburgerIcon:", !!hamburgerIcon);
   console.log("🔎 hamburgerMenu:", !!hamburgerMenu);
 
+  const hamburger = document.getElementById("hamburgerIcon");
+if (hamburger) {
+  hamburger.style.display = "block"; // Show it regardless of gameStarted
+}
+
   if (hamburgerIcon && hamburgerMenu) {
     console.log("🍔 Hamburger elements found — attaching listener");
     hamburgerIcon.addEventListener("click", () => {
