@@ -1170,7 +1170,6 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(() => {
       loadGameState?.();
     });
-  }
-});
+  });
 
 
