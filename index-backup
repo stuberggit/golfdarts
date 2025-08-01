@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GolfDarts</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header and Hamburger -->
+  <div class="header-bar">
+    <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+    <div class="hamburger" id="hamburgerIcon">☰</div>
+  </div>
+
+  <div class="hamburger-menu hidden" id="hamburgerMenu">
+  <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+  <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="history.html" target="_blank" rel="noopener noreferrer">📚 View History</a>
+  <label><input type="checkbox" id="audioToggle" checked> Audio</label>
+  <label><input type="checkbox" id="randomToggle"> Random</label>
+  <label><input type="checkbox" id="advancedToggle"> Advanced</label>
+</div>
+
+
+  <!-- Setup Screen -->
+  <div id="setup">
+    <div class="form-group">
+      <label for="playerCount">Number of Players:</label>
+      <select id="playerCount" class="large-select">
+        <option value="" disabled selected>Select Players</option>
+      </select>
+    </div>
+    <div id="nameInputs"></div>
+    <button id="startBtn" class="primary-button" onclick="startGame()" style="display:none;">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="game" style="display:none;">
+    <h2 id="holeHeader">Hole 1</h2>
+    <div id="scoreInputs"></div>
+
+    <div class="form-actions">
+      <button class="primary-button" onclick="submitPlayerScore()">Submit Score</button>
+      <button class="primary-button small-button" onclick="undoHole()" style="border-color: red;">Undo Last Hole</button>
+      <button class="button-leaderboard small-button" onclick="showModal('leaderboardModal')">Leaderboard</button>
+    </div>
+
+    <div id="scoreAnimation"></div>
+
+    <h3>Scorecard</h3>
+    <div id="scorecardWrapper">
+      <div id="scorecard"></div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="rulesModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📜 Rules</h2>
+      <p>
+        Darts, played like golf.<br><br>
+        Each player throws all 3 of their darts at the "hole" number, entering the total number of hits.<br><br>
+        After all players have completed the hole, all players advance to the next hole.<br><br>
+        Repeat this process until all players complete hole 18.<br><br>
+        Every hole is scored as a par three.<br><br>
+        The person with the lowest score wins the round.<br><br>
+        See the "scoring" summary for how scoring is calculated.
+      </p>
+      <button onclick="closeModal('rulesModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="scoringModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📊 Scoring</h2>
+      <h3># of Hits</h3>
+      <ul class="scoring-list">
+        <li style="color:#ff4c4c;">Miss! - Double Bogey (5)</li>
+        <li style="color:#ffffff;">1 - Par (3)</li>
+        <li style="color:#00ff00;">2 - Birdie (2)</li>
+        <li style="color:#00ffff;">3 - Ace (1)</li>
+        <li style="color:#ffcc00;">4 - Goose Egg (0)</li>
+        <li style="color:#ff66ff;">5 - Icicle (-1)</li>
+        <li style="color:#00bfff;">6 - Polar Bear (-2)</li>
+        <li style="color:#ff9933;">7 - Frostbite (-3)</li>
+        <li style="color:#ff69b4;">8 - Snowman (-4)</li>
+        <li style="color:#ffff00;">9 - Avalanche (-5)</li>
+      </ul>
+      <button onclick="closeModal('scoringModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="leaderboardModal" class="modal-overlay hidden">
+    <div class="modal-content leaderboard-modal">
+      <h2>🏆 Leaderboard</h2>
+      <div id="leaderboardDetails"></div>
+      <button onclick="closeModal('leaderboardModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="gameStatsModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📈 Game Stats</h2>
+      <div id="statsDetails"></div>
+      <button onclick="closeModal('gameStatsModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="historyModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>📚 Game History</h2>
+    <div id="historyDetails"></div>
+    <button onclick="closeModal('historyModal')">Close</button>
+  </div>
+</div>
+
+
+  <script>
+  const hamburgerIcon = document.getElementById("hamburgerIcon");
+  const hamburgerMenu = document.getElementById("hamburgerMenu");
+
+  hamburgerIcon.addEventListener("click", () => {
+    hamburgerMenu.classList.toggle("hidden");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (!hamburgerMenu.contains(e.target) && !hamburgerIcon.contains(e.target)) {
+      hamburgerMenu.classList.add("hidden");
+    }
+  });
+</script>
+
+  <!-- Make sure this is last -->
+  <script type="module" src="script.js"></script>
+
+</body>
+</html>
