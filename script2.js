@@ -11,14 +11,14 @@ let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 
-const isPreProd = location.href.includes("index2") || location.href.includes("script2");
+const isPreProd = location.href.includes("index3") || location.href.includes("script3");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
 let history = [];
 let filterSelect;
 let container;
 
-console.log("script.js loaded");
+console.log("script3.js loaded");
 console.log("Parsed History:", history);
 
 // ========== GAME SETUP ==========
