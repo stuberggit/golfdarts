@@ -626,7 +626,7 @@ function isAdjacent(number1, number2) {
   return number2 === prev || number2 === next;
 }
 
-if (isAdvancedMode && hazardHoles.includes(currentHole)) {
+if (advancedMode && hazardHoles.includes(currentHole)) {
   const targetNumber = holeNumbers[currentHole];
   darts.forEach(dart => {
     if ((dart.type === 'D' || dart.type === 'T') && isAdjacent(targetNumber, dart.value)) {
@@ -1072,15 +1072,5 @@ window.addEventListener("beforeunload", function (e) {
   if (saved) {
     e.preventDefault();
     e.returnValue = "";
-  }
-});
-
-// Allow closing history modal by clicking outside it
-window.addEventListener("click", (e) => {
-  const modal = document.getElementById("historyModal");
-  const content = modal?.querySelector(".modal-content");
-
-  if (modal && !modal.classList.contains("hidden") && !content.contains(e.target)) {
-    closeModal("historyModal");
   }
 });
