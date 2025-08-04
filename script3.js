@@ -612,6 +612,32 @@ function loadGameState() {
   document.body.id = "gameStarted";
 }
 
+// ========== ADVANCED MODE ==========
+function setupHazardHoles() {
+  const allHoleIndices = [...Array(18).keys()];
+  hazardHoles = allHoleIndices.sort(() => 0.5 - Math.random()).slice(0, 6);
+}
+
+function isAdjacent(number1, number2) {
+  const dartboardOrder = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+  const idx = dartboardOrder.indexOf(number1);
+  const prev = dartboardOrder[(idx - 1 + 20) % 20];
+  const next = dartboardOrder[(idx + 1) % 20];
+  return number2 === prev || number2 === next;
+}
+
+if (isAdvancedMode && hazardHoles.includes(currentHole)) {
+  const targetNumber = holeNumbers[currentHole];
+  darts.forEach(dart => {
+    if ((dart.type === 'D' || dart.type === 'T') && isAdjacent(targetNumber, dart.value)) {
+      totalScore += 1;
+      if (!player.hazardPenalties) player.hazardPenalties = [];
+      player.hazardPenalties.push(currentHole); // or holeNumbers[currentHole]
+    }
+  });
+}
+
+
 function endGame() {
   gameStarted = false;
 
