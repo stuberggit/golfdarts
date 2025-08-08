@@ -426,8 +426,7 @@ function updateScorecard() {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr>
-        <th>Player</th>
+      <tr><th>Player</th>
         ${[...Array(9)].map((_, i) => {
           const holeNumber = i + start;
           if (advancedMode && hazardHoles.includes(holeNumber)) {
