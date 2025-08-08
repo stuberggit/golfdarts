@@ -10,6 +10,7 @@ let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
+let actionHistory = [];
 
 const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
@@ -128,6 +129,9 @@ function startGame() {
   currentHole = 1;
   currentPlayerIndex = 0;
 
+  // <<< Reset action history for undo
+  actionHistory = [];
+
   // 🔹 Select hazard holes if Advanced Mode is enabled
   if (advancedMode) {
     setupHazardHoles();
@@ -229,7 +233,8 @@ function submitPlayerScore() {
   // Get base score
   let score = getScore(hits);
 
-  // Hazard penalty if applicable
+  // Hazard penalty if applicable - capture whether a hazard was added
+  let hazardAdded = false;
   const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
   if (
     advancedMode &&
@@ -239,16 +244,26 @@ function submitPlayerScore() {
   ) {
     score += 1;
     player.hazards = (player.hazards || 0) + 1;
+    hazardAdded = true;
   }
 
   if (player) {
-  const allPlayer = allPlayers.find(p => p.name === player.name);
-  player.scores.push(score);
-  if (allPlayer) allPlayer.scores.push(score);
-} else {
-  console.warn("No current player found during score submission.");
-  return;
-}
+    const allPlayer = allPlayers.find(p => p.name === player.name);
+    player.scores.push(score);
+    if (allPlayer) allPlayer.scores.push(score);
+
+    // Push to action history so Undo can reliably reverse this exact action
+    actionHistory.push({
+      playerIndex: currentPlayerIndex,
+      playerName: player.name,
+      hole: currentHole,
+      score: score,
+      hazardAdded: hazardAdded
+    });
+  } else {
+    console.warn("No current player found during score submission.");
+    return;
+  }
 
   saveGameState();
 
@@ -343,44 +358,59 @@ function submitPlayerScore() {
 }
 
 
+
   function undoHole() {
-  // Nothing to undo if at very start and no scores entered
-  const hasAnyScore = players.some(p => p.scores.some(s => s !== undefined && s !== null));
-  if (!hasAnyScore) {
+  if (!actionHistory || actionHistory.length === 0) {
     alert("Nothing to undo.");
     return;
   }
 
-  // Step back in turn order
-  if (currentPlayerIndex > 0) {
-    currentPlayerIndex--;
-  } else {
-    if (currentHole > 1) {
-      currentHole--;
-      currentPlayerIndex = players.length - 1;
-    } else {
-      alert("Nothing to undo.");
-      return;
-    }
+  const last = actionHistory.pop();
+  if (!last) {
+    alert("Nothing to undo.");
+    return;
   }
 
-  const player = players[currentPlayerIndex];
-  const allPlayer = allPlayers.find(p => p.name === player.name);
-
-  // Remove score for the current hole
-  const holeIndex = currentHole - 1;
-  if (holeIndex >= 0) {
-    player.scores[holeIndex] = undefined;
-    if (allPlayer) {
-      allPlayer.scores[holeIndex] = undefined;
-    }
+  // Find the player index in the current players array by name (handles rotations)
+  let playerIndex = last.playerIndex;
+  if (!players[playerIndex] || players[playerIndex].name !== last.playerName) {
+    // fallback: find by name
+    const found = players.findIndex(p => p.name === last.playerName);
+    if (found !== -1) playerIndex = found;
   }
+
+  const player = players[playerIndex];
+  const allPlayer = allPlayers.find(p => p.name === last.playerName);
+
+  // Remove the last score entry for that player (if present)
+  if (player && player.scores && player.scores.length > 0) {
+    player.scores.pop();
+  }
+
+  if (allPlayer && allPlayer.scores && allPlayer.scores.length > 0) {
+    allPlayer.scores.pop();
+  }
+
+  // If a hazard was added during that action, decrement hazard counter
+  if (last.hazardAdded && player) {
+    player.hazards = Math.max(0, (player.hazards || 0) - 1);
+    if (allPlayer) allPlayer.hazards = Math.max(0, (allPlayer.hazards || 0) - 1);
+  }
+
+  // Restore UI state to that turn (player and hole)
+  currentHole = last.hole;
+  currentPlayerIndex = playerIndex;
+
+  // Keep game state valid
+  gameStarted = true;
+  suddenDeath = false; // optional: you may want to recalc if undoing during sudden death
 
   saveGameState();
   showHole();
   updateLeaderboard();
   updateScorecard();
 }
+
 
 
 function showShanghaiWin(winnerName) {
@@ -1042,6 +1072,8 @@ window.showModal = showModal;
 window.closeModal = closeModal;
 window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
+window.undoHole = undoHole;
+
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
