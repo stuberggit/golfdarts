@@ -344,32 +344,44 @@ function submitPlayerScore() {
 
 
   function undoHole() {
-  if (currentHole === 1 && currentPlayerIndex === 0) {
+  // Nothing to undo if at very start and no scores entered
+  const hasAnyScore = players.some(p => p.scores.some(s => s !== undefined && s !== null));
+  if (!hasAnyScore) {
     alert("Nothing to undo.");
     return;
   }
 
+  // Step back in turn order
   if (currentPlayerIndex > 0) {
     currentPlayerIndex--;
   } else {
-    currentHole--;
-    currentPlayerIndex = players.length - 1;
+    if (currentHole > 1) {
+      currentHole--;
+      currentPlayerIndex = players.length - 1;
+    } else {
+      alert("Nothing to undo.");
+      return;
+    }
   }
 
   const player = players[currentPlayerIndex];
   const allPlayer = allPlayers.find(p => p.name === player.name);
 
-  if (allPlayer) allPlayer.scores.pop();
-  player.scores.pop();
+  // Remove score for the current hole
+  const holeIndex = currentHole - 1;
+  if (holeIndex >= 0) {
+    player.scores[holeIndex] = undefined;
+    if (allPlayer) {
+      allPlayer.scores[holeIndex] = undefined;
+    }
+  }
 
   saveGameState();
   showHole();
   updateLeaderboard();
   updateScorecard();
-
-  // ✅ Make sure to re-sync allPlayers
-  allPlayers = JSON.parse(JSON.stringify(players));
 }
+
 
 function showShanghaiWin(winnerName) {
   gameStarted = false;
