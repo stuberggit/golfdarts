@@ -128,14 +128,19 @@ function startGame() {
   currentHole = 1;
   currentPlayerIndex = 0;
 
+  // 🔹 Select hazard holes if Advanced Mode is enabled
+  if (advancedMode) {
+    setupHazardHoles();
+  }
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   
   const title = document.querySelector(".header-bar h1");
-if (title) title.style.display = "none";
+  if (title) title.style.display = "none";
 
   const hamburger = document.getElementById("hamburgerIcon");
-if (hamburger) hamburger.style.display = "block";
+  if (hamburger) hamburger.style.display = "block";
    
   showHole();
   updateLeaderboard();
@@ -143,8 +148,8 @@ if (hamburger) hamburger.style.display = "block";
   saveGameState();
 
   document.body.id = "gameStarted";
-
 }
+
 
 // ========== GAMEPLAY ==========
 
