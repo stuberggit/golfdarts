@@ -15,8 +15,6 @@ let randomMode = false;
 
 const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
-console.log("Random Mode is", randomMode);
-
 
 let history = [];
 let filterSelect;
@@ -105,6 +103,7 @@ function handleNameDropdown(selectId, inputId) {
 let holeSequence = [];
 let currentHoleIndex = 0;
 
+console.log("Random Mode is", randomMode);
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
