@@ -290,7 +290,7 @@ function getScoreLabelAndColor(score) {
 }
 
 
-function submitPlayerScore() {
+ffunction submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
 
@@ -301,102 +301,71 @@ function submitPlayerScore() {
 
   const player = players[currentPlayerIndex];
 
-  // Determine current hole for scoring (handles random and sudden death)
-  const displayHole = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
-
-  // Check for Shanghai
+  // Check for Shanghai (6 hits means triple hit)
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${displayHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${holeNum})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  // Base score from hits
-  let score = getScore(hits);
+  // Base score calculation: miss = 5, otherwise lookup
+  let score = getScore(hits); // e.g. hits=1 → score=3 (Par)
 
-  // Hazard penalty if applicable
-  let hazardAdded = false;
-  let hazards = 0; // always defined
+  // Add hazard penalties if applicable
+  let hazards = 0;
+  const displayHole = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
 
   if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
     const hazardSelect = document.querySelector(".hazardSelect");
     if (hazardSelect) {
       hazards = parseInt(hazardSelect.value) || 0;
       if (hazards > 0) {
-        score += hazards; // add hazards to score
-        player.hazards = (player.hazards || 0) + hazards; // track total hazards
-        hazardAdded = true;
+        score += hazards; // add hazard penalty strokes
+        player.hazards = (player.hazards || 0) + hazards; // track total hazards hit by player
       }
     }
   }
 
-  if (player) {
-    const allPlayer = allPlayers.find(p => p.name === player.name);
-    player.scores.push(score);
-    if (allPlayer) allPlayer.scores.push(score);
+  // Record the score for player
+  player.scores.push(score);
 
-    actionHistory.push({
-      playerIndex: currentPlayerIndex,
-      playerName: player.name,
-      hole: displayHole,
-      score: score,
-      hazardAdded: hazardAdded,
-      hazards: hazards
-    });
-  } else {
-    console.warn("No current player found during score submission.");
-    return;
+  // Also update in allPlayers copy if exists
+  const allPlayer = allPlayers.find(p => p.name === player.name);
+  if (allPlayer) {
+    allPlayer.scores.push(score);
   }
+
+  // Record action for undo history
+  actionHistory.push({
+    playerIndex: currentPlayerIndex,
+    playerName: player.name,
+    hole: displayHole,
+    score: score,
+    hazards: hazards
+  });
 
   saveGameState();
 
+  // Show scoring animation with descriptive label based on hits (not numeric score)
   const { label, color } = getScoreLabelAndColor(hits);
-
-  // End-game & sudden death checks
-  if (!suddenDeath && !randomMode && currentHole === 18 && currentPlayerIndex === players.length - 1) {
-    // Normal mode check
-    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
-    const lowest = Math.min(...totals);
-    const tied = players.filter((p, i) => totals[i] === lowest);
-    if (tied.length === 1) {
-      players = [tied[0]];
-      endGame();
-      return;
-    }
-  }
-
-  if (suddenDeath) {
-    const allPlayersCompletedHole = players.every(p => p.scores.length >= (randomMode ? currentHoleIndex + 1 : currentHole));
-    if (allPlayersCompletedHole) {
-      const lastHoleScores = players.map(p => p.scores[(randomMode ? currentHoleIndex : currentHole) - 1]);
-      const min = Math.min(...lastHoleScores);
-      const winners = players.filter((p, i) => lastHoleScores[i] === min);
-      if (winners.length === 1) {
-        players = [winners[0]];
-        endGame();
-        return;
-      }
-    }
-  }
-
-  // Show animation if not ending game
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
   updateScorecard();
 
-  // Advance to next player
+  // Advance turn
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
     if (!randomMode) {
-      // Normal mode
+      // Normal mode hole progression
       if (currentHole === 18) {
-        // Check for tie → sudden death
+        // End of normal round — check for ties
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
@@ -414,11 +383,11 @@ function submitPlayerScore() {
         currentHole++;
       }
     } else {
-      // Random mode
+      // Random mode hole progression
       currentHoleIndex++;
 
       if (currentHoleIndex >= holeSequence.length) {
-        // End of random sequence → sudden death
+        // End of random sequence — check for ties
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
@@ -427,7 +396,7 @@ function submitPlayerScore() {
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
-          currentHoleIndex = 0;  // Reset to avoid issues
+          currentHoleIndex = null; // no more sequence for sudden death
           currentHole = getRandomSuddenDeathHole();
         } else {
           endGame();
@@ -559,19 +528,12 @@ function updateScorecard() {
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
       <tr><th>Player</th>
         ${[...Array(9)].map((_, i) => {
-          const holeIndex = i + start - 1; // zero-based index into holeSequence or normal holes
-          let holeNumber;
-
-          if (randomMode) {
-            holeNumber = holeSequence[holeIndex];
-          } else {
-            holeNumber = i + start;
-          }
-
+          const holeIndex = i + start - 1;
+          const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
           if (advancedMode && hazardHoles.includes(holeNumber)) {
             return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
           } else {
-            return `<th>${holeNumber === "Bullseye" ? "🎯" : holeNumber}</th>`;
+            return `<th>${holeNumber}</th>`;
           }
         }).join('')}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
@@ -599,12 +561,12 @@ function updateScorecard() {
       table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
         scores.map((s, i) => {
           const holeIndex = i + start - 1;
-          let holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
+          const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
           const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
 
           const display = (s === undefined || s === null)
             ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-            : getScoreLabelAndColor(s).label;
+            : s;  // Show numeric score here
 
           return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
         }).join("")
@@ -684,6 +646,7 @@ function updateScorecard() {
     scoreInputs.appendChild(winText);
   }
 }
+
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
