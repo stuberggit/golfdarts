@@ -434,8 +434,13 @@ button:hover {
 /* === Scoring List === */
 .scoring-list {
   text-align: left;
-  padding-left: 20px;
   margin-top: 10px;
+  columns: 2;
+  column-gap: 20px;
+  list-style-position: inside;
+  padding-left: 0;
+  max-height: 300px; /* Optional, just in case */
+  overflow-y: auto;  /* Optional fallback */
 }
 
 /* === Mobile Adjustments === */
