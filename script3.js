@@ -11,6 +11,7 @@ let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 let actionHistory = [];
+let randomMode = false;
 
 const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
@@ -99,10 +100,18 @@ function handleNameDropdown(selectId, inputId) {
   input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
+let holeSequence = []; // store order of holes when random mode is on
+
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
     alert("Please select a valid number of players.");
+    return;
+  }
+
+  // Block if both modes selected
+  if (randomMode && advancedMode) {
+    alert("You cannot start a game with both Random Mode and Advanced Mode selected.");
     return;
   }
 
@@ -129,23 +138,31 @@ function startGame() {
   currentHole = 1;
   currentPlayerIndex = 0;
 
-  // <<< Reset action history for undo
+  // Reset action history for undo
   actionHistory = [];
 
-  // 🔹 Select hazard holes if Advanced Mode is enabled
+  // Select hazard holes if Advanced Mode is enabled
   if (advancedMode) {
     setupHazardHoles();
   }
 
+  // Create hole sequence (random or normal)
+  if (randomMode) {
+    holeSequence = shuffleArray(Array.from({ length: 20 }, (_, i) => i + 1)); // 1–20
+  } else {
+    holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
+  }
+
+  // UI changes
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  
+
   const title = document.querySelector(".header-bar h1");
   if (title) title.style.display = "none";
 
   const hamburger = document.getElementById("hamburgerIcon");
   if (hamburger) hamburger.style.display = "block";
-   
+
   showHole();
   updateLeaderboard();
   updateScorecard();
@@ -154,11 +171,18 @@ function startGame() {
   document.body.id = "gameStarted";
 }
 
-
-// ========== GAMEPLAY ==========
-
 function showHole() {
-  document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
+  let displayHole = currentHole;
+  
+  if (randomMode) {
+    // In random mode, pull from holeSequence
+    displayHole = holeSequence[(currentHoleIndex || 0) % holeSequence.length];
+  }
+
+  // Display correct header
+  const headerText = displayHole === "Bullseye" ? "Bullseye" : `Hole ${displayHole}`;
+  document.getElementById("holeHeader").innerText = headerText;
+
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
@@ -174,7 +198,7 @@ function showHole() {
   `;
 
   // Append hazard dropdown only if this is a hazard hole in advanced mode
-  if (advancedMode && hazardHoles.includes(currentHole)) {
+  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
     const hazardWrapper = document.createElement("div");
     hazardWrapper.className = "hazard-toggle";
     hazardWrapper.innerHTML = `
@@ -189,12 +213,16 @@ function showHole() {
     container.appendChild(hazardWrapper);
   }
 
-  // Highlight the hazard hole in the scorecard
-  highlightHazardHole(currentHole);
+  // Highlight the hazard hole in the scorecard if applicable
+  if (advancedMode && displayHole !== "Bullseye") {
+    highlightHazardHole(displayHole);
+  }
 
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
+
+
 
 
 function highlightHazardHole(hole) {
@@ -357,18 +385,31 @@ function submitPlayerScore() {
   }
 
   if (suddenDeath) {
-    const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
-    if (allPlayersCompletedHole) {
-      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
-      const min = Math.min(...lastHoleScores);
-      const winners = players.filter((p, i) => lastHoleScores[i] === min);
-      if (winners.length === 1) {
-        players = [winners[0]];
-        endGame();
-        return;
-      }
+  const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+  if (allPlayersCompletedHole) {
+    const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+    const min = Math.min(...lastHoleScores);
+    const winners = players.filter((p, i) => lastHoleScores[i] === min);
+
+    if (winners.length === 1) {
+      players = [winners[0]];
+      endGame();
+      return;
+    }
+
+    players = winners;
+
+    if (randomMode) {
+      // 🎯 Sudden Death random hole between 1–20 plus bullseye (21 total)
+      const possibleTargets = [...Array(20).keys()].map(n => n + 1).concat("Bullseye");
+      const randomIndex = Math.floor(Math.random() * possibleTargets.length);
+      currentHole = possibleTargets[randomIndex];
+    } else {
+      // Normal mode just goes to the next hole
+      currentHole = currentHole === 20 ? 1 : currentHole + 1;
     }
   }
+}
 
   // Show animation
   showScoreAnimation(`${player.name}: ${label}!`, color);
@@ -762,6 +803,17 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
     }
   });
 }
+
+// ========== RANDOM MODE ==========
+function toggleRandomMode() {
+  randomMode = !randomMode;
+  if (randomMode && advancedMode) {
+    alert("Random Mode and Advanced Mode cannot be active at the same time.");
+    randomMode = false; // revert
+    document.getElementById("randomToggle").checked = false; // assuming a checkbox
+  }
+}
+
 
 
 function endGame() {
