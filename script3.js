@@ -7,7 +7,6 @@ let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
 let audioEnabled = true;
-let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 let actionHistory = [];
@@ -103,7 +102,24 @@ function handleNameDropdown(selectId, inputId) {
 let holeSequence = [];
 let currentHoleIndex = 0;
 
+function shuffleArray(array) {
+  let currentIndex = array.length, randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex !== 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // Swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
 console.log("Random Mode is", randomMode);
+
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -777,8 +793,6 @@ function toggleRandomMode() {
     document.getElementById("randomToggle").checked = false; // assuming a checkbox
   }
 }
-
-
 
 function endGame() {
   gameStarted = false;
