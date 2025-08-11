@@ -170,8 +170,15 @@ function showHole() {
   let displayHole;
 
   if (randomMode) {
-    displayHole = holeSequence[currentHoleIndex];
+    if (suddenDeath) {
+      // Sudden death uses single random hole number in currentHole
+      displayHole = currentHole;
+    } else {
+      // Normal random mode picks from holeSequence by index
+      displayHole = holeSequence[currentHoleIndex];
+    }
   } else {
+    // Normal mode just shows currentHole
     displayHole = currentHole;
   }
 
@@ -213,7 +220,6 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
-
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
@@ -267,7 +273,7 @@ function getScoreLabelAndColor(score) {
 }
 
 
-function submitPlayerScore() {
+ffunction submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
 
@@ -278,9 +284,12 @@ function submitPlayerScore() {
 
   const player = players[currentPlayerIndex];
 
+  // Determine current hole for scoring (handles random and sudden death)
+  const displayHole = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
+
   // Check for Shanghai
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${randomMode ? holeSequence[currentHoleIndex] : currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${displayHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
@@ -293,7 +302,6 @@ function submitPlayerScore() {
   // Hazard penalty if applicable
   let hazardAdded = false;
   let hazards = 0; // always defined
-  const displayHole = randomMode ? holeSequence[currentHoleIndex] : currentHole;
 
   if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
     const hazardSelect = document.querySelector(".hazardSelect");
@@ -380,7 +388,7 @@ function submitPlayerScore() {
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
-          currentHole = getRandomSuddenDeathHole(); // random SD if needed
+          currentHole = getRandomSuddenDeathHole();
         } else {
           endGame();
           return;
@@ -402,7 +410,7 @@ function submitPlayerScore() {
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
-          currentHoleIndex = null; // sudden death won't use sequence
+          currentHoleIndex = 0;  // Reset to avoid issues
           currentHole = getRandomSuddenDeathHole();
         } else {
           endGame();
