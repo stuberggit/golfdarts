@@ -207,17 +207,47 @@ function getScore(hits) {
   return scores[hits - 1] ?? 5;
 }
 
-function getScoreLabelAndColor(hits) {
-  const labels = [
-    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg", "Icicle",
-    "Polar Bear", "Frostbite", "Snowman", "Avalanche"
-  ];
-  const colors = [
-    "#ff4c4c", "#ffffff", "#00ff00", "#00ffff", "#ffcc00", "#ff66ff",
-    "#00bfff", "#ff9933", "#ff69b4", "#ffff00"
-  ];
-  return { label: labels[hits] ?? "Unknown", color: colors[hits] ?? "#000" };
+function getScoreLabelAndColor(score) {
+  const labels = {
+    8: "Buster",
+    7: "Quad Bogey",
+    6: "Triple Bogey",
+    5: "Double Bogey",
+    4: "Bogey",
+    3: "Par",
+    2: "Birdie",
+    1: "Ace",
+    0: "Goose Egg",
+    "-1": "Icicle",
+    "-2": "Polar Bear",
+    "-3": "Frostbite",
+    "-4": "Snowman",
+    "-5": "Avalanche"
+  };
+
+  const colors = {
+    8: "#dc143c",     // Crimson (Buster)
+    7: "#8a2be2",     // Blue Violet (Quad Bogey)
+    6: "#c71585",     // Medium Violet Red (Triple Bogey)
+    5: "#ff4c4c",     // Red (Double Bogey)
+    4: "#ff8c00",     // Dark Orange (Bogey)
+    3: "#00ff00",     // Bright Green (Par)
+    2: "#00ffff",     // Cyan (Birdie)
+    1: "#00bfff",     // Deep Sky Blue (Ace)
+    0: "#ffcc00",     // Gold (Goose Egg)
+    "-1": "#7fffd4",  // Aquamarine (Icicle)
+    "-2": "#66cdaa",  // Medium Aquamarine (Polar Bear)
+    "-3": "#20b2aa",  // Light Sea Green (Frostbite)
+    "-4": "#5f9ea0",  // Cadet Blue (Snowman)
+    "-5": "#2f4f4f"   // Dark Slate Gray (Avalanche)
+  };
+
+  const label = labels[score] ?? "Unknown";
+  const color = colors[score] ?? "#ffffff"; // white fallback
+
+  return { label, color };
 }
+
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
