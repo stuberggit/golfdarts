@@ -10,6 +10,7 @@ let audioEnabled = true;
 let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
+let actionHistory = [];
 
 const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
@@ -128,14 +129,22 @@ function startGame() {
   currentHole = 1;
   currentPlayerIndex = 0;
 
+  // <<< Reset action history for undo
+  actionHistory = [];
+
+  // 🔹 Select hazard holes if Advanced Mode is enabled
+  if (advancedMode) {
+    setupHazardHoles();
+  }
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   
   const title = document.querySelector(".header-bar h1");
-if (title) title.style.display = "none";
+  if (title) title.style.display = "none";
 
   const hamburger = document.getElementById("hamburgerIcon");
-if (hamburger) hamburger.style.display = "block";
+  if (hamburger) hamburger.style.display = "block";
    
   showHole();
   updateLeaderboard();
@@ -143,8 +152,8 @@ if (hamburger) hamburger.style.display = "block";
   saveGameState();
 
   document.body.id = "gameStarted";
-
 }
+
 
 // ========== GAMEPLAY ==========
 
@@ -164,20 +173,29 @@ function showHole() {
     </div>
   `;
 
-  // Append hazard checkbox only if this is a hazard hole in advanced mode
+  // Append hazard dropdown only if this is a hazard hole in advanced mode
   if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardWrapper = document.createElement("div");
     hazardWrapper.className = "hazard-toggle";
-    hazardWrapper.innerHTML = `<label><input type="checkbox" class="hazardCheckbox"> Hit Hazard</label>`;
+    hazardWrapper.innerHTML = `
+      <label>Hazards hit:</label>
+      <select class="hazardSelect">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    `;
     container.appendChild(hazardWrapper);
   }
 
-  // Optional: Highlight the hazard hole in the scorecard (visual feedback)
+  // Highlight the hazard hole in the scorecard
   highlightHazardHole(currentHole);
+
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
-
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
@@ -189,17 +207,47 @@ function getScore(hits) {
   return scores[hits - 1] ?? 5;
 }
 
-function getScoreLabelAndColor(hits) {
-  const labels = [
-    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg", "Icicle",
-    "Polar Bear", "Frostbite", "Snowman", "Avalanche"
-  ];
-  const colors = [
-    "#ff4c4c", "#ffffff", "#00ff00", "#00ffff", "#ffcc00", "#ff66ff",
-    "#00bfff", "#ff9933", "#ff69b4", "#ffff00"
-  ];
-  return { label: labels[hits] ?? "Unknown", color: colors[hits] ?? "#000" };
+function getScoreLabelAndColor(score) {
+  const labels = {
+    8: "Buster",
+    7: "Quad Bogey",
+    6: "Triple Bogey",
+    5: "Double Bogey",
+    4: "Bogey",
+    3: "Par",
+    2: "Birdie",
+    1: "Ace",
+    0: "Goose Egg",
+    "-1": "Icicle",
+    "-2": "Polar Bear",
+    "-3": "Frostbite",
+    "-4": "Snowman",
+    "-5": "Avalanche"
+  };
+
+  const colors = {
+    8: "#dc143c",     // Crimson (Buster)
+    7: "#8a2be2",     // Blue Violet (Quad Bogey)
+    6: "#c71585",     // Medium Violet Red (Triple Bogey)
+    5: "#ff4c4c",     // Red (Double Bogey)
+    4: "#ff8c00",     // Dark Orange (Bogey)
+    3: "#00ff00",     // Bright Green (Par)
+    2: "#00ffff",     // Cyan (Birdie)
+    1: "#00bfff",     // Deep Sky Blue (Ace)
+    0: "#ffcc00",     // Gold (Goose Egg)
+    "-1": "#7fffd4",  // Aquamarine (Icicle)
+    "-2": "#66cdaa",  // Medium Aquamarine (Polar Bear)
+    "-3": "#20b2aa",  // Light Sea Green (Frostbite)
+    "-4": "#5f9ea0",  // Cadet Blue (Snowman)
+    "-5": "#2f4f4f"   // Dark Slate Gray (Avalanche)
+  };
+
+  const label = labels[score] ?? "Unknown";
+  const color = colors[score] ?? "#ffffff"; // white fallback
+
+  return { label, color };
 }
+
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
@@ -221,44 +269,87 @@ function submitPlayerScore() {
     }
   }
 
-  // Get base score
-  let score = getScore(hits);
+  // Calculate base score with exact logic:
+  // Miss + hazards
+  // Miss = hits === 0
+  // Buster = Miss + 3 hazards = 8
+  // Quad Bogey = Miss + 2 hazards = 7
+  // Triple Bogey = Miss + 1 hazard = 6
+  // Double Bogey = Miss only = 5
+  // Bogey = Hit 1 + 1 hazard = 4
+  // Par = Hit 1 no hazard = 3
+  // Birdie = Hit 2 = 2
+  // Ace = Hit 3 = 1
+  // Goose Egg = Hit 4 = 0
+  // Icicle = Hit 5 = -1
+  // Polar Bear = Hit 6 = -2
+  // Frostbite = Hit 7 = -3
+  // Snowman = Hit 8 = -4
+  // Avalanche = Hit 9 = -5
 
-  // Hazard penalty if applicable
-  const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
-  if (
-    advancedMode &&
-    hazardHoles.includes(currentHole) &&
-    hazardCheckboxes[currentPlayerIndex] &&
-    hazardCheckboxes[currentPlayerIndex].checked
-  ) {
-    score += 1;
-    player.hazards = (player.hazards || 0) + 1;
+  let score;
+  let hazards = 0;
+  let hazardAdded = false;
+
+  if (advancedMode && hazardHoles.includes(currentHole)) {
+    const hazardSelect = document.querySelector(".hazardSelect");
+    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+  }
+
+  if (hits === 0) {
+    // Miss + hazards
+    score = 5 + hazards; // 5 to 8
+  } else if (hits === 1 && hazards === 1) {
+    // Hit 1 + 1 hazard = Bogey
+    score = 4;
+  } else if (hits === 1 && hazards === 0) {
+    // Par
+    score = 3;
+  } else if (hits >= 2 && hits <= 9) {
+    // For hits 2-9, score decreases by 1 for each hit above 1
+    score = 4 - hits;
+  } else if (hits === 1 && hazards > 1) {
+    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
+    score = 4 + (hazards - 1);
+  } else {
+    // Fallback to par
+    score = 3;
+  }
+
+  // Add hazards to player's hazard count only if hazards > 0
+  if (hazards > 0) {
+    hazardAdded = true;
   }
 
   if (player) {
-  const allPlayer = allPlayers.find(p => p.name === player.name);
-  player.scores.push(score);
-  if (allPlayer) allPlayer.scores.push(score);
-} else {
-  console.warn("No current player found during score submission.");
-  return;
-}
+    const allPlayer = allPlayers.find(p => p.name === player.name);
+    player.scores.push(score);
+    if (allPlayer) allPlayer.scores.push(score);
+    player.hazards = (player.hazards || 0) + hazards;
+
+    actionHistory.push({
+      playerIndex: currentPlayerIndex,
+      playerName: player.name,
+      hole: currentHole,
+      score: score,
+      hazardAdded: hazardAdded,
+      hazards: hazards
+    });
+  } else {
+    console.warn("No current player found during score submission.");
+    return;
+  }
 
   saveGameState();
 
-  const { label, color } = getScoreLabelAndColor(hits);
+  const { label, color } = getScoreLabelAndColor(score);
 
-  // Determine if game is about to end
-  let gameWillEnd = false;
-  let winnerName = "";
-
+  // End-game & sudden death logic here stays unchanged
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
     if (tied.length === 1) {
-      winnerName = tied[0].name;
       players = [tied[0]];
       endGame();
       return;
@@ -279,7 +370,7 @@ function submitPlayerScore() {
     }
   }
 
-  // Only show animation if game is NOT ending
+  // Show animation
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
@@ -339,32 +430,58 @@ function submitPlayerScore() {
 
 
   function undoHole() {
-  if (currentHole === 1 && currentPlayerIndex === 0) {
+  if (!actionHistory || actionHistory.length === 0) {
     alert("Nothing to undo.");
     return;
   }
 
-  if (currentPlayerIndex > 0) {
-    currentPlayerIndex--;
-  } else {
-    currentHole--;
-    currentPlayerIndex = players.length - 1;
+  const last = actionHistory.pop();
+  if (!last) {
+    alert("Nothing to undo.");
+    return;
   }
 
-  const player = players[currentPlayerIndex];
-  const allPlayer = allPlayers.find(p => p.name === player.name);
+  // Find the player index in the current players array by name (handles rotations)
+  let playerIndex = last.playerIndex;
+  if (!players[playerIndex] || players[playerIndex].name !== last.playerName) {
+    // fallback: find by name
+    const found = players.findIndex(p => p.name === last.playerName);
+    if (found !== -1) playerIndex = found;
+  }
 
-  if (allPlayer) allPlayer.scores.pop();
-  player.scores.pop();
+  const player = players[playerIndex];
+  const allPlayer = allPlayers.find(p => p.name === last.playerName);
+
+  // Remove the last score entry for that player (if present)
+  if (player && player.scores && player.scores.length > 0) {
+    player.scores.pop();
+  }
+
+  if (allPlayer && allPlayer.scores && allPlayer.scores.length > 0) {
+    allPlayer.scores.pop();
+  }
+
+  // If a hazard was added during that action, decrement hazard counter
+  if (last.hazardAdded && player) {
+    player.hazards = Math.max(0, (player.hazards || 0) - 1);
+    if (allPlayer) allPlayer.hazards = Math.max(0, (allPlayer.hazards || 0) - 1);
+  }
+
+  // Restore UI state to that turn (player and hole)
+  currentHole = last.hole;
+  currentPlayerIndex = playerIndex;
+
+  // Keep game state valid
+  gameStarted = true;
+  suddenDeath = false; // optional: you may want to recalc if undoing during sudden death
 
   saveGameState();
   showHole();
   updateLeaderboard();
   updateScorecard();
-
-  // ✅ Make sure to re-sync allPlayers
-  allPlayers = JSON.parse(JSON.stringify(players));
 }
+
+
 
 function showShanghaiWin(winnerName) {
   gameStarted = false;
@@ -421,82 +538,90 @@ function updateScorecard() {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr><th>Player</th>${[...Array(9)].map((_, i) => `<th>${i + start}</th>`).join('')}<th>${label === "Front Nine" ? "Out" : "In"}</th></tr>
+      <tr><th>Player</th>
+        ${[...Array(9)].map((_, i) => {
+          const holeNumber = i + start;
+          if (advancedMode && hazardHoles.includes(holeNumber)) {
+            return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
+          } else {
+            return `<th>${holeNumber}</th>`;
+          }
+        }).join('')}
+        <th>${label === "Front Nine" ? "Out" : "In"}</th>
+      </tr>
     `;
 
     const isSudden = suddenDeath;
-const competingNames = isSudden ? players.map(p => p.name) : [];
+    const competingNames = isSudden ? players.map(p => p.name) : [];
 
-const sortedPlayers = [...allPlayers].sort((a, b) => {
-  const aIn = competingNames.includes(a.name);
-  const bIn = competingNames.includes(b.name);
-  return bIn - aIn; // Competing players first
-});
+    const sortedPlayers = [...allPlayers].sort((a, b) => {
+      const aIn = competingNames.includes(a.name);
+      const bIn = competingNames.includes(b.name);
+      return bIn - aIn; // Competing players first
+    });
 
-sortedPlayers.forEach(p => {
-  const scores = p.scores.slice(start - 1, start + 8);
-  const total = scores.reduce((s, v) => s + (v ?? 0), 0);
-  const isCompeting = competingNames.includes(p.name);
+    sortedPlayers.forEach(p => {
+      const scores = p.scores.slice(start - 1, start + 8);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+      const isCompeting = competingNames.includes(p.name);
 
-  const playerNameStyle = isSudden && !isCompeting
-    ? 'text-decoration: line-through; color: gray'
-    : '';
+      const playerNameStyle = isSudden && !isCompeting
+        ? 'text-decoration: line-through; color: gray'
+        : '';
 
-  table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
-    scores.map((s, i) => {
-      const holeNum = i + start;
-      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-      const display = (s === undefined || s === null)
-        ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-        : s;
-      return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-    }).join("")
-  }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
-});
-
+      table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
+        scores.map((s, i) => {
+          const holeNum = i + start;
+          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+          const display = (s === undefined || s === null)
+            ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+            : s;
+          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+        }).join("")
+      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+    });
   };
 
   const renderSuddenDeath = () => {
-  const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
-  const sdHoles = [];
-  for (let i = 19; i <= maxHole; i++) {
-    const label = i <= 20 ? i : (i - 20);
-    sdHoles.push(label);
-  }
-
-  table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-  table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
-
-  const competingNames = players.map(p => p.name);
-
-  const sortedPlayers = [...allPlayers].sort((a, b) => {
-    const aIn = competingNames.includes(a.name);
-    const bIn = competingNames.includes(b.name);
-    return bIn - aIn; // Active players first
-  });
-
-  sortedPlayers.forEach(p => {
-    const isTiedPlayer = competingNames.includes(p.name);
-    const sdScores = p.scores.slice(18); // From hole 19 onward
-
-    const nameCellStyle = isTiedPlayer
-      ? 'class="sudden-death-cell"'
-      : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
-
-    table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
-
-    for (let i = 0; i < sdHoles.length; i++) {
-      const holeNum = i + 19;
-      const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-      let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
-
-      table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
+    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
+    const sdHoles = [];
+    for (let i = 19; i <= maxHole; i++) {
+      const label = i <= 20 ? i : (i - 20);
+      sdHoles.push(label);
     }
 
-    table += `</tr>`;
-  });
-};
+    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
 
+    const competingNames = players.map(p => p.name);
+
+    const sortedPlayers = [...allPlayers].sort((a, b) => {
+      const aIn = competingNames.includes(a.name);
+      const bIn = competingNames.includes(b.name);
+      return bIn - aIn; // Active players first
+    });
+
+    sortedPlayers.forEach(p => {
+      const isTiedPlayer = competingNames.includes(p.name);
+      const sdScores = p.scores.slice(18); // From hole 19 onward
+
+      const nameCellStyle = isTiedPlayer
+        ? 'class="sudden-death-cell"'
+        : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
+
+      table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
+
+      for (let i = 0; i < sdHoles.length; i++) {
+        const holeNum = i + 19;
+        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+        let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
+      }
+
+      table += `</tr>`;
+    });
+  };
 
   // Render sections
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
@@ -529,6 +654,7 @@ sortedPlayers.forEach(p => {
     scoreInputs.appendChild(winText);
   }
 }
+
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
@@ -611,6 +737,32 @@ function loadGameState() {
   updateScorecard();
   document.body.id = "gameStarted";
 }
+
+// ========== ADVANCED MODE ==========
+function setupHazardHoles() {
+  const allHoleIndices = [...Array(18).keys()];
+  hazardHoles = allHoleIndices.sort(() => 0.5 - Math.random()).slice(0, 6);
+}
+
+function isAdjacent(number1, number2) {
+  const dartboardOrder = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+  const idx = dartboardOrder.indexOf(number1);
+  const prev = dartboardOrder[(idx - 1 + 20) % 20];
+  const next = dartboardOrder[(idx + 1) % 20];
+  return number2 === prev || number2 === next;
+}
+
+if (advancedMode && hazardHoles.includes(currentHole)) {
+  const targetNumber = holeNumbers[currentHole];
+  darts.forEach(dart => {
+    if ((dart.type === 'D' || dart.type === 'T') && isAdjacent(targetNumber, dart.value)) {
+      totalScore += 1;
+      if (!player.hazardPenalties) player.hazardPenalties = [];
+      player.hazardPenalties.push(currentHole); // or holeNumbers[currentHole]
+    }
+  });
+}
+
 
 function endGame() {
   gameStarted = false;
@@ -990,6 +1142,8 @@ window.showModal = showModal;
 window.closeModal = closeModal;
 window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
+window.undoHole = undoHole;
+
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
@@ -1048,14 +1202,3 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
-
-// Allow closing history modal by clicking outside it
-window.addEventListener("click", (e) => {
-  const modal = document.getElementById("historyModal");
-  const content = modal?.querySelector(".modal-content");
-
-  if (modal && !modal.classList.contains("hidden") && !content.contains(e.target)) {
-    closeModal("historyModal");
-  }
-});
-
