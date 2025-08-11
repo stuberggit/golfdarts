@@ -1182,7 +1182,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audioEnabled = e.target.checked;
   });
   document.getElementById("randomToggle")?.addEventListener("change", (e) => {
-    randomizedMode = e.target.checked;
+    randomMode = e.target.checked;
   });
   document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
