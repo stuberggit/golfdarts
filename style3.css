@@ -354,7 +354,7 @@ button:hover {
 .modal-content {
   max-width: 600px;
   width: 90%;
-  padding: 2rem;
+  padding: 2rem 2rem 3rem 2rem; /* add some extra bottom padding for spacing */
   border: 2px solid white;
   border-radius: 16px;
   background-color: #004d00;
@@ -364,6 +364,10 @@ button:hover {
   box-sizing: border-box;
   word-wrap: break-word;
   overflow-wrap: break-word;
+
+  position: relative; /* for positioning close button */
+  max-height: 80vh;   /* limit height */
+  overflow-y: auto;   /* scroll if needed */
 }
 
 .modal-content h2 {
@@ -376,6 +380,7 @@ button:hover {
   display: block;
 }
 
+/* Specific for scoring modal, center text */
 #scoringModal .modal-content {
   text-align: center;
 }
@@ -387,6 +392,21 @@ button:hover {
   border-radius: 12px;
   color: black;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+/* New close button styles */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
 }
 
 
@@ -439,8 +459,8 @@ button:hover {
   column-gap: 20px;
   list-style-position: inside;
   padding-left: 0;
-  max-height: 300px; /* Optional, just in case */
-  overflow-y: auto;  /* Optional fallback */
+  max-height: 60vh; /* Enough for list inside modal */
+  overflow-y: auto; 
 }
 
 /* === Mobile Adjustments === */
@@ -465,14 +485,12 @@ button:hover {
     max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
+    padding: 1rem 1rem 2rem 1rem; /* adjust padding on mobile */
+    font-size: 1rem;
   }
 
   .modal-content h2 {
     font-size: 1.4rem;
-  }
-
-  .modal-content {
-    font-size: 1rem;
   }
 }
 
@@ -629,12 +647,6 @@ button:hover {
 .mini-scorecard th {
   background-color: #f0f0f0;
   font-weight: bold;
-}
-
-/* Make history modal scrollable */
-#historyModal .modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
 }
 
 /* Optional: Style the link */
