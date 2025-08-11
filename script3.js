@@ -559,11 +559,19 @@ function updateScorecard() {
       <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
       <tr><th>Player</th>
         ${[...Array(9)].map((_, i) => {
-          const holeNumber = i + start;
+          const holeIndex = i + start - 1; // zero-based index into holeSequence or normal holes
+          let holeNumber;
+
+          if (randomMode) {
+            holeNumber = holeSequence[holeIndex];
+          } else {
+            holeNumber = i + start;
+          }
+
           if (advancedMode && hazardHoles.includes(holeNumber)) {
             return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
           } else {
-            return `<th>${holeNumber}</th>`;
+            return `<th>${holeNumber === "Bullseye" ? "🎯" : holeNumber}</th>`;
           }
         }).join('')}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
@@ -590,12 +598,15 @@ function updateScorecard() {
 
       table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
         scores.map((s, i) => {
-          const holeNum = i + start;
-          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+          const holeIndex = i + start - 1;
+          let holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
+          const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
+
           const display = (s === undefined || s === null)
             ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-            : s;
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
+            : getScoreLabelAndColor(s).label;
+
+          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
         }).join("")
       }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
@@ -645,7 +656,7 @@ function updateScorecard() {
   // Render sections
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
-  if (suddenDeath) renderSuddenDeath();  // ✅ Sudden Death shown on top
+  if (suddenDeath) renderSuddenDeath();
 
   if (currentHole >= 10 && allCompletedFront) {
     renderSection("Back Nine", 10);
@@ -673,7 +684,6 @@ function updateScorecard() {
     scoreInputs.appendChild(winText);
   }
 }
-
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
