@@ -242,19 +242,21 @@ function submitPlayerScore() {
   // Base score from hits
   let score = getScore(hits);
 
-  // Hazard penalty if applicable - capture whether a hazard was added
-let hazardAdded = false;
-if (advancedMode && hazardHoles.includes(currentHole)) {
-  const hazardSelect = document.querySelector(".hazardSelect");
-  if (hazardSelect) {
-    const hazards = parseInt(hazardSelect.value) || 0;
-    if (hazards > 0) {
-      score += hazards; // add hazards to score
-      player.hazards = (player.hazards || 0) + hazards; // track total hazards
-      hazardAdded = true;
+  // Hazard penalty if applicable
+  let hazardAdded = false;
+  let hazards = 0; // make sure hazards is always defined
+
+  if (advancedMode && hazardHoles.includes(currentHole)) {
+    const hazardSelect = document.querySelector(".hazardSelect");
+    if (hazardSelect) {
+      hazards = parseInt(hazardSelect.value) || 0;
+      if (hazards > 0) {
+        score += hazards; // add hazards to score
+        player.hazards = (player.hazards || 0) + hazards; // track total hazards
+        hazardAdded = true;
+      }
     }
   }
-}
 
   if (player) {
     const allPlayer = allPlayers.find(p => p.name === player.name);
@@ -267,7 +269,7 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
       hole: currentHole,
       score: score,
       hazardAdded: hazardAdded,
-      hazards: hazards // store exact hazard count for undo
+      hazards: hazards // now this is always defined
     });
   } else {
     console.warn("No current player found during score submission.");
@@ -361,6 +363,7 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
 
   showHole();
 }
+
 
   function undoHole() {
   if (!actionHistory || actionHistory.length === 0) {
