@@ -784,16 +784,6 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
   });
 }
 
-// ========== RANDOM MODE ==========
-function toggleRandomMode() {
-  randomMode = !randomMode;
-  if (randomMode && advancedMode) {
-    alert("Random Mode and Advanced Mode cannot be active at the same time.");
-    randomMode = false; // revert
-    document.getElementById("randomToggle").checked = false; // assuming a checkbox
-  }
-}
-
 function endGame() {
   gameStarted = false;
 
