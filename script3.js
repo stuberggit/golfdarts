@@ -15,6 +15,8 @@ let randomMode = false;
 
 const isPreProd = location.href.includes("index2") || location.href.includes("script2");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
+console.log("Random Mode is", randomMode);
+
 
 let history = [];
 let filterSelect;
