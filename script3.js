@@ -290,75 +290,42 @@ function submitPlayerScore() {
 
   // Check for Shanghai
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${randomMode ? holeSequence[currentHoleIndex] : currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  // Calculate base score with exact logic:
-  // Miss + hazards
-  // Miss = hits === 0
-  // Buster = Miss + 3 hazards = 8
-  // Quad Bogey = Miss + 2 hazards = 7
-  // Triple Bogey = Miss + 1 hazard = 6
-  // Double Bogey = Miss only = 5
-  // Bogey = Hit 1 + 1 hazard = 4
-  // Par = Hit 1 no hazard = 3
-  // Birdie = Hit 2 = 2
-  // Ace = Hit 3 = 1
-  // Goose Egg = Hit 4 = 0
-  // Icicle = Hit 5 = -1
-  // Polar Bear = Hit 6 = -2
-  // Frostbite = Hit 7 = -3
-  // Snowman = Hit 8 = -4
-  // Avalanche = Hit 9 = -5
+  // Base score from hits
+  let score = getScore(hits);
 
-  let score;
-  let hazards = 0;
+  // Hazard penalty if applicable
   let hazardAdded = false;
+  let hazards = 0; // always defined
+  const displayHole = randomMode ? holeSequence[currentHoleIndex] : currentHole;
 
-  if (advancedMode && hazardHoles.includes(currentHole)) {
+  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
     const hazardSelect = document.querySelector(".hazardSelect");
-    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
-  }
-
-  if (hits === 0) {
-    // Miss + hazards
-    score = 5 + hazards; // 5 to 8
-  } else if (hits === 1 && hazards === 1) {
-    // Hit 1 + 1 hazard = Bogey
-    score = 4;
-  } else if (hits === 1 && hazards === 0) {
-    // Par
-    score = 3;
-  } else if (hits >= 2 && hits <= 9) {
-    // For hits 2-9, score decreases by 1 for each hit above 1
-    score = 4 - hits;
-  } else if (hits === 1 && hazards > 1) {
-    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
-    score = 4 + (hazards - 1);
-  } else {
-    // Fallback to par
-    score = 3;
-  }
-
-  // Add hazards to player's hazard count only if hazards > 0
-  if (hazards > 0) {
-    hazardAdded = true;
+    if (hazardSelect) {
+      hazards = parseInt(hazardSelect.value) || 0;
+      if (hazards > 0) {
+        score += hazards; // add hazards to score
+        player.hazards = (player.hazards || 0) + hazards; // track total hazards
+        hazardAdded = true;
+      }
+    }
   }
 
   if (player) {
     const allPlayer = allPlayers.find(p => p.name === player.name);
     player.scores.push(score);
     if (allPlayer) allPlayer.scores.push(score);
-    player.hazards = (player.hazards || 0) + hazards;
 
     actionHistory.push({
       playerIndex: currentPlayerIndex,
       playerName: player.name,
-      hole: currentHole,
+      hole: displayHole,
       score: score,
       hazardAdded: hazardAdded,
       hazards: hazards
@@ -370,10 +337,11 @@ function submitPlayerScore() {
 
   saveGameState();
 
-  const { label, color } = getScoreLabelAndColor(score);
+  const { label, color } = getScoreLabelAndColor(hits);
 
-  // End-game & sudden death logic here stays unchanged
-  if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
+  // End-game & sudden death checks
+  if (!suddenDeath && !randomMode && currentHole === 18 && currentPlayerIndex === players.length - 1) {
+    // Normal mode check
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
@@ -385,89 +353,84 @@ function submitPlayerScore() {
   }
 
   if (suddenDeath) {
-  const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
-  if (allPlayersCompletedHole) {
-    const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
-    const min = Math.min(...lastHoleScores);
-    const winners = players.filter((p, i) => lastHoleScores[i] === min);
-
-    if (winners.length === 1) {
-      players = [winners[0]];
-      endGame();
-      return;
-    }
-
-    players = winners;
-
-    if (randomMode) {
-      // 🎯 Sudden Death random hole between 1–20 plus bullseye (21 total)
-      const possibleTargets = [...Array(20).keys()].map(n => n + 1).concat("Bullseye");
-      const randomIndex = Math.floor(Math.random() * possibleTargets.length);
-      currentHole = possibleTargets[randomIndex];
-    } else {
-      // Normal mode just goes to the next hole
-      currentHole = currentHole === 20 ? 1 : currentHole + 1;
+    const allPlayersCompletedHole = players.every(p => p.scores.length >= (randomMode ? currentHoleIndex + 1 : currentHole));
+    if (allPlayersCompletedHole) {
+      const lastHoleScores = players.map(p => p.scores[(randomMode ? currentHoleIndex : currentHole) - 1]);
+      const min = Math.min(...lastHoleScores);
+      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+      if (winners.length === 1) {
+        players = [winners[0]];
+        endGame();
+        return;
+      }
     }
   }
-}
 
-  // Show animation
+  // Show animation if not ending game
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
   updateScorecard();
 
+  // Advance to next player
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
-    const lowest = Math.min(...totals);
-    const tied = players.filter((p, i) => totals[i] === lowest);
+    if (!randomMode) {
+      // Normal mode
+      if (currentHole === 18) {
+        // Check for tie → sudden death
+        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+        const lowest = Math.min(...totals);
+        const tied = players.filter((p, i) => totals[i] === lowest);
 
-    if (currentHole === 18) {
-      if (tied.length > 1) {
-        players = tied;
-        tiedPlayers = tied;
-        suddenDeath = true;
-        currentHole = 19;
-
-        const names = tied.map(p => `"${p.name}"`).join(" and ");
-        document.getElementById("scoreInputs").innerHTML = `
-          <h2>${names} tie! On to Sudden Death!</h2>
-          <button onclick="showHole()" class="primary-button full-width">Continue</button>
-        `;
-        return;
-      } else {
-        endGame();
-        return;
-      }
-    }
-
-    if (suddenDeath) {
-      const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
-      if (allPlayersCompletedHole) {
-        const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
-        const min = Math.min(...lastHoleScores);
-        const winners = players.filter((p, i) => lastHoleScores[i] === min);
-
-        if (winners.length === 1) {
-          players = [winners[0]];
+        if (tied.length > 1) {
+          players = tied;
+          tiedPlayers = tied;
+          suddenDeath = true;
+          currentHole = getRandomSuddenDeathHole(); // random SD if needed
+        } else {
           endGame();
           return;
         }
-
-        players = winners;
-        currentHole = currentHole === 20 ? 1 : currentHole + 1;
+      } else {
+        currentHole++;
       }
     } else {
-      currentHole++;
+      // Random mode
+      currentHoleIndex++;
+
+      if (currentHoleIndex >= holeSequence.length) {
+        // End of random sequence → sudden death
+        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+        const lowest = Math.min(...totals);
+        const tied = players.filter((p, i) => totals[i] === lowest);
+
+        if (tied.length > 1) {
+          players = tied;
+          tiedPlayers = tied;
+          suddenDeath = true;
+          currentHoleIndex = null; // sudden death won't use sequence
+          currentHole = getRandomSuddenDeathHole();
+        } else {
+          endGame();
+          return;
+        }
+      }
     }
   }
 
   showHole();
 }
+
+// Random sudden death hole (1–20 or Bullseye)
+function getRandomSuddenDeathHole() {
+  const options = [...Array(20).keys()].map(n => n + 1).concat(["Bullseye"]);
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 
 
   function undoHole() {
