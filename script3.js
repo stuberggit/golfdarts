@@ -269,29 +269,63 @@ function submitPlayerScore() {
     }
   }
 
-  // Base score from hits
-  let score = getScore(hits);
+  // Calculate base score with exact logic:
+  // Miss + hazards
+  // Miss = hits === 0
+  // Buster = Miss + 3 hazards = 8
+  // Quad Bogey = Miss + 2 hazards = 7
+  // Triple Bogey = Miss + 1 hazard = 6
+  // Double Bogey = Miss only = 5
+  // Bogey = Hit 1 + 1 hazard = 4
+  // Par = Hit 1 no hazard = 3
+  // Birdie = Hit 2 = 2
+  // Ace = Hit 3 = 1
+  // Goose Egg = Hit 4 = 0
+  // Icicle = Hit 5 = -1
+  // Polar Bear = Hit 6 = -2
+  // Frostbite = Hit 7 = -3
+  // Snowman = Hit 8 = -4
+  // Avalanche = Hit 9 = -5
 
-  // Hazard penalty if applicable
+  let score;
+  let hazards = 0;
   let hazardAdded = false;
-  let hazards = 0; // make sure hazards is always defined
 
   if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    if (hazardSelect) {
-      hazards = parseInt(hazardSelect.value) || 0;
-      if (hazards > 0) {
-        score += hazards; // add hazards to score
-        player.hazards = (player.hazards || 0) + hazards; // track total hazards
-        hazardAdded = true;
-      }
-    }
+    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+  }
+
+  if (hits === 0) {
+    // Miss + hazards
+    score = 5 + hazards; // 5 to 8
+  } else if (hits === 1 && hazards === 1) {
+    // Hit 1 + 1 hazard = Bogey
+    score = 4;
+  } else if (hits === 1 && hazards === 0) {
+    // Par
+    score = 3;
+  } else if (hits >= 2 && hits <= 9) {
+    // For hits 2-9, score decreases by 1 for each hit above 1
+    score = 4 - hits;
+  } else if (hits === 1 && hazards > 1) {
+    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
+    score = 4 + (hazards - 1);
+  } else {
+    // Fallback to par
+    score = 3;
+  }
+
+  // Add hazards to player's hazard count only if hazards > 0
+  if (hazards > 0) {
+    hazardAdded = true;
   }
 
   if (player) {
     const allPlayer = allPlayers.find(p => p.name === player.name);
     player.scores.push(score);
     if (allPlayer) allPlayer.scores.push(score);
+    player.hazards = (player.hazards || 0) + hazards;
 
     actionHistory.push({
       playerIndex: currentPlayerIndex,
@@ -299,7 +333,7 @@ function submitPlayerScore() {
       hole: currentHole,
       score: score,
       hazardAdded: hazardAdded,
-      hazards: hazards // now this is always defined
+      hazards: hazards
     });
   } else {
     console.warn("No current player found during score submission.");
@@ -308,9 +342,9 @@ function submitPlayerScore() {
 
   saveGameState();
 
-  const { label, color } = getScoreLabelAndColor(hits);
+  const { label, color } = getScoreLabelAndColor(score);
 
-  // End-game & sudden death checks
+  // End-game & sudden death logic here stays unchanged
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
@@ -336,7 +370,7 @@ function submitPlayerScore() {
     }
   }
 
-  // Show animation if not ending game
+  // Show animation
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
