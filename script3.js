@@ -729,7 +729,9 @@ function loadGameState() {
   gameStarted = state.gameStarted;
   allPlayers = JSON.parse(JSON.stringify(players));
 
-  document.querySelector(".top-links").style.display = "none";
+  const topLinks = document.querySelector(".top-links");
+  if (topLinks) topLinks.style.display = "none";
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   const title = document.querySelector(".header-bar h1");
