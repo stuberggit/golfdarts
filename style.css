@@ -354,7 +354,7 @@ button:hover {
 .modal-content {
   max-width: 600px;
   width: 90%;
-  padding: 2rem;
+  padding: 3rem 2rem 3rem 2rem; /* more top padding to clear close button */
   border: 2px solid white;
   border-radius: 16px;
   background-color: #004d00;
@@ -364,6 +364,9 @@ button:hover {
   box-sizing: border-box;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  position: relative; /* for absolute close button */
+  max-height: 85vh;   /* a bit taller */
+  overflow-y: auto;   /* allow scrolling */
 }
 
 .modal-content h2 {
@@ -376,6 +379,7 @@ button:hover {
   display: block;
 }
 
+/* Specific for scoring modal, center text */
 #scoringModal .modal-content {
   text-align: center;
 }
@@ -387,6 +391,22 @@ button:hover {
   border-radius: 12px;
   color: black;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+/* New close button styles */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 28px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+  z-index: 10; /* ensure above content */
 }
 
 
@@ -431,11 +451,17 @@ button:hover {
   display: none !important;
 }
 
-/* === Scoring List === */
+/* Scoring list with two columns and max height */
 .scoring-list {
   text-align: left;
-  padding-left: 20px;
   margin-top: 10px;
+  columns: 2;
+  column-gap: 20px;
+  list-style-position: inside;
+  padding-left: 0;
+  max-height: 60vh; /* scroll limit */
+  overflow-y: auto;
+  font-size: 0.9rem; /* slightly smaller */
 }
 
 /* === Mobile Adjustments === */
@@ -455,19 +481,22 @@ button:hover {
   }
 }
 
-@media (max-width: 600px) {
+/* Smaller screens: one column, smaller font */
+@media (max-width: 480px) {
+  .scoring-list {
+    columns: 1;
+    font-size: 0.85rem;
+  }
+  
   .modal-content {
-    max-width: 95vw;
+    padding: 3rem 1rem 2rem 1rem; /* keep top padding */
     max-height: 90vh;
-    overflow-y: auto;
   }
-
-  .modal-content h2 {
-    font-size: 1.4rem;
-  }
-
-  .modal-content {
-    font-size: 1rem;
+  
+  .modal-close {
+    font-size: 24px;
+    top: 8px;
+    right: 8px;
   }
 }
 
@@ -626,12 +655,6 @@ button:hover {
   font-weight: bold;
 }
 
-/* Make history modal scrollable */
-#historyModal .modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
 /* Optional: Style the link */
 .more-link {
   display: block;
@@ -640,5 +663,3 @@ button:hover {
   color: #0066cc;
   font-weight: bold;
 }
-
-
