@@ -173,20 +173,29 @@ function showHole() {
     </div>
   `;
 
-  // Append hazard checkbox only if this is a hazard hole in advanced mode
+  // Append hazard dropdown only if this is a hazard hole in advanced mode
   if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardWrapper = document.createElement("div");
     hazardWrapper.className = "hazard-toggle";
-    hazardWrapper.innerHTML = `<label><input type="checkbox" class="hazardCheckbox"> Hit Hazard</label>`;
+    hazardWrapper.innerHTML = `
+      <label>Hazards hit:</label>
+      <select class="hazardSelect">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    `;
     container.appendChild(hazardWrapper);
   }
 
-  // Optional: Highlight the hazard hole in the scorecard (visual feedback)
+  // Highlight the hazard hole in the scorecard
   highlightHazardHole(currentHole);
+
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
-
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
@@ -230,21 +239,22 @@ function submitPlayerScore() {
     }
   }
 
-  // Get base score
+  // Base score from hits
   let score = getScore(hits);
 
-  // Hazard penalty if applicable - capture whether a hazard was added
+  // Hazard penalty if applicable
   let hazardAdded = false;
-  const hazardCheckboxes = document.querySelectorAll(".hazardCheckbox");
-  if (
-    advancedMode &&
-    hazardHoles.includes(currentHole) &&
-    hazardCheckboxes[currentPlayerIndex] &&
-    hazardCheckboxes[currentPlayerIndex].checked
-  ) {
-    score += 1;
-    player.hazards = (player.hazards || 0) + 1;
-    hazardAdded = true;
+  let hazards = 0;
+  if (advancedMode && hazardHoles.includes(currentHole)) {
+    const hazardSelect = document.querySelector(".hazardSelect");
+    if (hazardSelect) {
+      hazards = parseInt(hazardSelect.value) || 0;
+      if (hazards > 0) {
+        score += hazards;
+        player.hazards = (player.hazards || 0) + hazards;
+        hazardAdded = true;
+      }
+    }
   }
 
   if (player) {
@@ -252,13 +262,13 @@ function submitPlayerScore() {
     player.scores.push(score);
     if (allPlayer) allPlayer.scores.push(score);
 
-    // Push to action history so Undo can reliably reverse this exact action
     actionHistory.push({
       playerIndex: currentPlayerIndex,
       playerName: player.name,
       hole: currentHole,
       score: score,
-      hazardAdded: hazardAdded
+      hazardAdded: hazardAdded,
+      hazards: hazards // store exact hazard count for undo
     });
   } else {
     console.warn("No current player found during score submission.");
@@ -269,16 +279,12 @@ function submitPlayerScore() {
 
   const { label, color } = getScoreLabelAndColor(hits);
 
-  // Determine if game is about to end
-  let gameWillEnd = false;
-  let winnerName = "";
-
+  // End-game & sudden death checks
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
     const tied = players.filter((p, i) => totals[i] === lowest);
     if (tied.length === 1) {
-      winnerName = tied[0].name;
       players = [tied[0]];
       endGame();
       return;
@@ -299,7 +305,7 @@ function submitPlayerScore() {
     }
   }
 
-  // Only show animation if game is NOT ending
+  // Show animation if not ending game
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
@@ -356,8 +362,6 @@ function submitPlayerScore() {
 
   showHole();
 }
-
-
 
   function undoHole() {
   if (!actionHistory || actionHistory.length === 0) {
