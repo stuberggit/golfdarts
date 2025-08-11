@@ -273,7 +273,7 @@ function getScoreLabelAndColor(score) {
 }
 
 
-ffunction submitPlayerScore() {
+function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
 
