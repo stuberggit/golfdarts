@@ -100,7 +100,8 @@ function handleNameDropdown(selectId, inputId) {
   input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
-let holeSequence = []; // store order of holes when random mode is on
+let holeSequence = [];
+let currentHoleIndex = 0;
 
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
@@ -109,7 +110,6 @@ function startGame() {
     return;
   }
 
-  // Block if both modes selected
   if (randomMode && advancedMode) {
     alert("You cannot start a game with both Random Mode and Advanced Mode selected.");
     return;
@@ -127,7 +127,6 @@ function startGame() {
       alert(`Player ${i + 1} must have a name.`);
       return;
     }
-
     players.push({ name, scores: [] });
   }
 
@@ -136,24 +135,20 @@ function startGame() {
   suddenDeath = false;
   tiedPlayers = [];
   currentHole = 1;
+  currentHoleIndex = 0; // reset random index
   currentPlayerIndex = 0;
-
-  // Reset action history for undo
   actionHistory = [];
 
-  // Select hazard holes if Advanced Mode is enabled
   if (advancedMode) {
     setupHazardHoles();
   }
 
-  // Create hole sequence (random or normal)
   if (randomMode) {
-    holeSequence = shuffleArray(Array.from({ length: 20 }, (_, i) => i + 1)); // 1–20
+    holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "Bullseye"]);
   } else {
     holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
   }
 
-  // UI changes
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
 
@@ -172,21 +167,20 @@ function startGame() {
 }
 
 function showHole() {
-  let displayHole = currentHole;
-  
+  let displayHole;
+
   if (randomMode) {
-    // In random mode, pull from holeSequence
-    displayHole = holeSequence[(currentHoleIndex || 0) % holeSequence.length];
+    displayHole = holeSequence[currentHoleIndex];
+  } else {
+    displayHole = currentHole;
   }
 
-  // Display correct header
   const headerText = displayHole === "Bullseye" ? "Bullseye" : `Hole ${displayHole}`;
   document.getElementById("holeHeader").innerText = headerText;
 
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
-  // Start with hits input
   container.innerHTML = `
     <div class="input-group">
       <label>${player.name} hits:</label>
@@ -197,7 +191,6 @@ function showHole() {
     </div>
   `;
 
-  // Append hazard dropdown only if this is a hazard hole in advanced mode
   if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
     const hazardWrapper = document.createElement("div");
     hazardWrapper.className = "hazard-toggle";
@@ -213,7 +206,6 @@ function showHole() {
     container.appendChild(hazardWrapper);
   }
 
-  // Highlight the hazard hole in the scorecard if applicable
   if (advancedMode && displayHole !== "Bullseye") {
     highlightHazardHole(displayHole);
   }
@@ -221,6 +213,7 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
