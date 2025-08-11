@@ -65,33 +65,40 @@
         Each player throws all 3 of their darts at the "hole" number, entering the total number of hits.<br><br>
         After all players have completed the hole, all players advance to the next hole.<br><br>
         Repeat this process until all players complete hole 18.<br><br>
-        Every hole is scored as a par three.<br><br>
+        Every hole is scored as a par three. <br><br>
         The person with the lowest score wins the round.<br><br>
+        In Advanced Mode, up to 6 random holes will be selected as Hazard holes and indicated with ⚠️ as the hole number. If a player hits a triple or double of the holes next to the Hazard hole, a hazard is indicated when scoring the hole and +1 is added for each hazard. A total of 3 hazards can be applied.<br><br>
         See the "scoring" summary for how scoring is calculated.
       </p>
       <button onclick="closeModal('rulesModal')">Close</button>
     </div>
   </div>
 
-  <div id="scoringModal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <h2>📊 Scoring</h2>
-      <h3># of Hits</h3>
-      <ul class="scoring-list">
-        <li style="color:#ff4c4c;">Miss! - Double Bogey (5)</li>
-        <li style="color:#ffffff;">1 - Par (3)</li>
-        <li style="color:#00ff00;">2 - Birdie (2)</li>
-        <li style="color:#00ffff;">3 - Ace (1)</li>
-        <li style="color:#ffcc00;">4 - Goose Egg (0)</li>
-        <li style="color:#ff66ff;">5 - Icicle (-1)</li>
-        <li style="color:#00bfff;">6 - Polar Bear (-2)</li>
-        <li style="color:#ff9933;">7 - Frostbite (-3)</li>
-        <li style="color:#ff69b4;">8 - Snowman (-4)</li>
-        <li style="color:#ffff00;">9 - Avalanche (-5)</li>
-      </ul>
-      <button onclick="closeModal('scoringModal')">Close</button>
-    </div>
+ <div id="scoringModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal('scoringModal')" aria-label="Close modal">&times;</button>
+    <h2>📊 Scoring</h2>
+    <h3># of Hits</h3>
+    <h4>1 hit = Par (3)</h4>
+    <ul class="scoring-list">
+      <li style="color:#dc143c;">Miss! + 3 hazards - Buster (8)</li>
+      <li style="color:#8a2be2;">Miss! + 2 hazards - Quad Bogey (7)</li>
+      <li style="color:#c71585;">Miss! + 1 hazard - Triple Bogey (6)</li>
+      <li style="color:#ff4c4c;">Miss! - Double Bogey (5)</li>
+      <li style="color:#ff8c00;">1 + 1 hazard - Bogey (4)</li>
+      <li style="color:#00ff00;">1 - Par (3)</li>
+      <li style="color:#00ffff;">2 - Birdie (2)</li>
+      <li style="color:#00bfff;">3 - Ace (1)</li>
+      <li style="color:#ffcc00;">4 - Goose Egg (0)</li>
+      <li style="color:#7fffd4;">5 - Icicle (-1)</li>
+      <li style="color:#66cdaa;">6 - Polar Bear (-2)</li>
+      <li style="color:#20b2aa;">7 - Frostbite (-3)</li>
+      <li style="color:#5f9ea0;">8 - Snowman (-4)</li>
+      <li style="color:#ffffff;">9 - Avalanche(-5)</li>
+    </ul>
   </div>
+</div>
+
 
   <div id="leaderboardModal" class="modal-overlay hidden">
     <div class="modal-content leaderboard-modal">
