@@ -171,84 +171,55 @@ function startGame() {
   document.body.id = "gameStarted";
 }
 
-function startGame() {
-  const count = parseInt(document.getElementById("playerCount").value);
-  if (isNaN(count) || count < 1 || count > 20) {
-    alert("Please select a valid number of players.");
-    return;
-  }
-
-  // Prevent both modes together
-  if (randomMode && advancedMode) {
-    alert("You cannot start a game with both Random Mode and Advanced Mode selected.");
-    return;
-  }
-
-  players = [];
-  for (let i = 0; i < count; i++) {
-    const select = document.getElementById(`select-${i}`);
-    const input = document.getElementById(`name-${i}`);
-    const selected = select.value;
-    const inputted = input.value.trim();
-    const name = selected === "Other" ? inputted : selected;
-
-    if (!name) {
-      alert(`Player ${i + 1} must have a name.`);
-      return;
-    }
-
-    players.push({ name, scores: [] });
-  }
-
-  allPlayers = JSON.parse(JSON.stringify(players));
-  gameStarted = true;
-  suddenDeath = false;
-  tiedPlayers = [];
-  currentHole = 1;
-  currentHoleIndex = 0;
-  actionHistory = [];
-
-  // Advanced Mode hazards
-  if (advancedMode) {
-    setupHazardHoles();
-  }
-
-  // Random Mode hole sequence
-  if (randomMode) {
-    // Create full set: 1–20 + Bullseye
-    const allHoles = [...Array(20).keys()].map(n => n + 1).concat(["Bullseye"]);
-
-    // Shuffle and take first 18 for regulation play
-    holeSequence = shuffleArray(allHoles).slice(0, 18);
-  } else {
-    holeSequence = []; // not used in normal mode
-  }
-
-  document.getElementById("setup").style.display = "none";
-  document.getElementById("game").style.display = "block";
+function showHole() {
+  let displayHole = currentHole;
   
-  const title = document.querySelector(".header-bar h1");
-  if (title) title.style.display = "none";
-
-  const hamburger = document.getElementById("hamburgerIcon");
-  if (hamburger) hamburger.style.display = "block";
-   
-  showHole();
-  updateLeaderboard();
-  updateScorecard();
-  saveGameState();
-
-  document.body.id = "gameStarted";
-}
-
-// Helper to shuffle arrays
-function shuffleArray(arr) {
-  let array = arr.slice();
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+  if (randomMode) {
+    // In random mode, pull from holeSequence
+    displayHole = holeSequence[(currentHoleIndex || 0) % holeSequence.length];
   }
-  return array;
+
+  // Display correct header
+  const headerText = displayHole === "Bullseye" ? "Bullseye" : `Hole ${displayHole}`;
+  document.getElementById("holeHeader").innerText = headerText;
+
+  const container = document.getElementById("scoreInputs");
+  const player = players[currentPlayerIndex];
+
+  // Start with hits input
+  container.innerHTML = `
+    <div class="input-group">
+      <label>${player.name} hits:</label>
+      <select id="hits" class="full-width">
+        <option value="miss">Miss!</option>
+        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+      </select>
+    </div>
+  `;
+
+  // Append hazard dropdown only if this is a hazard hole in advanced mode
+  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
+    const hazardWrapper = document.createElement("div");
+    hazardWrapper.className = "hazard-toggle";
+    hazardWrapper.innerHTML = `
+      <label>Hazards hit:</label>
+      <select class="hazardSelect">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    `;
+    container.appendChild(hazardWrapper);
+  }
+
+  // Highlight the hazard hole in the scorecard if applicable
+  if (advancedMode && displayHole !== "Bullseye") {
+    highlightHazardHole(displayHole);
+  }
+
+  document.getElementById("scorecardWrapper").style.display = "block";
+  updateScorecard();
 }
 
 function highlightHazardHole(hole) {
