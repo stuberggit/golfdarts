@@ -958,7 +958,6 @@ function clearHistory() {
   alert("History cleared!");
 }
 
-
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
   if (!modal) return;
@@ -966,13 +965,26 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
+  // ✅ Ordered worst → best so display makes sense
   const scoreLabels = [
-    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg",
-    "Icicle", "Polar Bear", "Frostbite", "Snowman", "Avalanche"
+    "Buster",        // 8 strokes (worst)
+    "Quad Bogey",    // 7 strokes
+    "Triple Bogey",  // 6 strokes
+    "Double Bogey",  // 5 strokes
+    "Bogey",         // 4 strokes
+    "Par",           // 3 strokes
+    "Birdie",        // 2 strokes
+    "Ace",           // 1 stroke
+    "Goose Egg",     // 0
+    "Icicle",        // -1
+    "Polar Bear",    // -2
+    "Frostbite",     // -3
+    "Snowman",       // -4
+    "Avalanche"      // -5 (best)
   ];
 
   const hitCounts = allPlayers.map(player => {
-    const counts = Array(10).fill(0);
+    const counts = Array(scoreLabels.length).fill(0);
     player.scores.forEach(score => {
       const hitIndex = getHitsFromScore(score);
       if (hitIndex !== -1) counts[hitIndex]++;
@@ -990,23 +1002,26 @@ function showStats() {
   modal.classList.remove("hidden");
 }
 
-// Helper: map score back to hit count
+// ✅ Mapping matches your actual numeric scores
 function getHitsFromScore(score) {
   const map = {
-    5: 0,
-    3: 1,
-    2: 2,
-    1: 3,
-    0: 4,
-    [-1]: 5,
-    [-2]: 6,
-    [-3]: 7,
-    [-4]: 8,
-    [-5]: 9
+    8: 0,    // Buster
+    7: 1,    // Quad Bogey
+    6: 2,    // Triple Bogey
+    5: 3,    // Double Bogey
+    4: 4,    // Bogey
+    3: 5,    // Par
+    2: 6,    // Birdie
+    1: 7,    // Ace
+    0: 8,    // Goose Egg
+    [-1]: 9, // Icicle
+    [-2]: 10,// Polar Bear
+    [-3]: 11,// Frostbite
+    [-4]: 12,// Snowman
+    [-5]: 13 // Avalanche
   };
   return map[score] ?? -1;
 }
-
 
 // ========== MODALS ==========
 
