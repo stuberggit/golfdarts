@@ -353,7 +353,7 @@ function submitPlayerScore() {
   saveGameState();
 
   // Show scoring animation with descriptive label based on hits (not numeric score)
-  const { label, color } = getScoreLabelAndColor(score);
+  const { label, color } = getScoreLabelAndColor(hits);
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
@@ -362,36 +362,38 @@ function submitPlayerScore() {
   // Advance turn
   currentPlayerIndex++;
 
-  // If we've gone through all players, reset to first player and progress hole
   if (currentPlayerIndex >= players.length) {
-    currentPlayerIndex = 0;
-    holesPlayedCount++; // ✅ Track number of holes actually played
+    currentPlayerIndex = 0; // reset player index for next hole
 
+    // Hole progression logic:
     if (!randomMode) {
-      // Normal mode hole progression
-      if (holesPlayedCount >= 18) {
-        // End of normal round — check for ties
+      // Normal / Advanced mode
+      if (currentHole < 18) {
+        currentHole++; // next hole
+      } else {
+        // All players finished hole 18, check ties and end or sudden death
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
 
         if (tied.length > 1) {
+          // Tie → sudden death
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
           currentHole = getRandomSuddenDeathHole();
         } else {
+          // Clear winner, end game
           endGame();
           return;
         }
-      } else {
-        currentHole++;
       }
     } else {
       // Random mode hole progression
       currentHoleIndex++;
 
-      if (holesPlayedCount >= 18) { // ✅ End after 18 holes instead of 21
+      if (currentHoleIndex >= holeSequence.length) {
+        // End of random sequence — check for ties
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
