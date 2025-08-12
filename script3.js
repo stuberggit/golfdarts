@@ -1011,7 +1011,6 @@ function getHitsFromScore(score) {
 function showModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
-  if (!gameStarted && id === 'leaderboardModal') return;
   modal.classList.remove('hidden');
 }
 
