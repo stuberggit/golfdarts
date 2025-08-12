@@ -283,8 +283,8 @@ function getScoreLabelAndColor(hits) {
     "-5": "#2f4f4f"   // Dark Slate Gray (Avalanche)
   };
 
-  const label = labels[score] ?? "Unknown";
-  const color = colors[score] ?? "#ffffff"; // white fallback
+  const label = labels[hits] ?? "Unknown";
+  const color = colors[hits] ?? "#ffffff"; // white fallback
 
   return { label, color };
 }
