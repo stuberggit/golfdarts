@@ -419,15 +419,6 @@ function getRandomSuddenDeathHole() {
   return options[Math.floor(Math.random() * options.length)];
 }
 
-
-// Random sudden death hole (1–20 or Bullseye)
-function getRandomSuddenDeathHole() {
-  const options = [...Array(20).keys()].map(n => n + 1).concat(["Bullseye"]);
-  return options[Math.floor(Math.random() * options.length)];
-}
-
-
-
   function undoHole() {
   if (!actionHistory || actionHistory.length === 0) {
     alert("Nothing to undo.");
