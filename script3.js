@@ -248,7 +248,7 @@ function getScore(hits) {
   return scores[hits - 1] ?? 5;
 }
 
-function getScoreLabelAndColor(score) {
+function getScoreLabelAndColor(hits) {
   const labels = {
     8: "Buster",
     7: "Quad Bogey",
