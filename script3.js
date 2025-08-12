@@ -353,7 +353,7 @@ function submitPlayerScore() {
   saveGameState();
 
   // Show scoring animation with descriptive label based on hits (not numeric score)
-  const { label, color } = getScoreLabelAndColor(hits);
+  const { label, color } = getScoreLabelAndColor(score);
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
@@ -414,6 +414,7 @@ function submitPlayerScore() {
 
   showHole();
 }
+
 
 // Random sudden death hole (1–20 or Bullseye)
 function getRandomSuddenDeathHole() {
