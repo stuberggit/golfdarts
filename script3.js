@@ -290,6 +290,9 @@ function getScoreLabelAndColor(score) {
 }
 
 
+// Track number of holes actually played
+let holesPlayedCount = 0;
+
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
@@ -359,12 +362,14 @@ function submitPlayerScore() {
   // Advance turn
   currentPlayerIndex++;
 
+  // If we've gone through all players, reset to first player and progress hole
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
+    holesPlayedCount++; // ✅ Track number of holes actually played
 
     if (!randomMode) {
       // Normal mode hole progression
-      if (currentHole === 18) {
+      if (holesPlayedCount >= 18) {
         // End of normal round — check for ties
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
@@ -386,8 +391,7 @@ function submitPlayerScore() {
       // Random mode hole progression
       currentHoleIndex++;
 
-      if (currentHoleIndex >= holeSequence.length) {
-        // End of random sequence — check for ties
+      if (holesPlayedCount >= 18) { // ✅ End after 18 holes instead of 21
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
@@ -408,6 +412,13 @@ function submitPlayerScore() {
 
   showHole();
 }
+
+// Random sudden death hole (1–20 or Bullseye)
+function getRandomSuddenDeathHole() {
+  const options = [...Array(20).keys()].map(n => n + 1).concat(["Bullseye"]);
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 
 // Random sudden death hole (1–20 or Bullseye)
 function getRandomSuddenDeathHole() {
