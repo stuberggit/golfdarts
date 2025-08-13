@@ -538,6 +538,23 @@ button:hover {
   font-weight: bold; /* optional, for better readability */
 }
 
+.advanced-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  max-width: 180px; /* match Submit Score button width */
+  margin: 0 auto;
+}
+
+.advanced-inputs .input-group {
+  flex: 1;
+}
+
+.advanced-inputs select {
+  width: 100%;
+}
+
+
 .button-stats {
   background-color: #206a1e;
   border: 3px solid #ffcc00; /* Sudden death yellow border */
