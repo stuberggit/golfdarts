@@ -540,17 +540,21 @@ button:hover {
 
 .advanced-inputs {
   display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  max-width: 288px; /* match button row width */
-  margin: 0 auto;
+  justify-content: center;
+  gap: 24px; /* match spacing between Undo & Leaderboard buttons */
 }
 
 .advanced-inputs .input-group {
-  flex: 1;
+  width: 288px; /* each matches button width */
 }
 
-.advanced-inputs select {
+.single-select {
+  width: 288px;
+  margin: 0 auto;
+}
+
+.advanced-inputs select,
+.single-select select {
   width: 100%;
 }
 
