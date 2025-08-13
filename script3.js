@@ -202,7 +202,6 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
-  // ADVANCED MODE — two side-by-side dropdowns
   if (advancedMode && displayHole !== "🎯") {
     container.innerHTML = `
       <div class="advanced-inputs">
@@ -210,7 +209,9 @@ function showHole() {
           <label style="font-size: 2rem;">${player.name} hits:</label>
           <select id="hits">
             <option value="miss">Miss!</option>
-            ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+            ${[...Array(9)]
+              .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
+              .join("")}
           </select>
         </div>
         <div class="input-group">
@@ -226,15 +227,15 @@ function showHole() {
     `;
 
     highlightHazardHole(displayHole);
-
   } else {
-    // NORMAL / RANDOM MODE — single dropdown
     container.innerHTML = `
-      <div class="input-group">
+      <div class="input-group single-select">
         <label style="font-size: 2rem;">${player.name} hits:</label>
         <select id="hits">
           <option value="miss">Miss!</option>
-          ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+          ${[...Array(9)]
+            .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
+            .join("")}
         </select>
       </div>
     `;
@@ -243,8 +244,6 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
-
-
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
