@@ -532,6 +532,12 @@ button:hover {
   flex: 1; /* equal width for each dropdown */
 }
 
+/* Larger labels above dropdowns */
+.input-group label {
+  font-size: 2rem;
+  font-weight: bold; /* optional, for better readability */
+}
+
 /* Enlarged select boxes */
 .large-select {
   font-size: 2rem;       /* bigger text */
