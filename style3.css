@@ -538,26 +538,6 @@ button:hover {
   font-weight: bold; /* optional, for better readability */
 }
 
-.advanced-inputs {
-  display: flex;
-  justify-content: center;
-  gap: 24px; /* match spacing between Undo & Leaderboard buttons */
-}
-
-.advanced-inputs .input-group {
-  width: 288px; /* each matches button width */
-}
-
-.single-select {
-  width: 288px;
-  margin: 0 auto;
-}
-
-.advanced-inputs select,
-.single-select select {
-  width: 100%;
-}
-
 .button-stats {
   background-color: #206a1e;
   border: 3px solid #ffcc00; /* Sudden death yellow border */
