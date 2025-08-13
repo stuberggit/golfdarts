@@ -161,10 +161,10 @@ function startGame() {
   }
 
   if (randomMode) {
-    holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "Bullseye"]);
-  } else {
-    holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
-  }
+  holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "🎯"]);
+} else {
+  holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
+}
 
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -199,8 +199,8 @@ function showHole() {
     displayHole = currentHole;
   }
 
-  const headerText = displayHole === "Bullseye" ? "Bullseye" : `Hole ${displayHole}`;
-  document.getElementById("holeHeader").innerText = headerText;
+  const headerText = displayHole === "🎯" ? "🎯" : `Hole ${displayHole}`;
+document.getElementById("holeHeader").innerText = headerText;
 
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
@@ -215,7 +215,7 @@ function showHole() {
     </div>
   `;
 
-  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
+  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "🎯") {
     const hazardWrapper = document.createElement("div");
     hazardWrapper.className = "hazard-toggle";
     hazardWrapper.innerHTML = `
@@ -230,9 +230,9 @@ function showHole() {
     container.appendChild(hazardWrapper);
   }
 
-  if (advancedMode && displayHole !== "Bullseye") {
-    highlightHazardHole(displayHole);
-  }
+  if (advancedMode && displayHole !== "🎯") {
+  highlightHazardHole(displayHole);
+}
 
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
@@ -321,7 +321,7 @@ function submitPlayerScore() {
   let hazards = 0;
   const displayHole = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
 
-  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "Bullseye") {
+  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "🎯") {
     const hazardSelect = document.querySelector(".hazardSelect");
     if (hazardSelect) {
       hazards = parseInt(hazardSelect.value) || 0;
@@ -418,7 +418,7 @@ function submitPlayerScore() {
 
 // Random sudden death hole (1–20 or Bullseye)
 function getRandomSuddenDeathHole() {
-  const options = [...Array(20).keys()].map(n => n + 1).concat(["Bullseye"]);
+  const options = [...Array(20).keys()].map(n => n + 1).concat(["🎯"]);
   return options[Math.floor(Math.random() * options.length)];
 }
 
