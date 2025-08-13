@@ -620,12 +620,15 @@ function updateScorecard() {
     });
   };
 
-  // Render sections
+  // Determine turn number (works for both modes)
+  const turnNumber = randomMode ? currentHoleIndex + 1 : currentHole;
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
+  // Render sudden death section
   if (suddenDeath) renderSuddenDeath();
 
-  if (currentHole >= 10 && allCompletedFront) {
+  // Swap order after 9 holes played (turn-based check for random mode)
+  if (turnNumber > 9 && allCompletedFront) {
     renderSection("Back Nine", 10);
     renderSection("Front Nine", 1);
   } else {
@@ -651,6 +654,7 @@ function updateScorecard() {
     scoreInputs.appendChild(winText);
   }
 }
+
 
 
 function updateLeaderboard(final = false) {
