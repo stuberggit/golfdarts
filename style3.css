@@ -563,7 +563,7 @@ button:hover {
 
 .advanced-inputs select {
   width: 100%;                    /* fill group width */
-  font-size: 2rem;                /* bigger than default 1.2rem */
+  font-size: 1.2rem;                /* bigger than default 1.2rem */
   padding: 0.4rem 0.5rem;
 }
 
