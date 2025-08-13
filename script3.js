@@ -204,7 +204,7 @@ function showHole() {
 
   if (advancedMode && displayHole !== "🎯") {
     container.innerHTML = `
-      <div class="advanced-inputs">
+      <div class="button-row">
         <div class="input-group">
           <label style="font-size: 2rem;">${player.name} hits:</label>
           <select id="hits">
@@ -229,14 +229,16 @@ function showHole() {
     highlightHazardHole(displayHole);
   } else {
     container.innerHTML = `
-      <div class="input-group single-select">
-        <label style="font-size: 2rem;">${player.name} hits:</label>
-        <select id="hits">
-          <option value="miss">Miss!</option>
-          ${[...Array(9)]
-            .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
-            .join("")}
-        </select>
+      <div class="button-row">
+        <div class="input-group">
+          <label style="font-size: 2rem;">${player.name} hits:</label>
+          <select id="hits">
+            <option value="miss">Miss!</option>
+            ${[...Array(9)]
+              .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
+              .join("")}
+          </select>
+        </div>
       </div>
     `;
   }
@@ -244,6 +246,7 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
