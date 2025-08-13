@@ -187,11 +187,7 @@ function showHole() {
   let displayHole;
 
   if (randomMode) {
-    if (suddenDeath) {
-      displayHole = currentHole;
-    } else {
-      displayHole = holeSequence[currentHoleIndex];
-    }
+    displayHole = suddenDeath ? currentHole : holeSequence[currentHoleIndex];
   } else {
     displayHole = currentHole;
   }
@@ -202,51 +198,61 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
-  if (advancedMode && displayHole !== "🎯") {
-    container.innerHTML = `
-      <div class="button-row">
-        <div class="input-group">
-          <label style="font-size: 2rem;">${player.name} hits:</label>
-          <select id="hits">
-            <option value="miss">Miss!</option>
-            ${[...Array(9)]
-              .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
-              .join("")}
-          </select>
-        </div>
-        <div class="input-group">
-          <label style="font-size: 2rem;">Hazards hit:</label>
-          <select class="hazardSelect" ${hazardHoles.includes(displayHole) ? "" : "disabled"}>
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
-        </div>
-      </div>
-    `;
+  container.innerHTML = '';
 
-    highlightHazardHole(displayHole);
-  } else {
-    container.innerHTML = `
-      <div class="button-row">
-        <div class="input-group">
-          <label style="font-size: 2rem;">${player.name} hits:</label>
-          <select id="hits">
-            <option value="miss">Miss!</option>
-            ${[...Array(9)]
-              .map((_, i) => `<option value="${i + 1}">${i + 1}</option>`)
-              .join("")}
-          </select>
-        </div>
-      </div>
+  if (advancedMode && displayHole !== "🎯") {
+    // Wrap dropdowns in a flex container to mimic button alignment
+    const advancedWrapper = document.createElement('div');
+    advancedWrapper.className = 'advanced-inputs';
+
+    // Player hits
+    const playerGroup = document.createElement('div');
+    playerGroup.className = 'input-group';
+    playerGroup.innerHTML = `
+      <label>${player.name} hits:</label>
+      <select id="hits">
+        <option value="miss">Miss!</option>
+        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+      </select>
     `;
+    advancedWrapper.appendChild(playerGroup);
+
+    // Hazard hits (always visible but functional only on hazard holes)
+    const hazardGroup = document.createElement('div');
+    hazardGroup.className = 'input-group';
+    hazardGroup.innerHTML = `
+      <label>Hazards hit:</label>
+      <select class="hazardSelect">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    `;
+    advancedWrapper.appendChild(hazardGroup);
+
+    container.appendChild(advancedWrapper);
+  } else {
+    // Non-advanced mode: single player hits dropdown centered
+    const singleWrapper = document.createElement('div');
+    singleWrapper.className = 'single-select';
+    singleWrapper.innerHTML = `
+      <label>${player.name} hits:</label>
+      <select id="hits">
+        <option value="miss">Miss!</option>
+        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+      </select>
+    `;
+    container.appendChild(singleWrapper);
+  }
+
+  if (advancedMode && displayHole !== "🎯") {
+    highlightHazardHole(displayHole);
   }
 
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
-
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
