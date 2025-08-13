@@ -12,7 +12,7 @@ let hazardHoles = [];
 let actionHistory = [];
 let randomMode = false;
 
-const isPreProd = location.href.includes("index2") || location.href.includes("script2");
+const isPreProd = location.href.includes("index3") || location.href.includes("script3");
 const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
 
 let history = [];
@@ -392,7 +392,7 @@ function submitPlayerScore() {
       // Random mode hole progression
       currentHoleIndex++;
 
-      if (currentHoleIndex >= holeSequence.length) {
+      if (currentHoleIndex >= 18) { // ✅ stop after 18 played holes
         // End of random sequence — check for ties
         const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
         const lowest = Math.min(...totals);
@@ -414,7 +414,6 @@ function submitPlayerScore() {
 
   showHole();
 }
-
 
 // Random sudden death hole (1–20 or Bullseye)
 function getRandomSuddenDeathHole() {
