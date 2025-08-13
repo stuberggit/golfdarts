@@ -563,7 +563,7 @@ button:hover {
 
 .advanced-inputs select {
   width: 100%;                    /* fill group width */
-  font-size: 1.2rem;                /* bigger than default 1.2rem */
+  font-size: 1rem;               
   padding: 0.4rem 0.5rem;
 }
 
@@ -628,6 +628,12 @@ button:hover {
 
 .hazard-hole {
   background-color: rgba(255, 0, 0, 0.2); /* light red */
+}
+
+.hazardSelect:disabled {
+  background-color: #666; /* dark gray */
+  color: #ccc;            /* light gray text */
+  cursor: not-allowed;
 }
 
 .history-page {
