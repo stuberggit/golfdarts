@@ -534,7 +534,7 @@ button:hover {
 
 /* Larger labels above dropdowns */
 .input-group label {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: bold; /* optional, for better readability */
 }
 
