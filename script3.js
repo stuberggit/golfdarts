@@ -188,12 +188,12 @@ function showHole() {
 
   if (randomMode) {
     if (suddenDeath) {
-      displayHole = currentHole; // Sudden death uses single random hole
+      displayHole = currentHole;
     } else {
-      displayHole = holeSequence[currentHoleIndex]; // Normal random mode
+      displayHole = holeSequence[currentHoleIndex];
     }
   } else {
-    displayHole = currentHole; // Normal/Advanced mode
+    displayHole = currentHole;
   }
 
   const headerText = displayHole === "🎯" ? "🎯" : `Hole ${displayHole}`;
@@ -202,33 +202,42 @@ function showHole() {
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
-  container.innerHTML = `
-    <div class="input-row">
+  // ADVANCED MODE — two side-by-side dropdowns
+  if (advancedMode && displayHole !== "🎯") {
+    container.innerHTML = `
+      <div class="advanced-inputs">
+        <div class="input-group">
+          <label style="font-size: 2rem;">${player.name} hits:</label>
+          <select id="hits">
+            <option value="miss">Miss!</option>
+            ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+          </select>
+        </div>
+        <div class="input-group">
+          <label style="font-size: 2rem;">Hazards hit:</label>
+          <select class="hazardSelect" ${hazardHoles.includes(displayHole) ? "" : "disabled"}>
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    highlightHazardHole(displayHole);
+
+  } else {
+    // NORMAL / RANDOM MODE — single dropdown
+    container.innerHTML = `
       <div class="input-group">
-        <label>${player.name} hits:</label>
-        <select id="hits" class="full-width large-select">
+        <label style="font-size: 2rem;">${player.name} hits:</label>
+        <select id="hits">
           <option value="miss">Miss!</option>
           ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
         </select>
       </div>
-      ${
-        advancedMode
-          ? `<div class="input-group">
-              <label>Hazards hit:</label>
-              <select class="hazardSelect large-select" ${!hazardHoles.includes(displayHole) || displayHole === "🎯" ? "disabled" : ""}>
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-              </select>
-            </div>`
-          : ""
-      }
-    </div>
-  `;
-
-  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "🎯") {
-    highlightHazardHole(displayHole);
+    `;
   }
 
   document.getElementById("scorecardWrapper").style.display = "block";
