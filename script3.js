@@ -245,6 +245,7 @@ function showHole() {
 }
 
 
+
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
 }
