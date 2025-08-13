@@ -188,55 +188,53 @@ function showHole() {
 
   if (randomMode) {
     if (suddenDeath) {
-      // Sudden death uses single random hole number in currentHole
-      displayHole = currentHole;
+      displayHole = currentHole; // Sudden death uses single random hole
     } else {
-      // Normal random mode picks from holeSequence by index
-      displayHole = holeSequence[currentHoleIndex];
+      displayHole = holeSequence[currentHoleIndex]; // Normal random mode
     }
   } else {
-    // Normal mode just shows currentHole
-    displayHole = currentHole;
+    displayHole = currentHole; // Normal/Advanced mode
   }
 
   const headerText = displayHole === "🎯" ? "🎯" : `Hole ${displayHole}`;
-document.getElementById("holeHeader").innerText = headerText;
+  document.getElementById("holeHeader").innerText = headerText;
 
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
   container.innerHTML = `
-    <div class="input-group">
-      <label>${player.name} hits:</label>
-      <select id="hits" class="full-width">
-        <option value="miss">Miss!</option>
-        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
-      </select>
+    <div class="input-row">
+      <div class="input-group">
+        <label>${player.name} hits:</label>
+        <select id="hits" class="full-width large-select">
+          <option value="miss">Miss!</option>
+          ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+        </select>
+      </div>
+      ${
+        advancedMode
+          ? `<div class="input-group">
+              <label>Hazards hit:</label>
+              <select class="hazardSelect large-select" ${!hazardHoles.includes(displayHole) || displayHole === "🎯" ? "disabled" : ""}>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>`
+          : ""
+      }
     </div>
   `;
 
   if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "🎯") {
-    const hazardWrapper = document.createElement("div");
-    hazardWrapper.className = "hazard-toggle";
-    hazardWrapper.innerHTML = `
-      <label>Hazards hit:</label>
-      <select class="hazardSelect">
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-      </select>
-    `;
-    container.appendChild(hazardWrapper);
+    highlightHazardHole(displayHole);
   }
-
-  if (advancedMode && displayHole !== "🎯") {
-  highlightHazardHole(displayHole);
-}
 
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
