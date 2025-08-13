@@ -201,7 +201,6 @@ function showHole() {
   container.innerHTML = '';
 
   if (advancedMode && displayHole !== "🎯") {
-    // Wrap dropdowns in a flex container to mimic button alignment
     const advancedWrapper = document.createElement('div');
     advancedWrapper.className = 'advanced-inputs';
 
@@ -217,12 +216,13 @@ function showHole() {
     `;
     advancedWrapper.appendChild(playerGroup);
 
-    // Hazard hits (always visible but functional only on hazard holes)
+    // Hazard hits (always visible, disabled on non-hazard holes)
     const hazardGroup = document.createElement('div');
     hazardGroup.className = 'input-group';
+    const isHazard = hazardHoles.includes(displayHole);
     hazardGroup.innerHTML = `
       <label>Hazards hit:</label>
-      <select class="hazardSelect">
+      <select class="hazardSelect" ${isHazard ? '' : 'disabled'}>
         <option value="0">0</option>
         <option value="1">1</option>
         <option value="2">2</option>
@@ -233,7 +233,7 @@ function showHole() {
 
     container.appendChild(advancedWrapper);
   } else {
-    // Non-advanced mode: single player hits dropdown centered
+    // Non-advanced or normal/random mode: single player hits dropdown centered
     const singleWrapper = document.createElement('div');
     singleWrapper.className = 'single-select';
     singleWrapper.innerHTML = `
