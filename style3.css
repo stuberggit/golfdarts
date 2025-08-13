@@ -538,15 +538,6 @@ button:hover {
   font-weight: bold; /* optional, for better readability */
 }
 
-/* Enlarged select boxes */
-.large-select {
-  font-size: 2rem;       /* bigger text */
-  padding: 0.3rem 0.5rem; /* add some padding for comfort */
-  width: 100%;           /* fill parent input-group width */
-  max-width: 180px;      /* optionally limit width to match buttons */
-  box-sizing: border-box;
-}
-
 .button-stats {
   background-color: #206a1e;
   border: 3px solid #ffcc00; /* Sudden death yellow border */
