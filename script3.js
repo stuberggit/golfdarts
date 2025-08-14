@@ -887,6 +887,37 @@ if (leaderboard) {
   document.body.removeAttribute("id");
 }
 
+//Handicap
+const playerDiv = document.createElement('div');
+playerDiv.classList.add('player-setup');
+
+// Player dropdown
+const select = document.createElement('select');
+select.name = `player${i}`;
+select.id = `player${i}`;
+// add options...
+
+// Handicap input
+const handicap = document.createElement('input');
+handicap.type = 'number';
+handicap.min = -10;
+handicap.max = 10;
+handicap.value = 0;
+handicap.classList.add('handicap-input');
+handicap.id = `handicap${i}`;
+
+// Label
+const label = document.createElement('label');
+label.textContent = `Player ${i + 1}: `;
+label.appendChild(select);
+label.appendChild(document.createTextNode(' Handicap: '));
+label.appendChild(handicap);
+
+// Add to container
+playerDiv.appendChild(label);
+document.getElementById('nameInputs').appendChild(playerDiv);
+
+
 function showHistory() {
   console.log("📚 showHistory() was called");
 
