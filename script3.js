@@ -48,11 +48,14 @@ function createPlayerInputs() {
   for (let i = 0; i < count; i++) {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
+    const handicapId = `handicap-${i}`;
 
+    // Label for player selection
     const label = document.createElement("label");
     label.setAttribute("for", selectId);
     label.textContent = `Player ${i + 1}:`;
 
+    // Dropdown for selecting a player
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
     selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
@@ -71,22 +74,41 @@ function createPlayerInputs() {
       selectEl.appendChild(option);
     });
 
+    // Text input for entering a custom player name
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
     inputEl.placeholder = "Enter name";
     inputEl.style.display = "none";
 
+    // Handicap input
+    const handicapEl = document.createElement("input");
+    handicapEl.type = "number";
+    handicapEl.min = -10;
+    handicapEl.max = 10;
+    handicapEl.value = 0;
+    handicapEl.classList.add("handicap-input");
+    handicapEl.id = handicapId;
+
+    // Handicap label
+    const handicapLabel = document.createElement("label");
+    handicapLabel.setAttribute("for", handicapId);
+    handicapLabel.textContent = " Handicap: ";
+
+    // Wrap player and handicap inputs
     const wrapper = document.createElement("div");
     wrapper.className = "playerInputBlock";
     wrapper.appendChild(label);
     wrapper.appendChild(selectEl);
     wrapper.appendChild(inputEl);
+    wrapper.appendChild(handicapLabel);
+    wrapper.appendChild(handicapEl);
 
     container.appendChild(wrapper);
   }
 
   document.getElementById("startBtn").style.display = "inline";
 }
+
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
@@ -886,37 +908,6 @@ if (leaderboard) {
 
   document.body.removeAttribute("id");
 }
-
-//Handicap
-const playerDiv = document.createElement('div');
-playerDiv.classList.add('player-setup');
-
-// Player dropdown
-const select = document.createElement('select');
-select.name = `player${i}`;
-select.id = `player${i}`;
-// add options...
-
-// Handicap input
-const handicap = document.createElement('input');
-handicap.type = 'number';
-handicap.min = -10;
-handicap.max = 10;
-handicap.value = 0;
-handicap.classList.add('handicap-input');
-handicap.id = `handicap${i}`;
-
-// Label
-const label = document.createElement('label');
-label.textContent = `Player ${i + 1}: `;
-label.appendChild(select);
-label.appendChild(document.createTextNode(' Handicap: '));
-label.appendChild(handicap);
-
-// Add to container
-playerDiv.appendChild(label);
-document.getElementById('nameInputs').appendChild(playerDiv);
-
 
 function showHistory() {
   console.log("📚 showHistory() was called");
