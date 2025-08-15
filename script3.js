@@ -80,14 +80,18 @@ function createPlayerInputs() {
     inputEl.placeholder = "Enter name";
     inputEl.style.display = "none";
 
-    // Handicap input
-    const handicapEl = document.createElement("input");
-    handicapEl.type = "number";
-    handicapEl.min = -10;
-    handicapEl.max = 10;
-    handicapEl.value = 0;
-    handicapEl.classList.add("handicap-input");
-    handicapEl.id = handicapId;
+    // Handicap dropdown
+    const handicapSelect = document.createElement("select");
+    handicapSelect.id = handicapId;
+    handicapSelect.classList.add("handicap-input");
+
+    for (let h = -10; h <= 10; h++) {
+      const opt = document.createElement("option");
+      opt.value = h;
+      opt.textContent = (h > 0 ? "+" : "") + h; // Add plus sign for positives
+      if (h === 0) opt.selected = true; // Default to 0
+      handicapSelect.appendChild(opt);
+    }
 
     // Handicap label
     const handicapLabel = document.createElement("label");
@@ -101,14 +105,13 @@ function createPlayerInputs() {
     wrapper.appendChild(selectEl);
     wrapper.appendChild(inputEl);
     wrapper.appendChild(handicapLabel);
-    wrapper.appendChild(handicapEl);
+    wrapper.appendChild(handicapSelect);
 
     container.appendChild(wrapper);
   }
 
   document.getElementById("startBtn").style.display = "inline";
 }
-
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
