@@ -823,20 +823,22 @@ function endGame() {
     return;
   }
 
+  // Use the full player list as the baseline
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Compute adjusted totals (net) and raw totals (gross)
+  // Compute gross and net totals
   const totals = fullPlayerList.map(p => {
-    const rawTotal = p.scores.reduce((sum, s) => sum + s, 0);
-    const adjustedTotal = rawTotal + (p.handicap || 0);
-    return { ...p, rawTotal, adjustedTotal };
+    const grossTotal = p.scores.reduce((sum, s) => sum + s, 0);
+    const hcp = Number(p.handicap || 0);
+    const netTotal = grossTotal + hcp; // lower is better; handicap may be negative or positive
+    return { ...p, grossTotal, netTotal, handicap: hcp };
   });
 
-  // Determine winner based on NET (adjustedTotal)
-  const winningScore = Math.min(...totals.map(t => t.adjustedTotal));
-  const winners = totals.filter(t => t.adjustedTotal === winningScore);
+  // Decide winner by NET
+  const winningNet = Math.min(...totals.map(t => t.netTotal));
+  const winners = totals.filter(t => t.netTotal === winningNet);
 
-  // Save results to history
+  // Persist history (gross + net)
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
   previousHistory.push({
     date: new Date().toISOString(),
@@ -844,22 +846,31 @@ function endGame() {
       name: p.name,
       scores: [...p.scores],
       handicap: p.handicap || 0,
-      grossTotal: p.rawTotal,
-      netTotal: p.adjustedTotal
+      grossTotal: p.grossTotal,
+      netTotal: p.netTotal
     })),
     suddenDeath: suddenDeath,
-    advancedMode: advancedMode
+    advancedMode: advancedMode,
+    randomMode: randomMode
   });
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Show winner
+  // Winner / tie messaging
   if (winners.length === 1) {
+    const w = winners[0];
+    // Trophy line animation
+    if (typeof showScoreAnimation === "function") {
+      const hcpText = w.handicap >= 0 ? `+${w.handicap}` : `${w.handicap}`;
+      showScoreAnimation(`${w.name} wins! Net ${w.netTotal} (Gross ${w.grossTotal} ${hcpText}) 🏆`, "#ffcc00");
+    }
+
     const winText = document.createElement("h2");
-    winText.textContent = `${winners[0].name} wins!!`;
+    winText.textContent = `${w.name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
-  } else if (winners.length > 1) {
+  } else {
+    // True tie on NET after regulation
     const tieText = document.createElement("h2");
     tieText.textContent = `It's a tie! (${winners.map(w => w.name).join(", ")})`;
     tieText.style.color = "#ffff00";
@@ -888,6 +899,7 @@ function endGame() {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
