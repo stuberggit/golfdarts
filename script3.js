@@ -50,14 +50,10 @@ function createPlayerInputs() {
     const inputId = `name-${i}`;
     const handicapId = `handicap-${i}`;
 
-    // Label for player selection
-    const label = document.createElement("label");
-    label.setAttribute("for", selectId);
-    label.textContent = `Player ${i + 1}:`;
-
-    // Dropdown for selecting a player
+    // Create the player name dropdown
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
+    selectEl.classList.add("player-select");
     selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
 
     const defaultOption = document.createElement("option");
@@ -74,7 +70,7 @@ function createPlayerInputs() {
       selectEl.appendChild(option);
     });
 
-    // Text input for entering a custom player name
+    // Custom name input (hidden unless "Other" is chosen)
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
     inputEl.placeholder = "Enter name";
@@ -83,28 +79,21 @@ function createPlayerInputs() {
     // Handicap dropdown
     const handicapSelect = document.createElement("select");
     handicapSelect.id = handicapId;
-    handicapSelect.classList.add("handicap-input");
+    handicapSelect.classList.add("handicap-select");
 
     for (let h = -10; h <= 10; h++) {
       const opt = document.createElement("option");
       opt.value = h;
-      opt.textContent = (h > 0 ? "+" : "") + h; // Add plus sign for positives
-      if (h === 0) opt.selected = true; // Default to 0
+      opt.textContent = (h > 0 ? "+" : "") + h;
+      if (h === 0) opt.selected = true;
       handicapSelect.appendChild(opt);
     }
 
-    // Handicap label
-    const handicapLabel = document.createElement("label");
-    handicapLabel.setAttribute("for", handicapId);
-    handicapLabel.textContent = " Handicap: ";
-
-    // Wrap player and handicap inputs
+    // Wrapper for both dropdowns in one row
     const wrapper = document.createElement("div");
-    wrapper.className = "playerInputBlock";
-    wrapper.appendChild(label);
+    wrapper.className = "playerInputRow";
     wrapper.appendChild(selectEl);
-    wrapper.appendChild(inputEl);
-    wrapper.appendChild(handicapLabel);
+    wrapper.appendChild(inputEl); // still in DOM, just hidden
     wrapper.appendChild(handicapSelect);
 
     container.appendChild(wrapper);
@@ -112,6 +101,7 @@ function createPlayerInputs() {
 
   document.getElementById("startBtn").style.display = "inline";
 }
+
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
