@@ -636,6 +636,28 @@ button:hover {
   cursor: not-allowed;
 }
 
+/* Match Hits / Hazards layout */
+.playerInputRow {
+  display: flex;
+  justify-content: center;
+  gap: 24px; /* same as Advanced Mode */
+  margin-bottom: 12px;
+}
+
+/* Match button widths below "Submit Score" */
+.player-select,
+.handicap-select {
+  width: 288px;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Hidden name input shouldn't mess up layout */
+.playerInputRow input[type="text"] {
+  display: none;
+}
+
 .handicap-input {
   width: 60px;
   margin-left: 8px;
