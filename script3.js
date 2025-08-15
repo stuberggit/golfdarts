@@ -563,8 +563,10 @@ function updateScorecard() {
   const renderSection = (label, start) => {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
-      <tr><th colspan="${label === "Back Nine" ? 13 : 11}"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr><th>Player</th>
+      <tr><th colspan="12"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr>
+        <th>Player</th>
+        <th>HCP</th>
         ${[...Array(9)].map((_, i) => {
           const holeIndex = i + start - 1;
           const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
@@ -574,9 +576,7 @@ function updateScorecard() {
             return `<th>${holeNumber}</th>`;
           }
         }).join('')}
-        ${label === "Back Nine" ? `<th>HCP</th>` : ""}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
-        ${label === "Back Nine" ? `<th>Total</th>` : ""}
       </tr>
     `;
 
@@ -586,40 +586,36 @@ function updateScorecard() {
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn;
+      return bIn - aIn; // Competing players first
     });
 
     sortedPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0); // raw subtotal only
       const isCompeting = competingNames.includes(p.name);
 
       const playerNameStyle = isSudden && !isCompeting
         ? 'text-decoration: line-through; color: gray'
         : '';
 
-      table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
-        scores.map((s, i) => {
-          const holeIndex = i + start - 1;
-          const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
-          const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
+      table += `<tr>
+        <td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>
+        <td style="border: 1px solid #ccc; text-align:center;">${p.handicap || 0}</td>
+        ${
+          scores.map((s, i) => {
+            const holeIndex = i + start - 1;
+            const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
+            const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
 
-          const display = (s === undefined || s === null)
-            ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-            : s;
+            const display = (s === undefined || s === null)
+              ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+              : s; // raw score only, no handicap
 
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
-        }).join("")
-      }`;
-
-      if (label === "Back Nine") {
-        const handicap = p.handicap ?? 0;
-        const adjustedTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0) - handicap;
-        table += `<td style="border: 1px solid #ccc">${handicap}</td>`;
-        table += `<td style="border: 1px solid #ccc"><strong>${adjustedTotal}</strong></td>`;
-      }
-
-      table += `<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+            return `<td style="border: 1px solid #ccc; text-align:center;" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
+          }).join("")
+        }
+        <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
+      </tr>`;
     });
   };
 
@@ -631,26 +627,33 @@ function updateScorecard() {
       sdHoles.push(label);
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    table += `<tr><th colspan="${sdHoles.length + 2}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr>
+      <th class="sudden-death-header">Player</th>
+      <th class="sudden-death-header">HCP</th>
+      ${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}
+    </tr>`;
 
     const competingNames = players.map(p => p.name);
 
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn;
+      return bIn - aIn; // Active players first
     });
 
     sortedPlayers.forEach(p => {
       const isTiedPlayer = competingNames.includes(p.name);
-      const sdScores = p.scores.slice(18);
+      const sdScores = p.scores.slice(18); // From hole 19 onward
 
       const nameCellStyle = isTiedPlayer
         ? 'class="sudden-death-cell"'
         : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
 
-      table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
+      table += `<tr class="sudden-death-row">
+        <td ${nameCellStyle}>${p.name}</td>
+        <td class="sudden-death-cell">${p.handicap || 0}</td>
+      `;
 
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
@@ -685,6 +688,7 @@ function updateScorecard() {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
+  // Show winner message if game ends early (e.g. Shanghai win)
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
