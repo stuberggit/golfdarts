@@ -703,17 +703,23 @@ function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
   if (!leaderboardDetails) return;
 
-  const sorted = [...players].map(p => ({
-    name: p.name,
-    total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
-  })).sort((a, b) => a.total - b.total);
+  // Calculate gross and net for each player
+  const sorted = [...players].map(p => {
+    const grossTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    const netTotal = grossTotal + (p.handicap || 0); // handicap applied
+    return {
+      name: p.name,
+      gross: grossTotal,
+      net: netTotal
+    };
+  }).sort((a, b) => a.net - b.net); // sort by net score
 
   leaderboardDetails.innerHTML = `
     <ul class="leaderboard-list">
       ${sorted.map((p, i) => `
         <li${i === 0 ? ' class="first-place"' : ''}>
           <span>${p.name}</span>
-          <span>${p.total}</span>
+          <span>Gross: ${p.gross} | Net: ${p.net}</span>
         </li>
       `).join("")}
     </ul>
