@@ -151,15 +151,18 @@ function startGame() {
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
+    const handicapSelect = document.getElementById(`handicap-${i}`);
+    
     const selected = select.value;
     const inputted = input.value.trim();
     const name = selected === "Other" ? inputted : selected;
+    const handicap = parseInt(handicapSelect?.value || 0, 10);
 
     if (!name) {
       alert(`Player ${i + 1} must have a name.`);
       return;
     }
-    players.push({ name, scores: [] });
+    players.push({ name, scores: [], handicap: handicap });
   }
 
   allPlayers = JSON.parse(JSON.stringify(players));
@@ -167,7 +170,7 @@ function startGame() {
   suddenDeath = false;
   tiedPlayers = [];
   currentHole = 1;
-  currentHoleIndex = 0; // reset random index
+  currentHoleIndex = 0;
   currentPlayerIndex = 0;
   actionHistory = [];
 
@@ -176,10 +179,10 @@ function startGame() {
   }
 
   if (randomMode) {
-  holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "🎯"]);
-} else {
-  holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
-}
+    holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "🎯"]);
+  } else {
+    holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
+  }
 
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -560,7 +563,7 @@ function updateScorecard() {
   const renderSection = (label, start) => {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
-      <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr><th colspan="${label === "Back Nine" ? 13 : 11}"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
       <tr><th>Player</th>
         ${[...Array(9)].map((_, i) => {
           const holeIndex = i + start - 1;
@@ -571,7 +574,9 @@ function updateScorecard() {
             return `<th>${holeNumber}</th>`;
           }
         }).join('')}
+        ${label === "Back Nine" ? `<th>HCP</th>` : ""}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
+        ${label === "Back Nine" ? `<th>Total</th>` : ""}
       </tr>
     `;
 
@@ -581,7 +586,7 @@ function updateScorecard() {
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // Competing players first
+      return bIn - aIn;
     });
 
     sortedPlayers.forEach(p => {
@@ -601,11 +606,20 @@ function updateScorecard() {
 
           const display = (s === undefined || s === null)
             ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-            : s;  // Show numeric score here
+            : s;
 
           return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
         }).join("")
-      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+      }`;
+
+      if (label === "Back Nine") {
+        const handicap = p.handicap ?? 0;
+        const adjustedTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0) - handicap;
+        table += `<td style="border: 1px solid #ccc">${handicap}</td>`;
+        table += `<td style="border: 1px solid #ccc"><strong>${adjustedTotal}</strong></td>`;
+      }
+
+      table += `<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
     });
   };
 
@@ -625,12 +639,12 @@ function updateScorecard() {
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // Active players first
+      return bIn - aIn;
     });
 
     sortedPlayers.forEach(p => {
       const isTiedPlayer = competingNames.includes(p.name);
-      const sdScores = p.scores.slice(18); // From hole 19 onward
+      const sdScores = p.scores.slice(18);
 
       const nameCellStyle = isTiedPlayer
         ? 'class="sudden-death-cell"'
@@ -650,14 +664,11 @@ function updateScorecard() {
     });
   };
 
-  // Determine turn number (works for both modes)
   const turnNumber = randomMode ? currentHoleIndex + 1 : currentHole;
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
-  // Render sudden death section
   if (suddenDeath) renderSuddenDeath();
 
-  // Swap order after 9 holes played (turn-based check for random mode)
   if (turnNumber > 9 && allCompletedFront) {
     renderSection("Back Nine", 10);
     renderSection("Front Nine", 1);
@@ -674,7 +685,6 @@ function updateScorecard() {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
-  // Show winner message if game ends early (e.g. Shanghai win)
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
@@ -684,8 +694,6 @@ function updateScorecard() {
     scoreInputs.appendChild(winText);
   }
 }
-
-
 
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
@@ -805,50 +813,53 @@ function endGame() {
     return;
   }
 
-  // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Save winner if applicable
-  let winner = null;
-  if (players.length === 1) {
-    winner = players[0];
-  }
+  // Compute adjusted totals using handicap
+  const totals = fullPlayerList.map(p => {
+    const rawTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    const handicap = p.handicap || 0;
+    // Lower score wins, so we subtract handicap
+    const adjustedTotal = rawTotal - handicap;
+    return { ...p, rawTotal, handicap, adjustedTotal };
+  });
 
-  // ✅ Restore full player list
-  players = fullPlayerList;
-  allPlayers = fullPlayerList;
+  // Determine winner based on adjusted total
+  const winningScore = Math.min(...totals.map(t => t.adjustedTotal));
+  const winners = totals.filter(t => t.adjustedTotal === winningScore);
 
-  updateLeaderboard();
-  updateScorecard();
-  localStorage.removeItem("golfdartsState");
+  // Save results to history
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+  previousHistory.push({
+    date: new Date().toISOString(),
+    players: totals.map(p => ({
+      name: p.name,
+      scores: [...p.scores],
+      handicap: p.handicap || 0,
+      rawTotal: p.rawTotal,
+      total: p.adjustedTotal
+    })),
+    suddenDeath: suddenDeath,
+    advancedMode: advancedMode
+  });
+  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Save this game's results to local history
-const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-const gameSummary = {
-  date: new Date().toISOString(),
-  players: allPlayers.map(p => ({
-    name: p.name,
-    scores: [...p.scores],
-    total: p.scores.reduce((sum, s) => sum + s, 0),
-  })),
-  suddenDeath: suddenDeath,
-  advancedMode: advancedMode
-};
-
-previousHistory.push(gameSummary);
-localStorage.setItem(historyKey, JSON.stringify(previousHistory));
-
-  // Declare winner
-  if (winner) {
+  // Show winner or tie message
+  if (winners.length === 1) {
     const winText = document.createElement("h2");
-    winText.textContent = `${winner.name} wins!!`;
+    winText.textContent = `${winners[0].name} wins with an adjusted score of ${winners[0].adjustedTotal} (HCP: ${winners[0].handicap})! 🏆`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
+  } else if (winners.length > 1) {
+    const tieText = document.createElement("h2");
+    tieText.textContent = `It's a tie! (${winners.map(w => `${w.name} [${w.adjustedTotal}]`).join(", ")})`;
+    tieText.style.color = "#ffff00";
+    tieText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(tieText);
   }
 
-  // Game Stats Button
+  // Game Stats button
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -856,22 +867,20 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
+  // History button
   const historyBtn = document.createElement("button");
-historyBtn.innerText = "View History";
-historyBtn.className = "primary-button full-width";
-historyBtn.onclick = () => showHistory();
-scoreInputs.appendChild(historyBtn);
+  historyBtn.innerText = "View History";
+  historyBtn.className = "primary-button full-width";
+  historyBtn.onclick = () => showHistory();
+  scoreInputs.appendChild(historyBtn);
 
-
-  // Start New Round Button
+  // Start New Round button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
-
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
@@ -892,12 +901,12 @@ scoreInputs.appendChild(historyBtn);
   };
   scoreInputs.appendChild(startNewBtn);
 
-  // ✅ Ensure leaderboard remains visible
+  // Keep leaderboard visible
   const leaderboard = document.getElementById("leaderboard");
-if (leaderboard) {
-  leaderboard.classList.remove("hidden");
-  leaderboard.style.display = "block";
-}
+  if (leaderboard) {
+    leaderboard.classList.remove("hidden");
+    leaderboard.style.display = "block";
+  }
 
   document.body.removeAttribute("id");
 }
