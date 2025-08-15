@@ -349,7 +349,7 @@ function submitPlayerScore() {
   }
 
   // Base score calculation: miss = 5, otherwise lookup
-  let score = getScore(hits); // e.g. hits=1 → score=3 (Par)
+  let score = getScore(hits);
 
   // Add hazard penalties if applicable
   let hazards = 0;
@@ -360,8 +360,8 @@ function submitPlayerScore() {
     if (hazardSelect) {
       hazards = parseInt(hazardSelect.value) || 0;
       if (hazards > 0) {
-        score += hazards; // add hazard penalty strokes
-        player.hazards = (player.hazards || 0) + hazards; // track total hazards hit by player
+        score += hazards;
+        player.hazards = (player.hazards || 0) + hazards;
       }
     }
   }
@@ -386,7 +386,7 @@ function submitPlayerScore() {
 
   saveGameState();
 
-  // Show scoring animation with descriptive label based on hits (not numeric score)
+  // Show scoring animation
   const { label, color } = getScoreLabelAndColor(score);
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
@@ -397,38 +397,43 @@ function submitPlayerScore() {
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
-    currentPlayerIndex = 0; // reset player index for next hole
+    currentPlayerIndex = 0;
 
     // Hole progression logic:
     if (!randomMode) {
-      // Normal / Advanced mode
       if (currentHole < 18) {
-        currentHole++; // next hole
+        currentHole++;
       } else {
-        // All players finished hole 18, check ties and end or sudden death
-        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+        // All players finished hole 18 — check NET scores
+        const totals = players.map(p => {
+          const gross = p.scores.reduce((a, b) => a + b, 0);
+          return gross + (p.handicap || 0);
+        });
+
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
 
         if (tied.length > 1) {
-          // Tie → sudden death
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
           currentHole = getRandomSuddenDeathHole();
         } else {
-          // Clear winner, end game
           endGame();
           return;
         }
       }
     } else {
-      // Random mode hole progression
+      // Random mode
       currentHoleIndex++;
 
-      if (currentHoleIndex >= 18) { // ✅ stop after 18 played holes
-        // End of random sequence — check for ties
-        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+      if (currentHoleIndex >= 18) {
+        // End of sequence — check NET scores
+        const totals = players.map(p => {
+          const gross = p.scores.reduce((a, b) => a + b, 0);
+          return gross + (p.handicap || 0);
+        });
+
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
 
@@ -436,7 +441,7 @@ function submitPlayerScore() {
           players = tied;
           tiedPlayers = tied;
           suddenDeath = true;
-          currentHoleIndex = null; // no more sequence for sudden death
+          currentHoleIndex = null;
           currentHole = getRandomSuddenDeathHole();
         } else {
           endGame();
