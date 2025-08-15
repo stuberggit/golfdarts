@@ -825,16 +825,14 @@ function endGame() {
 
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Compute adjusted totals using handicap
+  // Compute adjusted totals (net) and raw totals (gross)
   const totals = fullPlayerList.map(p => {
-    const rawTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0);
-    const handicap = p.handicap || 0;
-    // Lower score wins, so we subtract handicap
-    const adjustedTotal = rawTotal - handicap;
-    return { ...p, rawTotal, handicap, adjustedTotal };
+    const rawTotal = p.scores.reduce((sum, s) => sum + s, 0);
+    const adjustedTotal = rawTotal + (p.handicap || 0);
+    return { ...p, rawTotal, adjustedTotal };
   });
 
-  // Determine winner based on adjusted total
+  // Determine winner based on NET (adjustedTotal)
   const winningScore = Math.min(...totals.map(t => t.adjustedTotal));
   const winners = totals.filter(t => t.adjustedTotal === winningScore);
 
@@ -846,24 +844,24 @@ function endGame() {
       name: p.name,
       scores: [...p.scores],
       handicap: p.handicap || 0,
-      rawTotal: p.rawTotal,
-      total: p.adjustedTotal
+      grossTotal: p.rawTotal,
+      netTotal: p.adjustedTotal
     })),
     suddenDeath: suddenDeath,
     advancedMode: advancedMode
   });
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Show winner or tie message
+  // Show winner
   if (winners.length === 1) {
     const winText = document.createElement("h2");
-    winText.textContent = `${winners[0].name} wins with an adjusted score of ${winners[0].adjustedTotal} (HCP: ${winners[0].handicap})! 🏆`;
+    winText.textContent = `${winners[0].name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
   } else if (winners.length > 1) {
     const tieText = document.createElement("h2");
-    tieText.textContent = `It's a tie! (${winners.map(w => `${w.name} [${w.adjustedTotal}]`).join(", ")})`;
+    tieText.textContent = `It's a tie! (${winners.map(w => w.name).join(", ")})`;
     tieText.style.color = "#ffff00";
     tieText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(tieText);
