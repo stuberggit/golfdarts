@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GolfDarts</title>
+  <link rel="stylesheet" href="style3.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Prata&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header and Hamburger -->
+  <div class="header-bar">
+    <h1>🏌️‍♂️ GolfDarts 🎯</h1>
+    <div class="hamburger" id="hamburgerIcon">☰</div>
+  </div>
+
+  <div class="hamburger-menu hidden" id="hamburgerMenu">
+  <a href="index.html">🏠 Home</a>
+  <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
+  <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="history3.html" target="_blank" rel="noopener noreferrer">📚 View History</a>
+  <a href="#" id="clearHistoryLink" class="hidden">🗑️ Clear History</a>
+</div>
+
+
+  <!-- Title -->
+  <h2 class="section-title">Game History</h2>
+
+  <!-- Filter -->
+  <label for="playerFilter" class="dropdown-label">Filter by player:</label>
+  <select id="playerFilter" class="large-select">
+    <option value="">-- All Players --</option>
+  </select>
+
+  <div id="historyContainer" class="history-wrapper"></div>
+
+  <!-- Optional Modals -->
+  <div id="rulesModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📜 Rules</h2>
+      <p>Darts, played like golf... (same rules as main site)</p>
+      <button onclick="closeModal('rulesModal')">Close</button>
+    </div>
+  </div>
+
+  <div id="scoringModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>📊 Scoring</h2>
+      <p>(same scoring rules as main site)</p>
+      <button onclick="closeModal('scoringModal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Make sure this is last -->
+  <script src="script3.js"></script>
+</body>
+</html>
