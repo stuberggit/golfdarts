@@ -11,13 +11,23 @@ let advancedMode = false;
 let hazardHoles = [];
 let actionHistory = [];
 let randomMode = false;
-
-const isPreProd = location.href.includes("index3") || location.href.includes("script3");
-const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
-
 let history = [];
 let filterSelect;
 let container;
+
+// Detect environment
+const isPreProd = window.location.pathname.includes("index2.html");
+const isAde = window.location.pathname.includes("index3.html");
+
+// History key per environment
+let historyKey;
+if (isPreProd) {
+  historyKey = "golfdartsHistory_preprod";
+} else if (isAde) {
+  historyKey = "golfdartsHistory_ade";
+} else {
+  historyKey = "golfdartsHistory_prod";
+}
 
 console.log("script.js loaded");
 console.log("Parsed History:", history);
