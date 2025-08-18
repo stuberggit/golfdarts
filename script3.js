@@ -394,7 +394,22 @@ function submitPlayerScore() {
     hazards: hazards
   });
 
+  // Save current game state
   saveGameState();
+
+  // ✅ Save/update history of completed games per environment
+  try {
+    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+    history.push({
+      timestamp: Date.now(),
+      players: JSON.parse(JSON.stringify(players)),
+      currentHole,
+      finished: currentHole > 18 || (randomMode && currentHoleIndex >= 18)
+    });
+    localStorage.setItem(historyKey, JSON.stringify(history));
+  } catch (e) {
+    console.error("Failed to save history:", e);
+  }
 
   // Show scoring animation
   const { label, color } = getScoreLabelAndColor(score);
