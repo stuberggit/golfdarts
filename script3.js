@@ -543,22 +543,47 @@ function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
-  document.getElementById("scoreInputs").innerHTML = "";
+  // Clear input area
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (scoreInputs) scoreInputs.innerHTML = "";
 
+  // Remove old overlay if it somehow exists
+  const oldOverlay = document.querySelector(".shanghai-overlay");
+  if (oldOverlay) oldOverlay.remove();
+
+  // Create overlay
   const overlay = document.createElement("div");
   overlay.className = "shanghai-overlay";
+  overlay.style.backgroundImage = "url('images/shanghai.jpg')";
+  overlay.style.backgroundSize = "cover";
+  overlay.style.backgroundPosition = "center";
+
   overlay.innerHTML = `
     <h1>🏆 SHANGHAI!!</h1>
     <h2>${winnerName} WINS!</h2>
     <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
-    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
+    <div class="overlay-buttons">
+      <button id="leaderboardBtn" class="secondary-button full-width">View Leaderboard</button>
+      <button id="statsBtn" class="secondary-button full-width">View Stats</button>
+      <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
+    </div>
   `;
   document.body.appendChild(overlay);
+
+  // Hook up buttons
+  document.getElementById("leaderboardBtn").onclick = () => {
+    showLeaderboard(); // reuse existing endgame leaderboard function
+  };
+
+  document.getElementById("statsBtn").onclick = () => {
+    showStats(); // reuse existing stats modal
+  };
 
   document.getElementById("playAgainBtn").onclick = () => {
     // Restart game with same players
     players.forEach(p => p.scores = []);
     currentHole = 1;
+    currentHoleIndex = 0;
     currentPlayerIndex = 0;
     suddenDeath = false;
     tiedPlayers = [];
@@ -566,14 +591,16 @@ function showShanghaiWin(winnerName) {
 
     // Reset UI
     document.body.removeChild(overlay);
-    document.getElementById("scoreInputs").innerHTML = "";
+    if (scoreInputs) scoreInputs.innerHTML = "";
+
     updateLeaderboard();
     updateScorecard();
     showHole();
     saveGameState();
   };
 
-  /*if ('speechSynthesis' in window) {
+  /* Optional celebration voice
+  if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
     utter.pitch = 1.3;
     utter.rate = 1;
