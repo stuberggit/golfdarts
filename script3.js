@@ -572,8 +572,14 @@ function showShanghaiWin(winnerName) {
 
   // Hook up buttons
   document.getElementById("leaderboardBtn").onclick = () => {
-    showLeaderboard(); // reuse existing endgame leaderboard function
-  };
+  if (typeof showLeaderboard === "function") {
+    showLeaderboard(); // preferred, if function is defined
+  } else {
+    // fallback: if modal is tied to a hidden button
+    const lbTrigger = document.querySelector(".leaderboard-trigger, #leaderboardModalBtn, #leaderboardLink");
+    if (lbTrigger) lbTrigger.click();
+  }
+};
 
   document.getElementById("statsBtn").onclick = () => {
     showStats(); // reuse existing stats modal
