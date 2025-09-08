@@ -210,7 +210,6 @@ button:hover {
   z-index: 9999;
   color: white;
   text-shadow: 2px 2px 5px black;
-  animation: pulse 1.5s infinite;
 }
 
 
