@@ -543,35 +543,34 @@ function showShanghaiWin(playerName) {
   const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
   const shanghaiScreen = document.getElementById("shanghaiScreen");
 
-  // ✅ Optional Shanghai audio
-  if (audioEnabled) {
-    try {
-      const audio = new Audio("sounds/shanghai.mp3");
-      audio.play().catch(err => console.warn("Shanghai audio playback failed:", err));
-    } catch (e) {
-      console.error("Error loading Shanghai audio:", e);
-    }
+  gameStarted = false;
+  localStorage.removeItem("golfdartsState");
+
+  // ✅ Optional Shanghai audio (kept from previous version)
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
   }
 
   // Clear and rebuild Shanghai screen
   shanghaiScreen.innerHTML = `
     <div class="shanghai-content">
-      <img src="images/trophy.png" alt="Trophy" class="shanghai-trophy" />
-      <h2>${playerName} wins with a SHANGHAI!</h2>
+      <img src="images/shanghai.jpg" alt="Shanghai Trophy" class="shanghai-trophy" />
+      <h1>🏆 SHANGHAI!!</h1>
+      <h2>${playerName} WINS!</h2>
       <p>Single + Double + Triple on Hole ${holeNum}</p>
     </div>
   `;
 
-  // ✅ Add the universal endgame buttons
+  // Add the universal endgame buttons (Leaderboard, Game Stats, Start New Round)
   addEndGameButtons(shanghaiScreen);
 
   // Show Shanghai background
   shanghaiScreen.classList.remove("hidden");
   document.body.classList.add("shanghai-active");
 }
-
-
-
 
 // ========== DISPLAY ==========
 
