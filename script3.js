@@ -543,76 +543,68 @@ function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
-  // Clear input area
   const scoreInputs = document.getElementById("scoreInputs");
   if (scoreInputs) scoreInputs.innerHTML = "";
 
-  // Remove old overlay if it somehow exists
-  const oldOverlay = document.querySelector(".shanghai-overlay");
-  if (oldOverlay) oldOverlay.remove();
-
-  // Create overlay
   const overlay = document.createElement("div");
   overlay.className = "shanghai-overlay";
-  overlay.style.backgroundImage = "url('images/shanghai.jpg')";
-  overlay.style.backgroundSize = "cover";
-  overlay.style.backgroundPosition = "center";
-
   overlay.innerHTML = `
     <h1>🏆 SHANGHAI!!</h1>
     <h2>${winnerName} WINS!</h2>
     <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
-    <div class="overlay-buttons">
-      <button id="leaderboardBtn" class="secondary-button full-width">View Leaderboard</button>
-      <button id="statsBtn" class="secondary-button full-width">View Stats</button>
-      <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
-    </div>
+    <button id="btnLeaderboard" class="button-leaderboard">Leaderboard</button>
+    <button id="btnStats" class="button-stats">Game Stats</button>
+    <button id="btnNewRound" class="primary-button full-width">Start New Round</button>
   `;
   document.body.appendChild(overlay);
 
-  // Hook up buttons
-  document.getElementById("leaderboardBtn").onclick = () => {
-  if (typeof showLeaderboard === "function") {
-    showLeaderboard(); // preferred, if function is defined
-  } else {
-    // fallback: if modal is tied to a hidden button
-    const lbTrigger = document.querySelector(".leaderboard-trigger, #leaderboardModalBtn, #leaderboardLink");
-    if (lbTrigger) lbTrigger.click();
-  }
-};
-
-  document.getElementById("statsBtn").onclick = () => {
-    showStats(); // reuse existing stats modal
+  // Wire up buttons
+  document.getElementById("btnLeaderboard").onclick = () => {
+    showModal('leaderboardModal'); // ✅ same as index3.html
   };
 
-  document.getElementById("playAgainBtn").onclick = () => {
-    // Restart game with same players
-    players.forEach(p => p.scores = []);
-    currentHole = 1;
-    currentHoleIndex = 0;
-    currentPlayerIndex = 0;
-    suddenDeath = false;
-    tiedPlayers = [];
-    gameStarted = true;
-
-    // Reset UI
-    document.body.removeChild(overlay);
-    if (scoreInputs) scoreInputs.innerHTML = "";
-
-    updateLeaderboard();
-    updateScorecard();
-    showHole();
-    saveGameState();
+  document.getElementById("btnStats").onclick = () => {
+    showStats(); // ✅ opens the same Game Stats modal
   };
 
-  /* Optional celebration voice
+  document.getElementById("btnNewRound").onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // Rotate players: move LAST to FRONT
+      players.unshift(players.pop());
+      players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
+
+      // Remove overlay
+      document.body.removeChild(overlay);
+
+      // Reset UI
+      if (scoreInputs) scoreInputs.innerHTML = "";
+
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+
+  // Optional: announce win via voice
+  /*
   if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
     utter.pitch = 1.3;
     utter.rate = 1;
     speechSynthesis.speak(utter);
-  }*/
+  }
+  */
 }
+
 
 
 // ========== DISPLAY ==========
