@@ -226,6 +226,22 @@ button:hover {
   color: #333;
 }
 
+/* Dimmed effect when a modal is open */
+body.shanghai-bg.modal-open {
+  position: relative;
+}
+
+body.shanghai-bg.modal-open::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* darkness overlay */
+  z-index: 900; /* below modal but above background */
+}
+
 @keyframes pulse {
   0% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.05); opacity: 0.9; }
