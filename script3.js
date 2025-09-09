@@ -539,71 +539,37 @@ function getRandomSuddenDeathHole() {
 
 
 
-function showShanghaiWin(winnerName) {
-  gameStarted = false;
-  localStorage.removeItem("golfdartsState");
+function showShanghaiWin(playerName) {
+  const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
+  const shanghaiScreen = document.getElementById("shanghaiScreen");
 
-  const scoreInputs = document.getElementById("scoreInputs");
-  if (scoreInputs) scoreInputs.innerHTML = "";
-
-  const overlay = document.createElement("div");
-  overlay.className = "shanghai-overlay";
-  overlay.innerHTML = `
-    <h1>🏆 SHANGHAI!!</h1>
-    <h2>${winnerName} WINS!</h2>
-    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
-    <button id="btnLeaderboard" class="button-leaderboard">Leaderboard</button>
-    <button id="btnStats" class="button-stats">Game Stats</button>
-    <button id="btnNewRound" class="primary-button full-width">Start New Round</button>
-  `;
-  document.body.appendChild(overlay);
-
-  // Wire up buttons
-  document.getElementById("btnLeaderboard").onclick = () => {
-    showModal('leaderboardModal'); // ✅ same as index3.html
-  };
-
-  document.getElementById("btnStats").onclick = () => {
-    showStats(); // ✅ opens the same Game Stats modal
-  };
-
-  document.getElementById("btnNewRound").onclick = () => {
-    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move LAST to FRONT
-      players.unshift(players.pop());
-      players.forEach(p => p.scores = []);
-      allPlayers = JSON.parse(JSON.stringify(players));
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      suddenDeath = false;
-      tiedPlayers = [];
-      gameStarted = true;
-
-      // Remove overlay
-      document.body.removeChild(overlay);
-
-      // Reset UI
-      if (scoreInputs) scoreInputs.innerHTML = "";
-
-      saveGameState();
-      showHole();
-      updateLeaderboard();
-      updateScorecard();
-    } else {
-      location.reload();
+  // ✅ Optional Shanghai audio
+  if (audioEnabled) {
+    try {
+      const audio = new Audio("sounds/shanghai.mp3");
+      audio.play().catch(err => console.warn("Shanghai audio playback failed:", err));
+    } catch (e) {
+      console.error("Error loading Shanghai audio:", e);
     }
-  };
-
-  // Optional: announce win via voice
-  /*
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
   }
-  */
+
+  // Clear and rebuild Shanghai screen
+  shanghaiScreen.innerHTML = `
+    <div class="shanghai-content">
+      <img src="images/trophy.png" alt="Trophy" class="shanghai-trophy" />
+      <h2>${playerName} wins with a SHANGHAI!</h2>
+      <p>Single + Double + Triple on Hole ${holeNum}</p>
+    </div>
+  `;
+
+  // ✅ Add the universal endgame buttons
+  addEndGameButtons(shanghaiScreen);
+
+  // Show Shanghai background
+  shanghaiScreen.classList.remove("hidden");
+  document.body.classList.add("shanghai-active");
 }
+
 
 
 
@@ -885,7 +851,7 @@ function endGame() {
   const totals = fullPlayerList.map(p => {
     const grossTotal = p.scores.reduce((sum, s) => sum + s, 0);
     const hcp = Number(p.handicap || 0);
-    const netTotal = grossTotal + hcp;
+    const netTotal = grossTotal + hcp; // lower is better
     return { ...p, grossTotal, netTotal, handicap: hcp };
   });
 
@@ -933,152 +899,10 @@ function endGame() {
     scoreInputs.appendChild(tieText);
   }
 
-  // === BUTTONS ===
-
-  // Leaderboard
-  const leaderboardBtn = document.createElement("button");
-  leaderboardBtn.innerText = "Leaderboard";
-  leaderboardBtn.className = "button-leaderboard";
-  leaderboardBtn.onclick = () => showModal("leaderboardModal");
-  scoreInputs.appendChild(leaderboardBtn);
-
-  // Game Stats
-  const statsBtn = document.createElement("button");
-  statsBtn.innerText = "Game Stats";
-  statsBtn.className = "button-stats";
-  statsBtn.onclick = () => showStats();
-  scoreInputs.appendChild(statsBtn);
-
-  // View History
-  const historyBtn = document.createElement("button");
-  historyBtn.innerText = "View History";
-  historyBtn.className = "primary-button full-width";
-  historyBtn.onclick = () => showHistory();
-  scoreInputs.appendChild(historyBtn);
-
-  // Start New Round
-  const startNewBtn = document.createElement("button");
-  startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button full-width";
-  startNewBtn.onclick = () => {
-    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move LAST to FRONT
-      players.unshift(players.pop());
-      players.forEach(p => p.scores = []);
-      allPlayers = JSON.parse(JSON.stringify(players));
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      suddenDeath = false;
-      tiedPlayers = [];
-      gameStarted = true;
-
-      scoreInputs.innerHTML = "";
-
-      saveGameState();
-      showHole();
-      updateLeaderboard();
-      updateScorecard();
-    } else {
-      location.reload();
-    }
-  };
-  scoreInputs.appendChild(startNewBtn);
-
-  // Keep leaderboard visible
-  const leaderboard = document.getElementById("leaderboard");
-  if (leaderboard) {
-    leaderboard.classList.remove("hidden");
-    leaderboard.style.display = "block";
-  }
+  // Add standard end-of-game buttons
+  addEndGameButtons(scoreInputs);
 
   document.body.removeAttribute("id");
-}
-
-function showHistory() {
-  console.log("📚 showHistory() was called");
-
-  const container = document.getElementById("historyDetails");
-  container.innerHTML = "";
- 
-  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-  const gameSummary = {
-    date: new Date().toISOString(),
-    players: allPlayers.map(p => ({
-      name: p.name,
-      scores: [...p.scores],
-      total: p.scores.reduce((sum, s) => sum + s, 0),
-    })),
-    suddenDeath: suddenDeath,
-    advancedMode: advancedMode
-  };
-
-  previousHistory.push(gameSummary);
-  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
-
-  if (previousHistory.length === 0) {
-    container.innerHTML = "<p>No past games saved.</p>";
-    showModal("historyModal");
-    return;
-  }
-
-  const latestGames = previousHistory.slice(-10).reverse();
-
-  latestGames.forEach((game, index) => {
-    const date = new Date(game.date).toLocaleString();
-    const mode = game.advancedMode ? "Advanced" : "Standard";
-    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
-    const header = document.createElement("h3");
-    header.textContent = `Game ${previousHistory.length - index} – ${date} – ${mode}${sudden}`;
-    container.appendChild(header);
-
-    game.players.forEach(player => {
-      const table = document.createElement("table");
-      table.className = "mini-scorecard";
-
-      const nameRow = document.createElement("tr");
-      const nameCell = document.createElement("th");
-      nameCell.colSpan = 11;
-      nameCell.textContent = player.name;
-      nameRow.appendChild(nameCell);
-      table.appendChild(nameRow);
-
-      const front9 = player.scores.slice(0, 9);
-      const back9 = player.scores.slice(9, 18);
-      const subtotal = front9.reduce((sum, s) => sum + s, 0);
-
-      const frontRow = document.createElement("tr");
-      frontRow.innerHTML = "<td>1–9</td>" + front9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(frontRow);
-
-      const subtotalRow = document.createElement("tr");
-      subtotalRow.innerHTML = `<td>Subtotal</td><td colspan="9">${subtotal}</td>`;
-      table.appendChild(subtotalRow);
-
-      const backRow = document.createElement("tr");
-      backRow.innerHTML = "<td>10–18</td>" + back9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(backRow);
-
-      const totalRow = document.createElement("tr");
-      totalRow.innerHTML = `<td>Total</td><td colspan="9">${player.total}</td>`;
-      table.appendChild(totalRow);
-
-      container.appendChild(table);
-    });
-
-    container.appendChild(document.createElement("hr"));
-  });
-
-  if (previousHistory.length > 10) {
-    const moreLink = document.createElement("a");
-    moreLink.href = "history.html";
-    moreLink.textContent = "➡️ View More Rounds";
-    moreLink.className = "more-link";
-    container.appendChild(moreLink);
-  }
-
-  showModal("historyModal");
 }
 
 
@@ -1281,6 +1105,63 @@ window.closeModal = closeModal;
 window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
 window.undoHole = undoHole;
+
+function addEndGameButtons(container) {
+  // Leaderboard
+  const leaderboardBtn = document.createElement("button");
+  leaderboardBtn.innerText = "Leaderboard";
+  leaderboardBtn.className = "button-leaderboard";
+  leaderboardBtn.onclick = () => showModal("leaderboardModal");
+  container.appendChild(leaderboardBtn);
+
+  // Game Stats
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "button-stats";
+  statsBtn.onclick = () => showStats();
+  container.appendChild(statsBtn);
+
+  // View History
+  const historyBtn = document.createElement("button");
+  historyBtn.innerText = "View History";
+  historyBtn.className = "primary-button full-width";
+  historyBtn.onclick = () => showHistory();
+  container.appendChild(historyBtn);
+
+  // Start New Round
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      players.unshift(players.pop());
+      players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
+
+      container.innerHTML = "";
+
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+  container.appendChild(startNewBtn);
+
+  // Keep leaderboard visible
+  const leaderboard = document.getElementById("leaderboard");
+  if (leaderboard) {
+    leaderboard.classList.remove("hidden");
+    leaderboard.style.display = "block";
+  }
+}
 
 
 // ========== EVENT LISTENERS ==========
