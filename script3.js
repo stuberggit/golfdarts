@@ -351,7 +351,7 @@ function submitPlayerScore() {
   // Check for Shanghai (6 hits means triple hit)
   if (hits === 6) {
     const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${holeNum})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${holeNum})? Cancel to score -2 and return to game. OK to win with a Shanghai! Now go get your picture taken`);
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
@@ -885,7 +885,7 @@ function endGame() {
   const totals = fullPlayerList.map(p => {
     const grossTotal = p.scores.reduce((sum, s) => sum + s, 0);
     const hcp = Number(p.handicap || 0);
-    const netTotal = grossTotal + hcp; // lower is better; handicap may be negative or positive
+    const netTotal = grossTotal + hcp;
     return { ...p, grossTotal, netTotal, handicap: hcp };
   });
 
@@ -904,28 +904,28 @@ function endGame() {
       grossTotal: p.grossTotal,
       netTotal: p.netTotal
     })),
-    suddenDeath: suddenDeath,
-    advancedMode: advancedMode,
-    randomMode: randomMode
+    suddenDeath,
+    advancedMode,
+    randomMode
   });
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
   // Winner / tie messaging
   if (winners.length === 1) {
     const w = winners[0];
-    // Trophy line animation
     if (typeof showScoreAnimation === "function") {
       const hcpText = w.handicap >= 0 ? `+${w.handicap}` : `${w.handicap}`;
-      showScoreAnimation(`${w.name} wins! Net ${w.netTotal} (Gross ${w.grossTotal} ${hcpText}) 🏆`, "#ffcc00");
+      showScoreAnimation(
+        `${w.name} wins! Net ${w.netTotal} (Gross ${w.grossTotal} ${hcpText}) 🏆`,
+        "#ffcc00"
+      );
     }
-
     const winText = document.createElement("h2");
     winText.textContent = `${w.name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
   } else {
-    // True tie on NET after regulation
     const tieText = document.createElement("h2");
     tieText.textContent = `It's a tie! (${winners.map(w => w.name).join(", ")})`;
     tieText.style.color = "#ffff00";
@@ -933,22 +933,30 @@ function endGame() {
     scoreInputs.appendChild(tieText);
   }
 
-  // Game Stats button
+  // === BUTTONS ===
+
+  // Leaderboard
+  const leaderboardBtn = document.createElement("button");
+  leaderboardBtn.innerText = "Leaderboard";
+  leaderboardBtn.className = "button-leaderboard";
+  leaderboardBtn.onclick = () => showModal("leaderboardModal");
+  scoreInputs.appendChild(leaderboardBtn);
+
+  // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
-  statsBtn.className = "primary-button full-width";
-  statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.className = "button-stats";
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  // History button
+  // View History
   const historyBtn = document.createElement("button");
   historyBtn.innerText = "View History";
   historyBtn.className = "primary-button full-width";
   historyBtn.onclick = () => showHistory();
   scoreInputs.appendChild(historyBtn);
 
-  // Start New Round button
+  // Start New Round
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
