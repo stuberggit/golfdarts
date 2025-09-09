@@ -1087,6 +1087,31 @@ function renderHistory() {
   });
 }
 
+function showHistory() {
+  const historyModal = document.getElementById("historyModal");
+  if (!historyModal) {
+    console.warn("History modal not found");
+    return;
+  }
+
+  // Show the modal
+  historyModal.classList.remove("hidden");
+  historyModal.style.display = "block";
+
+  // Dim background if desired
+  document.getElementById("shanghaiScreen")?.classList.add("dimmed"); 
+
+  // Render the history inside the modal container
+  const container = historyModal.querySelector(".history-container");
+  if (container) {
+    renderHistory(container);
+  }
+}
+
+// Expose globally
+window.showHistory = showHistory;
+
+
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
