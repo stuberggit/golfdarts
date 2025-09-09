@@ -353,8 +353,9 @@ function submitPlayerScore() {
     const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
     const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${holeNum})? Cancel to score -2 and return to game. OK to win with a Shanghai! Now go get your picture taken`);
     if (isShanghai) {
+      // Call the new, updated function with optional audio preserved
       showShanghaiWin(player.name);
-      return;
+      return; // Stop any further scoring/turn advancement
     }
   }
 
@@ -397,7 +398,7 @@ function submitPlayerScore() {
   // Save current game state
   saveGameState();
 
-  // ✅ Save/update history of completed games per environment
+  // Save/update history
   try {
     let history = JSON.parse(localStorage.getItem(historyKey)) || [];
     history.push({
@@ -424,17 +425,12 @@ function submitPlayerScore() {
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    // Hole progression logic:
+    // Hole progression logic
     if (!randomMode) {
       if (currentHole < 18) {
         currentHole++;
       } else {
-        // All players finished hole 18 — check NET scores
-        const totals = players.map(p => {
-          const gross = p.scores.reduce((a, b) => a + b, 0);
-          return gross + (p.handicap || 0);
-        });
-
+        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0) + (p.handicap || 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
 
@@ -449,16 +445,9 @@ function submitPlayerScore() {
         }
       }
     } else {
-      // Random mode
       currentHoleIndex++;
-
       if (currentHoleIndex >= 18) {
-        // End of sequence — check NET scores
-        const totals = players.map(p => {
-          const gross = p.scores.reduce((a, b) => a + b, 0);
-          return gross + (p.handicap || 0);
-        });
-
+        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0) + (p.handicap || 0));
         const lowest = Math.min(...totals);
         const tied = players.filter((p, i) => totals[i] === lowest);
 
