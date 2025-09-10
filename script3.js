@@ -534,7 +534,15 @@ function showShanghaiWin(playerName, holeNumber) {
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    bg.style.backgroundImage = "url('images/shanghai.jpg')";
+    bg.style.backgroundImage = "url('images/shanghai.jpg')"; // correct file
+    bg.style.position = "fixed";
+    bg.style.top = "0";
+    bg.style.left = "0";
+    bg.style.width = "100%";
+    bg.style.height = "100%";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
+    bg.style.zIndex = "1000"; // below overlay
     document.body.appendChild(bg);
   }
   bg.style.display = "block";
@@ -546,6 +554,7 @@ function showShanghaiWin(playerName, holeNumber) {
   // Create overlay container for text
   overlay = document.createElement("div");
   overlay.classList.add("shanghai-overlay");
+  overlay.style.zIndex = "1001"; // above background, below buttons
 
   // Add overlay content (H1, H2, recap)
   overlay.innerHTML = `
@@ -557,7 +566,7 @@ function showShanghaiWin(playerName, holeNumber) {
 
   document.body.appendChild(overlay);
 
-  // Show optional audio announcement
+  // Optional audio announcement
   if ('speechSynthesis' in window) {
     const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
     utter.pitch = 1.3;
@@ -565,10 +574,9 @@ function showShanghaiWin(playerName, holeNumber) {
     speechSynthesis.speak(utter);
   }
 
-  // Call endGame after short delay (buttons and history handled there)
+  // Call endGame after short delay (buttons handled there)
   setTimeout(() => endGame(playerName), 1500);
 }
-
 
 // ========== DISPLAY ==========
 
