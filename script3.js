@@ -528,42 +528,40 @@ function getRandomSuddenDeathHole() {
 
 
 
-function showShanghaiWin(playerName) {
-  const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
-  const scoreInputs = document.getElementById("scoreInputs");
-
-  if (!scoreInputs) {
-    console.warn("scoreInputs container not found. Cannot render Shanghai win screen.");
-    return;
+function showShanghaiWin(playerName, holeNumber) {
+  // Create or reuse background
+  let bg = document.getElementById("shanghaiBackground");
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "shanghaiBackground";
+    bg.style.backgroundImage = "url('images/shanghai-bg.jpg')"; // adjust path
+    document.body.appendChild(bg);
   }
+  bg.style.display = "block";
 
-  gameStarted = false;
-  localStorage.removeItem("golfdartsState");
+  // Remove any existing overlay
+  let overlay = document.getElementById("shanghaiOverlay");
+  if (overlay) overlay.remove();
 
-  // ✅ Optional Shanghai audio (kept)
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
-  }
+  // Create overlay container
+  overlay = document.createElement("div");
+  overlay.id = "shanghaiOverlay";
+  overlay.classList.add("shanghai-overlay");
 
-  // Clear and rebuild the scoreInputs area with Shanghai victory screen
-  scoreInputs.innerHTML = `
-    <div class="shanghai-content">
-      <img src="images/shanghai.jpg" alt="Shanghai Trophy" class="shanghai-trophy" />
-      <h1>🏆 SHANGHAI!!</h1>
-      <h2>${playerName} WINS!</h2>
-      <p>Single + Double + Triple on Hole ${holeNum}</p>
-    </div>
+  // Add content
+  overlay.innerHTML = `
+    <div>🏆</div>
+    <h1>Shanghai!</h1>
+    <h2>${playerName} Wins!</h2>
+    <p>Hit a Single, Double, and Triple on Hole ${holeNumber}</p>
   `;
 
-  // Add the universal endgame buttons (Leaderboard, Game Stats, Start New Round)
-  addEndGameButtons(scoreInputs);
+  document.body.appendChild(overlay);
 
-  // Add Shanghai-specific styling (background dimming etc.)
-  document.body.classList.add("shanghai-active");
+  // Call endGame after short delay so UI has time to show
+  setTimeout(() => endGame(playerName), 2000);
 }
+
 
 // ========== DISPLAY ==========
 
