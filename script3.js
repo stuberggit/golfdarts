@@ -534,7 +534,7 @@ function showShanghaiWin(playerName, holeNumber) {
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    bg.style.backgroundImage = "url('images/shanghai-bg.jpg')"; // adjust path if needed
+    bg.style.backgroundImage = "url('images/shanghai.jpg')";
     document.body.appendChild(bg);
   }
   bg.style.display = "block";
