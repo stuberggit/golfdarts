@@ -529,26 +529,25 @@ function getRandomSuddenDeathHole() {
 
 
 function showShanghaiWin(playerName, holeNumber) {
-  // Create or reuse background
+  // Ensure the background exists
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    bg.style.backgroundImage = "url('images/shanghai-bg.jpg')"; // adjust path
+    bg.style.backgroundImage = "url('images/shanghai-bg.jpg')"; // adjust path if needed
     document.body.appendChild(bg);
   }
   bg.style.display = "block";
 
-  // Remove any existing overlay
-  let overlay = document.getElementById("shanghaiOverlay");
+  // Remove any existing overlay text
+  let overlay = document.querySelector(".shanghai-overlay");
   if (overlay) overlay.remove();
 
-  // Create overlay container
+  // Create overlay container for text
   overlay = document.createElement("div");
-  overlay.id = "shanghaiOverlay";
   overlay.classList.add("shanghai-overlay");
 
-  // Add content
+  // Add overlay content (H1, H2, recap)
   overlay.innerHTML = `
     <div>🏆</div>
     <h1>Shanghai!</h1>
@@ -558,8 +557,16 @@ function showShanghaiWin(playerName, holeNumber) {
 
   document.body.appendChild(overlay);
 
-  // Call endGame after short delay so UI has time to show
-  setTimeout(() => endGame(playerName), 2000);
+  // Show optional audio announcement
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }
+
+  // Call endGame after short delay (buttons and history handled there)
+  setTimeout(() => endGame(playerName), 1500);
 }
 
 
