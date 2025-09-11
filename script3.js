@@ -1191,6 +1191,11 @@ function addEndGameButtons(container) {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // --- NEW: remove any Shanghai UI before resetting ---
+      if (typeof removeShanghaiDisplay === "function") {
+        removeShanghaiDisplay();
+      }
+
       players.unshift(players.pop());
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
