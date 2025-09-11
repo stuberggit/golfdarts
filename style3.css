@@ -206,6 +206,7 @@ button:hover {
   background-size: cover;
   z-index: 1000; /* below overlay text but above everything else */
   display: none; /* shown dynamically via JS */
+  animation: shanghaiPulse 4s ease-in-out infinite;
 }
 
 /* Shanghai overlay text container */
@@ -228,7 +229,8 @@ button:hover {
 .shanghai-overlay h1 {
   font-size: 3rem;
   margin-bottom: 0.5em;
-  text-shadow: 2px 2px 4px white;
+  margin-top: -250px; /* lift H1 higher */
+  text-shadow: 3px 3px 6px black, 0 0 10px white;
 }
 
 .shanghai-overlay h2 {
@@ -246,7 +248,7 @@ button:hover {
   font-size: 1.1rem;
   margin-top: 0.5em;
   font-style: italic;
-  color: #ddd; /* lighter to stand out on bg */
+  color: #eee;
 }
 
 /* Dimmed effect when a modal is open */
@@ -258,9 +260,9 @@ body.shanghai-bg.modal-open::after {
   z-index: 900; /* sits above bg, below overlay */
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.9; }
+@keyframes shanghaiPulse {
+  0%   { transform: scale(1); opacity: 1; }
+  50%  { transform: scale(1.05); opacity: 0.95; }
   100% { transform: scale(1); opacity: 1; }
 }
 
