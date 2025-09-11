@@ -197,16 +197,18 @@ button:hover {
 
 /* Shanghai background container (fills screen, below overlay text) */
 #shanghaiBackground {
-  position: fixed;
+  position: relative;
+  height: 100vh; 
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: url('images/shanghai-bg.jpg') no-repeat center center;
   background-size: cover;
+  background-position: center;
   z-index: 1000; /* below overlay text but above everything else */
   display: none; /* shown dynamically via JS */
-  animation: shanghaiPulse 4s ease-in-out infinite;
+  animation: shanghaiPulse 2s ease-in-out infinite;
 }
 
 /* Shanghai overlay text container */
