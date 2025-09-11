@@ -229,7 +229,7 @@ button:hover {
 .shanghai-overlay h1 {
   font-size: 3rem;
   margin-bottom: 0.5em;
-  margin-top: -250px; /* lift H1 higher */
+  margin-top: -50px; /* lift H1 higher */
   text-shadow: 3px 3px 6px black, 0 0 10px white;
 }
 
