@@ -526,60 +526,103 @@ function getRandomSuddenDeathHole() {
   updateScorecard();
 }
 
-// Helper to remove the shanghai image + overlay from the DOM
+// Call this before resetting/starting a new round (we reference it from addEndGameButtons)
 function removeShanghaiDisplay() {
-  const img = document.getElementById("shanghaiImage");
-  if (img) img.remove();
+  // hide/remove background and overlay but don't touch score/history data
+  const bg = document.getElementById("shanghaiBackground");
+  if (bg) {
+    // remove overlay children inside bg
+    bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
+    bg.style.display = "none";
+    bg.style.backgroundImage = ""; // remove reference to free memory
+  }
 
-  document.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
-
-  // remove the body flag if you use it for dimming
+  // restore any UI flags you use for dimming
   document.body.classList.remove("shanghai-bg");
 }
 
+// Main: show Shanghai and ensure image loads before showing text
 function showShanghaiWin(playerName, holeNumber) {
-  // Ensure the background exists
+  // compute hole fallback if not passed
+  const hole = (typeof holeNumber !== "undefined" && holeNumber !== null)
+    ? holeNumber
+    : (randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole);
+
+  const scoreInputs = document.getElementById("scoreInputs");
+
+  // Ensure the background element exists and is located BEFORE scoreInputs
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    document.body.appendChild(bg);
-  }
-  bg.style.display = "block";
-
-  // Remove any existing overlay text
-  let overlay = bg.querySelector(".shanghai-overlay");
-  if (overlay) overlay.remove();
-
-  // Create overlay container for text
-  overlay = document.createElement("div");
-  overlay.classList.add("shanghai-overlay");
-  overlay.innerHTML = `
-    <div>🏆</div>
-    <h1>Shanghai!</h1>
-    <h2>${playerName} Wins!</h2>
-    <p>Hit a Single, Double, and Triple on Hole ${holeNumber}</p>
-  `;
-  bg.appendChild(overlay);
-
-  // Optional audio
-  if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
+    // insert bg before scoreInputs so scoreInputs (and its buttons) appear below bg in DOM & are scrollable
+    if (scoreInputs && scoreInputs.parentNode) {
+      scoreInputs.parentNode.insertBefore(bg, scoreInputs);
+    } else {
+      document.body.appendChild(bg);
+    }
   }
 
-  // Add the endgame buttons BELOW the Shanghai section
-  setTimeout(() => {
-    const buttonContainer = document.createElement("div");
-    buttonContainer.id = "endGameButtons";
-    buttonContainer.style.marginTop = "2rem";
-    document.body.appendChild(buttonContainer);
+  // Clear any previous overlay children and clear the scoreInputs area (endGame will repopulate it)
+  bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
+  if (scoreInputs) scoreInputs.innerHTML = ""; // let endGame populate buttons later
 
-    addEndGameButtons(buttonContainer);
-  }, 1500);
+  // PRELOAD the image; show background only once the image is loaded
+  const img = new Image();
+  img.src = "images/shanghai.jpg"; // correct filename you confirmed
+  img.onload = () => {
+    // set background image via style (ensures browser fetched it)
+    bg.style.backgroundImage = `url('${img.src}')`;
+    bg.style.display = "block";
+
+    // Create overlay text inside bg (so text sits above the image)
+    const overlay = document.createElement("div");
+    overlay.className = "shanghai-overlay";
+
+    // h1 moved up 50px via inline transform so we don't depend on external CSS timing
+    overlay.innerHTML = `
+      <h1 style="transform: translateY(-50px);">Shanghai!</h1>
+      <h2>🏆 ${playerName} Wins! 🏆</h2>
+      <p class="shanghai-subtext">Single + Double + Triple on Hole ${hole}!</p>
+    `;
+    bg.appendChild(overlay);
+
+    // Optional audio announcement (kept)
+    if ('speechSynthesis' in window) {
+      try {
+        const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai on hole ${hole}!`);
+        utter.pitch = 1.3;
+        utter.rate = 1;
+        speechSynthesis.speak(utter);
+      } catch (err) {
+        console.warn("Speech synthesis failed:", err);
+      }
+    }
+
+    // Delay slightly so the user sees the image+overlay before endGame writes buttons into scoreInputs
+    setTimeout(() => {
+      // endGame will save history and call addEndGameButtons(scoreInputs)
+      // we call it without arguments (it uses your game state)
+      endGame();
+    }, 1200);
+  };
+
+  img.onerror = (e) => {
+    console.error("Failed to load images/shanghai.jpg", e);
+    // Fallback: show overlay text anyway (no bg), then endGame
+    const overlay = document.createElement("div");
+    overlay.className = "shanghai-overlay";
+    overlay.innerHTML = `
+      <h1 style="transform: translateY(-50px);">Shanghai!</h1>
+      <h2>🏆 ${playerName} Wins! 🏆</h2>
+      <p class="shanghai-subtext">Single + Double + Triple on Hole ${hole}!</p>
+    `;
+    bg.appendChild(overlay);
+
+    setTimeout(() => endGame(), 800);
+  };
 }
+
 
 // ========== DISPLAY ==========
 
