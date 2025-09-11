@@ -538,63 +538,48 @@ function removeShanghaiDisplay() {
 }
 
 function showShanghaiWin(playerName, holeNumber) {
-  // Ensure valid hole number
-  const hole = holeNumber ?? currentHole;
-
-  // Ensure background exists
+  // Ensure the background exists
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    bg.style.position = "fixed";
-    bg.style.top = "0";
-    bg.style.left = "0";
-    bg.style.width = "100%";
-    bg.style.height = "100%";
-    bg.style.backgroundSize = "cover";
-    bg.style.backgroundPosition = "center";
-    bg.style.zIndex = "1000"; // below overlay
     document.body.appendChild(bg);
   }
+  bg.style.display = "block";
 
-  // Preload image first
-  const img = new Image();
-  img.src = "images/shanghai.jpg";
-  img.onload = () => {
-    bg.style.backgroundImage = `url(${img.src})`;
-    bg.style.display = "block";
+  // Remove any existing overlay text
+  let overlay = bg.querySelector(".shanghai-overlay");
+  if (overlay) overlay.remove();
 
-    // Remove any existing overlay text
-    let overlay = document.querySelector(".shanghai-overlay");
-    if (overlay) overlay.remove();
+  // Create overlay container for text
+  overlay = document.createElement("div");
+  overlay.classList.add("shanghai-overlay");
+  overlay.innerHTML = `
+    <div>🏆</div>
+    <h1>Shanghai!</h1>
+    <h2>${playerName} Wins!</h2>
+    <p>Hit a Single, Double, and Triple on Hole ${holeNumber}</p>
+  `;
+  bg.appendChild(overlay);
 
-    // Create overlay container for text
-    overlay = document.createElement("div");
-    overlay.classList.add("shanghai-overlay");
-    overlay.style.zIndex = "1001"; // above background
+  // Optional audio
+  if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }
 
-    // Add overlay content
-    overlay.innerHTML = `
-      <h1>Shanghai!</h1>
-      <h2>🏆 ${playerName} Wins! 🏆</h2>
-      <p>Single + Double + Triple on Hole ${hole}!</p>
-    `;
+  // Add the endgame buttons BELOW the Shanghai section
+  setTimeout(() => {
+    const buttonContainer = document.createElement("div");
+    buttonContainer.id = "endGameButtons";
+    buttonContainer.style.marginTop = "2rem";
+    document.body.appendChild(buttonContainer);
 
-    document.body.appendChild(overlay);
-
-    // Optional audio announcement
-    if ("speechSynthesis" in window) {
-      const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai on hole ${hole}!`);
-      utter.pitch = 1.3;
-      utter.rate = 1;
-      speechSynthesis.speak(utter);
-    }
-
-    // End game after short delay
-    setTimeout(() => endGame(playerName), 1500);
-  };
+    addEndGameButtons(buttonContainer);
+  }, 1500);
 }
-
 
 // ========== DISPLAY ==========
 
