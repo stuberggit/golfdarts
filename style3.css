@@ -198,40 +198,38 @@ button:hover {
 /* Shanghai background container (fills screen, below overlay text) */
 #shanghaiBackground {
   position: relative;
-  height: 100vh; 
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh; 
   background: url('images/shanghai-bg.jpg') no-repeat center center;
   background-size: cover;
-  z-index: 1000; /* below overlay text but above everything else */
+  z-index: 900; /* below overlay text but above everything else */
   display: none; /* shown dynamically via JS */
   animation: shanghaiPulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* Shanghai overlay text container */
 .shanghai-overlay {
-  position: fixed;
+  position: absolute;
   top: 20%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   z-index: 1001; /* above background */
   color: white;
   text-align: center;
   text-shadow: 2px 2px 5px black;
   padding: 1rem;
+  animation: none;
 }
 
 .shanghai-overlay h1 {
   font-size: 3rem;
-  margin-bottom: 0.5em;
-  margin-top: -50px; /* lift H1 higher */
-  text-shadow: 3px 3px 6px black, 0 0 10px white;
+   margin: 0.25rem 0;
+  transform: translateY(-125px);
+  text-shadow: 2px 2px 6px black;
 }
 
 .shanghai-overlay h2 {
@@ -256,9 +254,9 @@ button:hover {
 body.shanghai-bg.modal-open::after {
   content: "";
   position: fixed;
-  inset: 0; /* shorthand for top:0; right:0; bottom:0; left:0 */
-  background: rgba(0, 0, 0, 0.6); /* darkness overlay */
-  z-index: 900; /* sits above bg, below overlay */
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000; /* sits between bg (900) and overlay (1001); modals must be higher */
 }
 
 @keyframes shanghaiPulse {
