@@ -566,10 +566,9 @@ function showShanghaiWin(playerName, holeNumber) {
   // make sure overlay is above the image
   overlay.style.zIndex = "1001";
   overlay.innerHTML = `
-    <div style="font-size:2.6rem; margin-bottom:0.25rem;">🏆</div>
     <h1>Shanghai!</h1>
-    <h2>${playerName} Wins!</h2>
-    <p class="shanghai-subtext">Hit a Single, Double, and Triple on Hole ${holeNumber ?? "undefined"}</p>
+    <h2>${playerName} Wins! 🏆</h2>
+    <p class="shanghai-subtext">Single, Double, and Triple on Hole ${holeNumber ?? "undefined"}!</p>
   `;
   document.body.appendChild(overlay);
 
