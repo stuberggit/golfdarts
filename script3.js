@@ -537,69 +537,64 @@ function removeShanghaiDisplay() {
   document.body.classList.remove("shanghai-bg");
 }
 
-// Robust showShanghaiWin that forces the browser to fetch the correct image
 function showShanghaiWin(playerName, holeNumber) {
-  // --- create image element (forces browser to request the file) ---
-  let img = document.getElementById("shanghaiImage");
-  if (img) img.remove(); // remove any previous instance to force reload if needed
+  // Ensure valid hole number
+  const hole = holeNumber ?? currentHole;
 
-  img = document.createElement("img");
-  img.id = "shanghaiImage";
-  img.src = "images/shanghai.jpg";              // <- correct filename you confirmed
-  // styling: cover viewport, fixed, behind overlay text but above page UI
-  Object.assign(img.style, {
-    position: "fixed",
-    inset: "0",
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    zIndex: "900",           // below overlay text (1001) and below modals (if modals > 1200)
-    display: "none",         // show after load
-    pointerEvents: "none"    // let clicks pass through to buttons (if you want that)
-  });
-  document.body.appendChild(img);
+  // Ensure background exists
+  let bg = document.getElementById("shanghaiBackground");
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "shanghaiBackground";
+    bg.style.position = "fixed";
+    bg.style.top = "0";
+    bg.style.left = "0";
+    bg.style.width = "100%";
+    bg.style.height = "100%";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
+    bg.style.zIndex = "1000"; // below overlay
+    document.body.appendChild(bg);
+  }
 
-  // --- overlay text (uses your existing .shanghai-overlay styles) ---
-  document.querySelectorAll(".shanghai-overlay").forEach(el => el.remove()); // clean up old
-  const overlay = document.createElement("div");
-  overlay.className = "shanghai-overlay";
-  // make sure overlay is above the image
-  overlay.style.zIndex = "1001";
-  overlay.innerHTML = `
-    <h1>Shanghai!</h1>
-    <h2>${playerName} Wins! 🏆</h2>
-    <p class="shanghai-subtext">Single, Double, and Triple on Hole ${holeNumber ?? "undefined"}!</p>
-  `;
-  document.body.appendChild(overlay);
-
-  // show image after it successfully loads (avoids blank/partial paint)
+  // Preload image first
+  const img = new Image();
+  img.src = "images/shanghai.jpg";
   img.onload = () => {
-    img.style.display = "block";
-    // optional: add a body class used for dimming when modals open
-    document.body.classList.add("shanghai-bg");
-  };
-  img.onerror = (e) => {
-    console.error("Failed to load shanghai image:", e);
-    // fallback: show overlay text anyway (image not critical)
-    img.style.display = "none";
-    document.body.classList.add("shanghai-bg");
-  };
+    bg.style.backgroundImage = `url(${img.src})`;
+    bg.style.display = "block";
 
-  // Keep the optional speech announcement (you asked to keep audio)
-  if ('speechSynthesis' in window) {
-    try {
-      const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai!`);
+    // Remove any existing overlay text
+    let overlay = document.querySelector(".shanghai-overlay");
+    if (overlay) overlay.remove();
+
+    // Create overlay container for text
+    overlay = document.createElement("div");
+    overlay.classList.add("shanghai-overlay");
+    overlay.style.zIndex = "1001"; // above background
+
+    // Add overlay content
+    overlay.innerHTML = `
+      <h1>Shanghai!</h1>
+      <h2>🏆 ${playerName} Wins! 🏆</h2>
+      <p>Single + Double + Triple on Hole ${hole}!</p>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Optional audio announcement
+    if ("speechSynthesis" in window) {
+      const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai on hole ${hole}!`);
       utter.pitch = 1.3;
       utter.rate = 1;
       speechSynthesis.speak(utter);
-    } catch (err) {
-      console.warn("Speech synthesis failed:", err);
     }
-  }
 
-  // Call endGame after a short delay to let the UI show up first
-  setTimeout(() => endGame(playerName), 1200);
+    // End game after short delay
+    setTimeout(() => endGame(playerName), 1500);
+  };
 }
+
 
 // ========== DISPLAY ==========
 
