@@ -596,17 +596,12 @@ function showShanghaiWin(winnerName) {
   const scoreInputs = document.getElementById("scoreInputs");
   if (scoreInputs) scoreInputs.innerHTML = "";
 
-  // Ensure the background container exists and insert BEFORE scoreInputs
+  // Ensure the background container exists at very top of <body>
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-
-    if (scoreInputs && scoreInputs.parentNode) {
-      scoreInputs.parentNode.insertBefore(bg, scoreInputs);
-    } else {
-      document.body.insertBefore(bg, document.body.firstChild);
-    }
+    document.body.insertBefore(bg, document.body.firstChild); // always first
   }
 
   // Clear previous overlays
@@ -614,7 +609,7 @@ function showShanghaiWin(winnerName) {
 
   // Preload the Shanghai image
   const img = new Image();
-  img.src = "images/shanghai.jpg"; // make sure this matches your repo file
+  img.src = "images/shanghai.jpg";
 
   img.onload = () => {
     bg.style.backgroundImage = `url('${img.src}')`;
@@ -631,10 +626,10 @@ function showShanghaiWin(winnerName) {
     `;
     bg.appendChild(overlay);
 
-    // Add our standard buttons below the overlay
+    // Add end-of-game buttons
     addEndGameButtons(scoreInputs);
 
-    // Make sure the scorecard remains visible
+    // Keep scorecard visible
     const scorecard = document.getElementById("scorecardWrapper");
     if (scorecard) scorecard.style.display = "block";
 
