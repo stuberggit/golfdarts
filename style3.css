@@ -197,16 +197,24 @@ button:hover {
 
 /* Shanghai background container (fills screen, below overlay text) */
 #shanghaiBackground {
-  position: fixed;   /* instead of relative */
-  inset: 0;          /* shorthand for top:0; right:0; bottom:0; left:0 */
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100vh;
-  background: url('images/shanghai-bg.jpg') no-repeat center center;
-  background-size: cover;
   z-index: 900;
   display: none;
-  animation: shanghaiPulse 2s ease-in-out infinite;
   pointer-events: none;
+  background: none; /* actual image handled by ::before */
+}
+
+#shanghaiBackground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('images/shanghai.jpg') no-repeat center center;
+  background-size: cover;
+  animation: shanghaiPulse 2s ease-in-out infinite;
+  z-index: 1;
 }
 
 /* Shanghai overlay text container */
