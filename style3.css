@@ -209,6 +209,7 @@ button:hover {
 
 #shanghaiBackground::before {
   content: "";
+  pointer-events: auto;
   position: absolute;
   inset: 0;
   background: url('images/shanghai.jpg') no-repeat center center;
