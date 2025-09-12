@@ -574,7 +574,7 @@ function getRandomSuddenDeathHole() {
   updateScorecard();
 }
 
-// Call this before resetting/starting a new round (we reference it from addEndGameButtons)
+// Call this before resetting/starting a new round
 function removeShanghaiDisplay() {
   // hide/remove background and overlay but don't touch score/history data
   const bg = document.getElementById("shanghaiBackground");
@@ -614,46 +614,12 @@ function showShanghaiWin(winnerName) {
   `;
   bg.appendChild(overlay);
 
-  // Insert the same buttons we normally add at endgame
+  // Call endGame with viaShanghai flag → get back the buttons
+  const buttons = endGame({ viaShanghai: true });
+
+  // Append those buttons into the overlay
   const btnContainer = overlay.querySelector(".shanghai-buttons");
-
-  const statsBtn = document.createElement("button");
-  statsBtn.innerText = "Game Stats";
-  statsBtn.className = "primary-button full-width";
-  statsBtn.style.borderColor = "#ffcc00";
-  statsBtn.onclick = () => showStats();
-  btnContainer.appendChild(statsBtn);
-
-  const historyBtn = document.createElement("button");
-  historyBtn.innerText = "View History";
-  historyBtn.className = "primary-button full-width";
-  historyBtn.onclick = () => showHistory();
-  btnContainer.appendChild(historyBtn);
-
-  const startNewBtn = document.createElement("button");
-  startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button full-width";
-  startNewBtn.onclick = () => {
-    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      players.unshift(players.pop());
-      players.forEach(p => p.scores = []);
-      allPlayers = JSON.parse(JSON.stringify(players));
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      suddenDeath = false;
-      tiedPlayers = [];
-      gameStarted = true;
-
-      removeShanghaiDisplay();
-      updateLeaderboard();
-      updateScorecard();
-      showHole();
-      saveGameState();
-    } else {
-      location.reload();
-    }
-  };
-  btnContainer.appendChild(startNewBtn);
+  buttons.forEach(btn => btnContainer.appendChild(btn));
 
   bg.style.display = "block";
   document.body.classList.add("shanghai-bg");
@@ -661,6 +627,7 @@ function showShanghaiWin(winnerName) {
   updateLeaderboard();
   updateScorecard();
 }
+
 
 // ========== DISPLAY ==========
 
@@ -924,7 +891,8 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
   });
 }
 
-function endGame() {
+function endGame(opts = {}) {
+  const viaShanghai = !!opts.viaShanghai;
   gameStarted = false;
 
   const scoreInputs = document.getElementById("scoreInputs");
@@ -951,24 +919,27 @@ function endGame() {
   localStorage.removeItem("golfdartsState");
 
   // Save this game's results to local history
-const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const gameSummary = {
+    date: new Date().toISOString(),
+    players: allPlayers.map(p => ({
+      name: p.name,
+      scores: [...p.scores],
+      total: p.scores.reduce((sum, s) => sum + s, 0),
+    })),
+    suddenDeath: suddenDeath,
+    advancedMode: advancedMode,
+    randomMode: randomMode,
+    shanghai: viaShanghai || false
+  };
+  previousHistory.push(gameSummary);
+  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-const gameSummary = {
-  date: new Date().toISOString(),
-  players: allPlayers.map(p => ({
-    name: p.name,
-    scores: [...p.scores],
-    total: p.scores.reduce((sum, s) => sum + s, 0),
-  })),
-  suddenDeath: suddenDeath,
-  advancedMode: advancedMode
-};
+  // Clear existing UI
+  scoreInputs.innerHTML = "";
 
-previousHistory.push(gameSummary);
-localStorage.setItem(historyKey, JSON.stringify(previousHistory));
-
-  // Declare winner
-  if (winner) {
+  // Winner text (if not Shanghai overlay)
+  if (winner && !viaShanghai) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
     winText.style.color = "#ffff00";
@@ -976,30 +947,29 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
     scoreInputs.appendChild(winText);
   }
 
-  // Game Stats Button
+  // Standard buttons (Stats / History / Start New Round)
+  // For Shanghai, caller can decide where these are appended
+  const buttons = [];
+
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
   statsBtn.style.borderColor = "#ffcc00";
   statsBtn.onclick = () => showStats();
-  scoreInputs.appendChild(statsBtn);
+  buttons.push(statsBtn);
 
   const historyBtn = document.createElement("button");
-historyBtn.innerText = "View History";
-historyBtn.className = "primary-button full-width";
-historyBtn.onclick = () => showHistory();
-scoreInputs.appendChild(historyBtn);
+  historyBtn.innerText = "View History";
+  historyBtn.className = "primary-button full-width";
+  historyBtn.onclick = () => showHistory();
+  buttons.push(historyBtn);
 
-
-  // Start New Round Button
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move LAST to FRONT
       players.unshift(players.pop());
-
       players.forEach(p => p.scores = []);
       allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
@@ -1009,7 +979,7 @@ scoreInputs.appendChild(historyBtn);
       gameStarted = true;
 
       scoreInputs.innerHTML = "";
-
+      removeShanghaiDisplay();
       saveGameState();
       showHole();
       updateLeaderboard();
@@ -1018,14 +988,23 @@ scoreInputs.appendChild(historyBtn);
       location.reload();
     }
   };
-  scoreInputs.appendChild(startNewBtn);
+  buttons.push(startNewBtn);
+
+  // Append buttons in correct place
+  if (viaShanghai) {
+    // Shanghai path: caller inserts them into overlay
+    return buttons;
+  } else {
+    // Normal game path: append to scoreInputs
+    buttons.forEach(btn => scoreInputs.appendChild(btn));
+  }
 
   // ✅ Ensure leaderboard remains visible
   const leaderboard = document.getElementById("leaderboard");
-if (leaderboard) {
-  leaderboard.classList.remove("hidden");
-  leaderboard.style.display = "block";
-}
+  if (leaderboard) {
+    leaderboard.classList.remove("hidden");
+    leaderboard.style.display = "block";
+  }
 
   document.body.removeAttribute("id");
 }
@@ -1241,68 +1220,6 @@ function showHistory() {
   const container = historyModal.querySelector(".history-container");
   if (container) {
     renderHistory(container);
-  }
-}
-
-function addEndGameButtons(container) {
-  // Leaderboard
-  const leaderboardBtn = document.createElement("button");
-  leaderboardBtn.innerText = "Leaderboard";
-  leaderboardBtn.className = "button-leaderboard";
-  leaderboardBtn.onclick = () => showModal("leaderboardModal");
-  container.appendChild(leaderboardBtn);
-
-  // Game Stats
-  const statsBtn = document.createElement("button");
-  statsBtn.innerText = "Game Stats";
-  statsBtn.className = "button-stats";
-  statsBtn.onclick = () => showStats();
-  container.appendChild(statsBtn);
-
-  // View History
-  const historyBtn = document.createElement("button");
-  historyBtn.innerText = "View History";
-  historyBtn.className = "primary-button full-width";
-  historyBtn.onclick = () => showHistory();
-  container.appendChild(historyBtn);
-
-  // Start New Round
-  const startNewBtn = document.createElement("button");
-  startNewBtn.innerText = "Start New Round";
-  startNewBtn.className = "primary-button full-width";
-  startNewBtn.onclick = () => {
-    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // --- NEW: remove any Shanghai UI before resetting ---
-      if (typeof removeShanghaiDisplay === "function") {
-        removeShanghaiDisplay();
-      }
-
-      players.unshift(players.pop());
-      players.forEach(p => p.scores = []);
-      allPlayers = JSON.parse(JSON.stringify(players));
-      currentHole = 1;
-      currentPlayerIndex = 0;
-      suddenDeath = false;
-      tiedPlayers = [];
-      gameStarted = true;
-
-      container.innerHTML = "";
-
-      saveGameState();
-      showHole();
-      updateLeaderboard();
-      updateScorecard();
-    } else {
-      location.reload();
-    }
-  };
-  container.appendChild(startNewBtn);
-
-  // Keep leaderboard visible
-  const leaderboard = document.getElementById("leaderboard");
-  if (leaderboard) {
-    leaderboard.classList.remove("hidden");
-    leaderboard.style.display = "block";
   }
 }
 
