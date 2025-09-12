@@ -575,24 +575,24 @@ function getRandomSuddenDeathHole() {
 }
 
 // Call this before resetting/starting a new round
+// Call this before resetting/starting a new round or when opening Stats/Leaderboard from Shanghai
 function removeShanghaiDisplay() {
-  // hide/remove background and overlay but don't touch score/history data
   const bg = document.getElementById("shanghaiBackground");
   if (bg) {
-    // remove overlay children inside bg
     bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
     bg.style.display = "none";
-    bg.style.backgroundImage = ""; // remove reference to free memory
+    // If you set background via JS elsewhere, also clear it:
+    // bg.style.backgroundImage = "";
   }
-
-  // restore any UI flags you use for dimming
   document.body.classList.remove("shanghai-bg");
 }
+
 
 function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
+  // Ensure background layer exists and sits on top (make sure its CSS z-index > app UI)
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
@@ -600,26 +600,97 @@ function showShanghaiWin(winnerName) {
     document.body.insertBefore(bg, document.body.firstChild);
   }
 
-  // Clear previous overlays
+  // Clear any previous overlay content
   bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
 
   // Build overlay
   const overlay = document.createElement("div");
   overlay.className = "shanghai-overlay";
+  overlay.style.zIndex = "3000"; // ensure above background image layer
+  overlay.style.pointerEvents = "auto"; // ensure clicks work
   overlay.innerHTML = `
     <h1>SHANGHAI!!</h1>
     <h2>🏆 ${winnerName} WINS! 🏆</h2>
     <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
-    <div class="shanghai-buttons"></div>
+    <div class="shanghai-buttons" style="display:flex; flex-direction:column; gap:10px; margin-top:0.75rem;"></div>
   `;
   bg.appendChild(overlay);
 
-  // Reuse endGame logic to generate the buttons
-  const buttons = endGame({ viaShanghai: true });
+  // Get canonical endgame buttons (Stats + Start New Round)
+  const canonicalButtons = endGame({ viaShanghai: true }) || [];
   const btnContainer = overlay.querySelector(".shanghai-buttons");
-  buttons.forEach(btn => btnContainer.appendChild(btn));
 
+  // Match normal endgame width: read #scoreInputs width and apply to overlay container
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (scoreInputs) {
+    const w = getComputedStyle(scoreInputs).width;
+    btnContainer.style.width = w;       // same width as your normal end area
+    btnContainer.style.marginLeft = "auto";
+    btnContainer.style.marginRight = "auto";
+  } else {
+    // fallback
+    btnContainer.style.width = "min(520px, 90vw)";
+    btnContainer.style.margin = "0 auto";
+  }
+
+  // 1) GAME STATS (from canonical set)
+  const statsBtn = canonicalButtons.find(b => (b.innerText || "").trim().toLowerCase() === "game stats");
+  if (statsBtn) {
+    // Ensure full-width class is present for width consistency
+    if (!statsBtn.className.includes("full-width")) statsBtn.className += " full-width";
+    btnContainer.appendChild(statsBtn);
+  }
+
+  // 2) LEADERBOARD (overlay-specific; white btn w/ green text & darker green border)
+  const lbBtn = document.createElement("button");
+  lbBtn.innerText = "Leaderboard";
+  // Try to mirror your in-game Leaderboard button styles by copying its classes
+  const liveLbBtn = Array.from(document.querySelectorAll("button"))
+    .find(b => (b.textContent || "").trim().toLowerCase() === "leaderboard");
+  if (liveLbBtn) {
+    lbBtn.className = liveLbBtn.className;
+  } else {
+    // fallback: white with green text/border (tweak if your CSS uses different tokens)
+    lbBtn.className = "full-width";
+    lbBtn.style.background = "#fff";
+    lbBtn.style.color = "#14853f";
+    lbBtn.style.border = "2px solid #0f6b33";
+    lbBtn.style.padding = "10px";
+    lbBtn.style.borderRadius = "6px";
+    lbBtn.style.fontWeight = "600";
+  }
+  lbBtn.onclick = () => {
+    removeShanghaiDisplay(); // ensure leaderboard is visible above app UI
+    // If you have a dedicated toggle function, call it here.
+    // Otherwise, click the existing Leaderboard control if present:
+    const existingLb = Array.from(document.querySelectorAll("button"))
+      .find(b => (b.textContent || "").trim().toLowerCase() === "leaderboard");
+    if (existingLb) {
+      existingLb.click();
+    } else {
+      // fallback: ensure the leaderboard area is visible
+      const leaderboard = document.getElementById("leaderboard");
+      if (leaderboard) {
+        leaderboard.classList.remove("hidden");
+        leaderboard.style.display = "block";
+        leaderboard.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+  btnContainer.appendChild(lbBtn);
+
+  // 3) START NEW ROUND (from canonical set)
+  const startBtn = canonicalButtons.find(b => (b.innerText || "").trim().toLowerCase() === "start new round");
+  if (startBtn) {
+    if (!startBtn.className.includes("full-width")) startBtn.className += " full-width";
+    btnContainer.appendChild(startBtn);
+  }
+
+  // Show background layer and lock interactions to overlay (no click-through)
   bg.style.display = "block";
+  // Make sure #shanghaiBackground captures clicks and is above the app:
+  // (CSS should set z-index > app and pointer-events:auto; ::before has pointer-events:none)
+
   document.body.classList.add("shanghai-bg");
 
   updateLeaderboard();
@@ -898,16 +969,14 @@ function endGame(opts = {}) {
     return;
   }
 
-  // ✅ Clone full player list before any filtering
+  // Clone before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Save winner if applicable
+  // winner if players was filtered to a single winner
   let winner = null;
-  if (players.length === 1) {
-    winner = players[0];
-  }
+  if (players.length === 1) winner = players[0];
 
-  // ✅ Restore full player list
+  // Restore full list for UI + history
   players = fullPlayerList;
   allPlayers = fullPlayerList;
 
@@ -915,7 +984,7 @@ function endGame(opts = {}) {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  // Save this game's results to local history
+  // Save game summary (no History button UI here, just data)
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
   const gameSummary = {
     date: new Date().toISOString(),
@@ -932,10 +1001,10 @@ function endGame(opts = {}) {
   previousHistory.push(gameSummary);
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Clear existing UI
+  // Wipe the area we normally place endgame buttons/text
   scoreInputs.innerHTML = "";
 
-  // Winner text (if not Shanghai overlay)
+  // Winner text (skip if Shanghai overlay will show its own headline)
   if (winner && !viaShanghai) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
@@ -944,7 +1013,7 @@ function endGame(opts = {}) {
     scoreInputs.appendChild(winText);
   }
 
-  // --- Build buttons ---
+  // Build canonical buttons (Stats + Start New Round)
   const buttons = [];
 
   // Game Stats
@@ -952,22 +1021,12 @@ function endGame(opts = {}) {
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
   statsBtn.style.borderColor = "#ffcc00";
-  statsBtn.onclick = () => showStats();
-  buttons.push(statsBtn);
-
-  // Leaderboard
-  const lbBtn = document.createElement("button");
-  lbBtn.innerText = "View Leaderboard";
-  lbBtn.className = "primary-button full-width";
-  lbBtn.onclick = () => {
-    const leaderboard = document.getElementById("leaderboard");
-    if (leaderboard) {
-      leaderboard.classList.remove("hidden");
-      leaderboard.style.display = "block";
-      leaderboard.scrollIntoView({ behavior: "smooth" });
-    }
+  statsBtn.onclick = () => {
+    // If invoked from Shanghai overlay, hide overlay first so the modal is visible
+    if (viaShanghai) removeShanghaiDisplay();
+    showStats();
   };
-  buttons.push(lbBtn);
+  buttons.push(statsBtn);
 
   // Start New Round
   const startNewBtn = document.createElement("button");
@@ -975,6 +1034,7 @@ function endGame(opts = {}) {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // rotate last to front
       players.unshift(players.pop());
       players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
@@ -996,23 +1056,22 @@ function endGame(opts = {}) {
   };
   buttons.push(startNewBtn);
 
-  // Place buttons in the correct spot
   if (viaShanghai) {
-    // Shanghai overlay will handle appending these
+    // For Shanghai, caller (showShanghaiWin) will decide where to place these buttons.
     return buttons;
   } else {
-    // Normal end of game → append directly into scoreInputs
+    // Normal end-of-game: place buttons here (and keep your gameplay controls below as-is)
     buttons.forEach(btn => scoreInputs.appendChild(btn));
-  }
 
-  // ✅ Ensure leaderboard remains visible
-  const leaderboard = document.getElementById("leaderboard");
-  if (leaderboard) {
-    leaderboard.classList.remove("hidden");
-    leaderboard.style.display = "block";
-  }
+    // Ensure leaderboard remains visible
+    const leaderboard = document.getElementById("leaderboard");
+    if (leaderboard) {
+      leaderboard.classList.remove("hidden");
+      leaderboard.style.display = "block";
+    }
 
-  document.body.removeAttribute("id");
+    document.body.removeAttribute("id");
+  }
 }
 
 function clearHistory() {
