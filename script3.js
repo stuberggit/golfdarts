@@ -612,19 +612,13 @@ function showShanghaiWin(winnerName) {
   bg.appendChild(overlay);
 
   const btnContainer = overlay.querySelector(".shanghai-buttons");
+  btnContainer.style.width = "min(520px, 90vw)";
+  btnContainer.style.margin = "1rem auto 0";
+  btnContainer.style.display = "flex";
+  btnContainer.style.flexDirection = "column";
+  btnContainer.style.gap = "10px";
 
-  // Match width of normal endgame buttons
-  const scoreInputs = document.getElementById("scoreInputs");
-  if (scoreInputs) {
-    btnContainer.style.width = getComputedStyle(scoreInputs).width;
-    btnContainer.style.margin = "0 auto";
-  } else {
-    btnContainer.style.width = "min(520px, 90vw)";
-    btnContainer.style.margin = "0 auto";
-  }
-
-  // Build buttons here instead of relying on endGame()
-  // 1. Game Stats
+  // --- Game Stats ---
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -632,7 +626,7 @@ function showShanghaiWin(winnerName) {
   statsBtn.onclick = () => showStats();
   btnContainer.appendChild(statsBtn);
 
-  // 2. Leaderboard
+  // --- Leaderboard ---
   const lbBtn = document.createElement("button");
   lbBtn.innerText = "Leaderboard";
   lbBtn.className = "primary-button full-width";
@@ -646,7 +640,7 @@ function showShanghaiWin(winnerName) {
   };
   btnContainer.appendChild(lbBtn);
 
-  // 3. Start New Round
+  // --- Start New Round ---
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
