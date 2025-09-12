@@ -596,12 +596,17 @@ function showShanghaiWin(winnerName) {
   const scoreInputs = document.getElementById("scoreInputs");
   if (scoreInputs) scoreInputs.innerHTML = "";
 
-  // Ensure the background container exists
+  // Ensure the background container exists and insert BEFORE scoreInputs
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    document.body.appendChild(bg);
+
+    if (scoreInputs && scoreInputs.parentNode) {
+      scoreInputs.parentNode.insertBefore(bg, scoreInputs);
+    } else {
+      document.body.insertBefore(bg, document.body.firstChild);
+    }
   }
 
   // Clear previous overlays
@@ -614,22 +619,25 @@ function showShanghaiWin(winnerName) {
   img.onload = () => {
     bg.style.backgroundImage = `url('${img.src}')`;
     bg.style.display = "block";
+    document.body.classList.add("shanghai-bg");
 
     // Overlay content
     const overlay = document.createElement("div");
     overlay.className = "shanghai-overlay";
     overlay.innerHTML = `
-      <h1>🏆 SHANGHAI!!</h1>
-      <h2>${winnerName} WINS!</h2>
-      <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+      <h1>SHANGHAI!!</h1>
+      <h2>🏆 ${winnerName} WINS! 🏆</h2>
+      <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
     `;
     bg.appendChild(overlay);
 
     // Add our standard buttons below the overlay
     addEndGameButtons(scoreInputs);
 
-    // Optional: scroll so both overlay and scorecard/buttons are visible
-    document.getElementById("scorecardWrapper").style.display = "block";
+    // Make sure the scorecard remains visible
+    const scorecard = document.getElementById("scorecardWrapper");
+    if (scorecard) scorecard.style.display = "block";
+
     updateLeaderboard();
     updateScorecard();
   };
@@ -637,6 +645,7 @@ function showShanghaiWin(winnerName) {
   img.onerror = () => {
     console.warn("Could not load Shanghai image, falling back to text only.");
     bg.style.display = "block";
+    document.body.classList.add("shanghai-bg");
   };
 }
 
