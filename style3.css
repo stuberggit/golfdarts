@@ -201,24 +201,22 @@ button:hover {
   inset: 0;
   width: 100%;
   height: 100vh;
-  z-index: 900;
+  z-index: 2000;
   display: none;
-  pointer-events: none;
-  background: none; /* actual image handled by ::before */
+  pointer-events: none; /* background itself ignores clicks */
 }
 
 #shanghaiBackground::before {
   content: "";
-  pointer-events: auto;
   position: absolute;
   inset: 0;
   background: url('images/shanghai.jpg') no-repeat center center;
   background-size: cover;
   animation: shanghaiPulse 2s ease-in-out infinite;
   z-index: 1;
+  pointer-events: none; /* image layer ignores clicks */
 }
 
-/* Shanghai overlay text container */
 .shanghai-overlay {
   position: absolute;
   top: 20%;
@@ -227,12 +225,12 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 1001; /* above background */
+  z-index: 3000;          /* above background */
+  pointer-events: auto;   /* overlay & buttons are clickable */
   color: white;
   text-align: center;
   text-shadow: 2px 2px 5px black;
   padding: 1rem;
-  animation: none;
 }
 
 .shanghai-overlay h1 {
