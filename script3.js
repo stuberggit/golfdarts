@@ -942,8 +942,7 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
   });
 }
 
-function endGame(opts = {}) {
-  const viaShanghai = !!opts.viaShanghai;
+function endGame() {
   gameStarted = false;
 
   const scoreInputs = document.getElementById("scoreInputs");
@@ -952,14 +951,16 @@ function endGame(opts = {}) {
     return;
   }
 
-  // Clone before any filtering
+  // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // winner if players was filtered to a single winner
+  // Determine winner if a single player remains
   let winner = null;
-  if (players.length === 1) winner = players[0];
+  if (players.length === 1) {
+    winner = players[0];
+  }
 
-  // Restore full list for UI + history
+  // ✅ Restore full player list
   players = fullPlayerList;
   allPlayers = fullPlayerList;
 
@@ -967,7 +968,7 @@ function endGame(opts = {}) {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  // Save game summary
+  // Save this game's results to local history
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
   const gameSummary = {
     date: new Date().toISOString(),
@@ -978,17 +979,16 @@ function endGame(opts = {}) {
     })),
     suddenDeath,
     advancedMode,
-    randomMode,
-    shanghai: viaShanghai || false
+    randomMode
   };
   previousHistory.push(gameSummary);
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Wipe the area we normally place endgame buttons/text
+  // Clear score input area
   scoreInputs.innerHTML = "";
 
-  // Winner text (skip if Shanghai overlay will show its own headline)
-  if (winner && !viaShanghai) {
+  // Winner text
+  if (winner) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
     winText.style.color = "#ffff00";
@@ -996,18 +996,14 @@ function endGame(opts = {}) {
     scoreInputs.appendChild(winText);
   }
 
-  // Build canonical buttons (Stats + Leaderboard + Start New Round)
-  const buttons = [];
-
+  // --- End-of-game buttons ---
   // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
   statsBtn.style.borderColor = "#ffcc00";
-  statsBtn.onclick = () => {
-    showStats(); // no removeShanghaiDisplay here!
-  };
-  buttons.push(statsBtn);
+  statsBtn.onclick = () => showStats();
+  scoreInputs.appendChild(statsBtn);
 
   // Leaderboard
   const lbBtn = document.createElement("button");
@@ -1021,7 +1017,7 @@ function endGame(opts = {}) {
       leaderboard.scrollIntoView({ behavior: "smooth" });
     }
   };
-  buttons.push(lbBtn);
+  scoreInputs.appendChild(lbBtn);
 
   // Start New Round
   const startNewBtn = document.createElement("button");
@@ -1029,6 +1025,7 @@ function endGame(opts = {}) {
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // Rotate players: move last to front
       players.unshift(players.pop());
       players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
@@ -1039,7 +1036,6 @@ function endGame(opts = {}) {
       gameStarted = true;
 
       scoreInputs.innerHTML = "";
-      removeShanghaiDisplay(); // clear overlay only when restarting
       saveGameState();
       showHole();
       updateLeaderboard();
@@ -1048,24 +1044,16 @@ function endGame(opts = {}) {
       location.reload();
     }
   };
-  buttons.push(startNewBtn);
+  scoreInputs.appendChild(startNewBtn);
 
-  if (viaShanghai) {
-    // Let caller place buttons in overlay
-    return buttons;
-  } else {
-    // Normal end of game: append in scoreInputs
-    buttons.forEach(btn => scoreInputs.appendChild(btn));
-
-    // Keep leaderboard visible
-    const leaderboard = document.getElementById("leaderboard");
-    if (leaderboard) {
-      leaderboard.classList.remove("hidden");
-      leaderboard.style.display = "block";
-    }
-
-    document.body.removeAttribute("id");
+  // ✅ Ensure leaderboard remains visible
+  const leaderboard = document.getElementById("leaderboard");
+  if (leaderboard) {
+    leaderboard.classList.remove("hidden");
+    leaderboard.style.display = "block";
   }
+
+  document.body.removeAttribute("id");
 }
 
 function clearHistory() {
