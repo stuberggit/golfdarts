@@ -348,120 +348,168 @@ function submitPlayerScore() {
 
   const player = players[currentPlayerIndex];
 
-  // Check for Shanghai (6 hits means triple hit)
+  // Check for Shanghai
   if (hits === 6) {
-    const holeNum = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${holeNum})? Cancel to score -2 and return to game. OK to win with a Shanghai! Now go get your picture taken`);
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
-      // Call the new, updated function with optional audio preserved
       showShanghaiWin(player.name);
-      return; // Stop any further scoring/turn advancement
+      return;
     }
   }
 
-  // Base score calculation: miss = 5, otherwise lookup
-  let score = getScore(hits);
+  // Calculate base score with exact logic:
+  // Miss + hazards
+  // Miss = hits === 0
+  // Buster = Miss + 3 hazards = 8
+  // Quad Bogey = Miss + 2 hazards = 7
+  // Triple Bogey = Miss + 1 hazard = 6
+  // Double Bogey = Miss only = 5
+  // Bogey = Hit 1 + 1 hazard = 4
+  // Par = Hit 1 no hazard = 3
+  // Birdie = Hit 2 = 2
+  // Ace = Hit 3 = 1
+  // Goose Egg = Hit 4 = 0
+  // Icicle = Hit 5 = -1
+  // Polar Bear = Hit 6 = -2
+  // Frostbite = Hit 7 = -3
+  // Snowman = Hit 8 = -4
+  // Avalanche = Hit 9 = -5
 
-  // Add hazard penalties if applicable
+  let score;
   let hazards = 0;
-  const displayHole = randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole;
+  let hazardAdded = false;
 
-  if (advancedMode && hazardHoles.includes(displayHole) && displayHole !== "🎯") {
+  if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    if (hazardSelect) {
-      hazards = parseInt(hazardSelect.value) || 0;
-      if (hazards > 0) {
-        score += hazards;
-        player.hazards = (player.hazards || 0) + hazards;
+    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+  }
+
+  if (hits === 0) {
+    // Miss + hazards
+    score = 5 + hazards; // 5 to 8
+  } else if (hits === 1 && hazards === 1) {
+    // Hit 1 + 1 hazard = Bogey
+    score = 4;
+  } else if (hits === 1 && hazards === 0) {
+    // Par
+    score = 3;
+  } else if (hits >= 2 && hits <= 9) {
+    // For hits 2-9, score decreases by 1 for each hit above 1
+    score = 4 - hits;
+  } else if (hits === 1 && hazards > 1) {
+    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
+    score = 4 + (hazards - 1);
+  } else {
+    // Fallback to par
+    score = 3;
+  }
+
+  // Add hazards to player's hazard count only if hazards > 0
+  if (hazards > 0) {
+    hazardAdded = true;
+  }
+
+  if (player) {
+    const allPlayer = allPlayers.find(p => p.name === player.name);
+    player.scores.push(score);
+    if (allPlayer) allPlayer.scores.push(score);
+    player.hazards = (player.hazards || 0) + hazards;
+
+    actionHistory.push({
+      playerIndex: currentPlayerIndex,
+      playerName: player.name,
+      hole: currentHole,
+      score: score,
+      hazardAdded: hazardAdded,
+      hazards: hazards
+    });
+  } else {
+    console.warn("No current player found during score submission.");
+    return;
+  }
+
+  saveGameState();
+
+  const { label, color } = getScoreLabelAndColor(score);
+
+  // End-game & sudden death logic here stays unchanged
+  if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
+    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+    const lowest = Math.min(...totals);
+    const tied = players.filter((p, i) => totals[i] === lowest);
+    if (tied.length === 1) {
+      players = [tied[0]];
+      endGame();
+      return;
+    }
+  }
+
+  if (suddenDeath) {
+    const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+    if (allPlayersCompletedHole) {
+      const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+      const min = Math.min(...lastHoleScores);
+      const winners = players.filter((p, i) => lastHoleScores[i] === min);
+      if (winners.length === 1) {
+        players = [winners[0]];
+        endGame();
+        return;
       }
     }
   }
 
-  // Record the score for player
-  player.scores.push(score);
-
-  // Also update in allPlayers copy if exists
-  const allPlayer = allPlayers.find(p => p.name === player.name);
-  if (allPlayer) {
-    allPlayer.scores.push(score);
-  }
-
-  // Record action for undo history
-  actionHistory.push({
-    playerIndex: currentPlayerIndex,
-    playerName: player.name,
-    hole: displayHole,
-    score: score,
-    hazards: hazards
-  });
-
-  // Save current game state
-  saveGameState();
-
-  // Save/update history
-  try {
-    let history = JSON.parse(localStorage.getItem(historyKey)) || [];
-    history.push({
-      timestamp: Date.now(),
-      players: JSON.parse(JSON.stringify(players)),
-      currentHole,
-      finished: currentHole > 18 || (randomMode && currentHoleIndex >= 18)
-    });
-    localStorage.setItem(historyKey, JSON.stringify(history));
-  } catch (e) {
-    console.error("Failed to save history:", e);
-  }
-
-  // Show scoring animation
-  const { label, color } = getScoreLabelAndColor(score);
+  // Show animation
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
   updateScorecard();
 
-  // Advance turn
   currentPlayerIndex++;
 
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
-    // Hole progression logic
-    if (!randomMode) {
-      if (currentHole < 18) {
-        currentHole++;
-      } else {
-        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0) + (p.handicap || 0));
-        const lowest = Math.min(...totals);
-        const tied = players.filter((p, i) => totals[i] === lowest);
+    const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
+    const lowest = Math.min(...totals);
+    const tied = players.filter((p, i) => totals[i] === lowest);
 
-        if (tied.length > 1) {
-          players = tied;
-          tiedPlayers = tied;
-          suddenDeath = true;
-          currentHole = getRandomSuddenDeathHole();
-        } else {
+    if (currentHole === 18) {
+      if (tied.length > 1) {
+        players = tied;
+        tiedPlayers = tied;
+        suddenDeath = true;
+        currentHole = 19;
+
+        const names = tied.map(p => `"${p.name}"`).join(" and ");
+        document.getElementById("scoreInputs").innerHTML = `
+          <h2>${names} tie! On to Sudden Death!</h2>
+          <button onclick="showHole()" class="primary-button full-width">Continue</button>
+        `;
+        return;
+      } else {
+        endGame();
+        return;
+      }
+    }
+
+    if (suddenDeath) {
+      const allPlayersCompletedHole = players.every(p => p.scores.length >= currentHole);
+      if (allPlayersCompletedHole) {
+        const lastHoleScores = players.map(p => p.scores[currentHole - 1]);
+        const min = Math.min(...lastHoleScores);
+        const winners = players.filter((p, i) => lastHoleScores[i] === min);
+
+        if (winners.length === 1) {
+          players = [winners[0]];
           endGame();
           return;
         }
+
+        players = winners;
+        currentHole = currentHole === 20 ? 1 : currentHole + 1;
       }
     } else {
-      currentHoleIndex++;
-      if (currentHoleIndex >= 18) {
-        const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0) + (p.handicap || 0));
-        const lowest = Math.min(...totals);
-        const tied = players.filter((p, i) => totals[i] === lowest);
-
-        if (tied.length > 1) {
-          players = tied;
-          tiedPlayers = tied;
-          suddenDeath = true;
-          currentHoleIndex = null;
-          currentHole = getRandomSuddenDeathHole();
-        } else {
-          endGame();
-          return;
-        }
-      }
+      currentHole++;
     }
   }
 
@@ -541,86 +589,46 @@ function removeShanghaiDisplay() {
   document.body.classList.remove("shanghai-bg");
 }
 
-// Main: show Shanghai and ensure image loads before showing text
-function showShanghaiWin(playerName, holeNumber) {
-  // compute hole fallback if not passed
-  const hole = (typeof holeNumber !== "undefined" && holeNumber !== null)
-    ? holeNumber
-    : (randomMode && !suddenDeath ? holeSequence[currentHoleIndex] : currentHole);
+function showShanghaiWin(winnerName) {
+  gameStarted = false;
+  localStorage.removeItem("golfdartsState");
 
-  const scoreInputs = document.getElementById("scoreInputs");
+  document.getElementById("scoreInputs").innerHTML = "";
 
-  // Ensure the background element exists and is located BEFORE scoreInputs
-  let bg = document.getElementById("shanghaiBackground");
-  if (!bg) {
-    bg = document.createElement("div");
-    bg.id = "shanghaiBackground";
-    // insert bg before scoreInputs so scoreInputs (and its buttons) appear below bg in DOM & are scrollable
-    if (scoreInputs && scoreInputs.parentNode) {
-      scoreInputs.parentNode.insertBefore(bg, scoreInputs);
-    } else {
-      document.body.appendChild(bg);
-    }
-  }
+  const overlay = document.createElement("div");
+  overlay.className = "shanghai-overlay";
+  overlay.innerHTML = `
+    <h1 style="transform: translateY(-50px);">SHANGHAI!!</h1>
+    <h2>🏆 ${winnerName} WINS! 🏆</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
+    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
+  `;
+  document.body.appendChild(overlay);
 
-  // Clear any previous overlay children and clear the scoreInputs area (endGame will repopulate it)
-  bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
-  if (scoreInputs) scoreInputs.innerHTML = ""; // let endGame populate buttons later
+  document.getElementById("playAgainBtn").onclick = () => {
+    // Restart game with same players
+    players.forEach(p => p.scores = []);
+    currentHole = 1;
+    currentPlayerIndex = 0;
+    suddenDeath = false;
+    tiedPlayers = [];
+    gameStarted = true;
 
-  // PRELOAD the image; show background only once the image is loaded
-  const img = new Image();
-  img.src = "images/shanghai.jpg"; // correct filename you confirmed
-  img.onload = () => {
-    // set background image via style (ensures browser fetched it)
-    bg.style.backgroundImage = `url('${img.src}')`;
-    bg.style.display = "block";
-
-    // Create overlay text inside bg (so text sits above the image)
-    const overlay = document.createElement("div");
-    overlay.className = "shanghai-overlay";
-
-    // h1 moved up 50px via inline transform so we don't depend on external CSS timing
-    overlay.innerHTML = `
-      <h1 style="transform: translateY(-50px);">Shanghai!</h1>
-      <h2>🏆 ${playerName} Wins! 🏆</h2>
-      <p class="shanghai-subtext">Single + Double + Triple on Hole ${hole}!</p>
-    `;
-    bg.appendChild(overlay);
-
-    // Optional audio announcement (kept)
-    if ('speechSynthesis' in window) {
-      try {
-        const utter = new SpeechSynthesisUtterance(`${playerName} wins with a Shanghai on hole ${hole}!`);
-        utter.pitch = 1.3;
-        utter.rate = 1;
-        speechSynthesis.speak(utter);
-      } catch (err) {
-        console.warn("Speech synthesis failed:", err);
-      }
-    }
-
-    // Delay slightly so the user sees the image+overlay before endGame writes buttons into scoreInputs
-    setTimeout(() => {
-      // endGame will save history and call addEndGameButtons(scoreInputs)
-      // we call it without arguments (it uses your game state)
-      endGame();
-    }, 1200);
+    // Reset UI
+    document.body.removeChild(overlay);
+    document.getElementById("scoreInputs").innerHTML = "";
+    updateLeaderboard();
+    updateScorecard();
+    showHole();
+    saveGameState();
   };
 
-  img.onerror = (e) => {
-    console.error("Failed to load images/shanghai.jpg", e);
-    // Fallback: show overlay text anyway (no bg), then endGame
-    const overlay = document.createElement("div");
-    overlay.className = "shanghai-overlay";
-    overlay.innerHTML = `
-      <h1 style="transform: translateY(-50px);">Shanghai!</h1>
-      <h2>🏆 ${playerName} Wins! 🏆</h2>
-      <p class="shanghai-subtext">Single + Double + Triple on Hole ${hole}!</p>
-    `;
-    bg.appendChild(overlay);
-
-    setTimeout(() => endGame(), 800);
-  };
+  /*if ('speechSynthesis' in window) {
+    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
+    utter.pitch = 1.3;
+    utter.rate = 1;
+    speechSynthesis.speak(utter);
+  }*/
 }
 
 
@@ -895,70 +903,102 @@ function endGame() {
     return;
   }
 
-  // Use the full player list as the baseline
+  // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Compute gross and net totals
-  const totals = fullPlayerList.map(p => {
-    const grossTotal = p.scores.reduce((sum, s) => sum + s, 0);
-    const hcp = Number(p.handicap || 0);
-    const netTotal = grossTotal + hcp; // lower is better
-    return { ...p, grossTotal, netTotal, handicap: hcp };
-  });
+  // Save winner if applicable
+  let winner = null;
+  if (players.length === 1) {
+    winner = players[0];
+  }
 
-  // Decide winner by NET
-  const winningNet = Math.min(...totals.map(t => t.netTotal));
-  const winners = totals.filter(t => t.netTotal === winningNet);
+  // ✅ Restore full player list
+  players = fullPlayerList;
+  allPlayers = fullPlayerList;
 
-  // Persist history (gross + net)
-  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-  previousHistory.push({
-    date: new Date().toISOString(),
-    players: totals.map(p => ({
-      name: p.name,
-      scores: [...p.scores],
-      handicap: p.handicap || 0,
-      grossTotal: p.grossTotal,
-      netTotal: p.netTotal
-    })),
-    suddenDeath,
-    advancedMode,
-    randomMode
-  });
-  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+  updateLeaderboard();
+  updateScorecard();
+  localStorage.removeItem("golfdartsState");
 
-  // Clear out old UI
-  scoreInputs.innerHTML = "";
+  // Save this game's results to local history
+const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
 
-  // Winner / tie messaging
-  if (winners.length === 1) {
-    const w = winners[0];
-    if (typeof showScoreAnimation === "function") {
-      const hcpText = w.handicap >= 0 ? `+${w.handicap}` : `${w.handicap}`;
-      showScoreAnimation(
-        `${w.name} wins! Net ${w.netTotal} (Gross ${w.grossTotal} ${hcpText}) 🏆`,
-        "#ffcc00"
-      );
-    }
+const gameSummary = {
+  date: new Date().toISOString(),
+  players: allPlayers.map(p => ({
+    name: p.name,
+    scores: [...p.scores],
+    total: p.scores.reduce((sum, s) => sum + s, 0),
+  })),
+  suddenDeath: suddenDeath,
+  advancedMode: advancedMode
+};
+
+previousHistory.push(gameSummary);
+localStorage.setItem(historyKey, JSON.stringify(previousHistory));
+
+  // Declare winner
+  if (winner) {
     const winText = document.createElement("h2");
-    winText.textContent = `${w.name} wins!!`;
+    winText.textContent = `${winner.name} wins!!`;
     winText.style.color = "#ffff00";
     winText.style.textShadow = "1px 1px 4px black";
     scoreInputs.appendChild(winText);
-  } else {
-    const tieText = document.createElement("h2");
-    tieText.textContent = `It's a tie! (${winners.map(w => w.name).join(", ")})`;
-    tieText.style.color = "#ffff00";
-    tieText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(tieText);
   }
 
-  // Add standard end-of-game buttons
-  addEndGameButtons(scoreInputs);
+  // Game Stats Button
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.onclick = () => showStats();
+  scoreInputs.appendChild(statsBtn);
+
+  const historyBtn = document.createElement("button");
+historyBtn.innerText = "View History";
+historyBtn.className = "primary-button full-width";
+historyBtn.onclick = () => showHistory();
+scoreInputs.appendChild(historyBtn);
+
+
+  // Start New Round Button
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // Rotate players: move LAST to FRONT
+      players.unshift(players.pop());
+
+      players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
+
+      scoreInputs.innerHTML = "";
+
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+  scoreInputs.appendChild(startNewBtn);
+
+  // ✅ Ensure leaderboard remains visible
+  const leaderboard = document.getElementById("leaderboard");
+if (leaderboard) {
+  leaderboard.classList.remove("hidden");
+  leaderboard.style.display = "block";
+}
 
   document.body.removeAttribute("id");
 }
-
 
 function clearHistory() {
   localStorage.removeItem(historyKey);
