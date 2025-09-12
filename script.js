@@ -492,9 +492,9 @@ function showShanghaiWin(winnerName) {
   const overlay = document.createElement("div");
   overlay.className = "shanghai-overlay";
   overlay.innerHTML = `
-    <h1>🏆 SHANGHAI!!</h1>
-    <h2>${winnerName} WINS!</h2>
-    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+    <h1 style="transform: translateY(-50px);">SHANGHAI!!</h1>
+    <h2>🏆 ${winnerName} WINS! 🏆</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
     <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
   `;
   document.body.appendChild(overlay);
