@@ -626,27 +626,12 @@ function showShanghaiWin(winnerName) {
   statsBtn.onclick = () => showStats();
   btnContainer.appendChild(statsBtn);
 
-  // --- Leaderboard ---
+    // --- Leaderboard ---
   const lbBtn = document.createElement("button");
   lbBtn.innerText = "Leaderboard";
-  lbBtn.className = "full-width"; // white/green style, not primary green
-  lbBtn.style.background = "#fff";
-  lbBtn.style.color = "#14853f";
-  lbBtn.style.border = "2px solid #0f6b33";
-  lbBtn.style.padding = "10px";
-  lbBtn.style.borderRadius = "6px";
-  lbBtn.style.fontWeight = "600";
+  lbBtn.className = "button-leaderboard small-button full-width"; // match real button + force full width
   lbBtn.style.marginTop = "0.25rem";
-  lbBtn.onclick = () => {
-    const leaderboard = document.getElementById("leaderboard");
-    if (leaderboard) {
-      leaderboard.classList.remove("hidden");
-      leaderboard.style.display = "block";
-      leaderboard.scrollIntoView({ behavior: "smooth" });
-    } else {
-      console.warn("Leaderboard element not found");
-    }
-  };
+  lbBtn.onclick = () => showModal('leaderboardModal'); // same as your in-game button
   btnContainer.appendChild(lbBtn);
 
   // --- Start New Round ---
