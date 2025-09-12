@@ -1214,17 +1214,6 @@ function showHistory() {
   }
 }
 
-// Expose globally
-window.showHistory = showHistory;
-
-
-window.startGame = startGame;
-window.showModal = showModal;
-window.closeModal = closeModal;
-window.showHistory = showHistory;
-window.submitPlayerScore = submitPlayerScore;
-window.undoHole = undoHole;
-
 function addEndGameButtons(container) {
   // Leaderboard
   const leaderboardBtn = document.createElement("button");
@@ -1286,6 +1275,16 @@ function addEndGameButtons(container) {
     leaderboard.style.display = "block";
   }
 }
+
+// Expose globally
+window.showHistory = showHistory;
+window.startGame = startGame;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.showHistory = showHistory;
+window.submitPlayerScore = submitPlayerScore;
+window.undoHole = undoHole;
+window.showHole = showHole;
 
 
 // ========== EVENT LISTENERS ==========
