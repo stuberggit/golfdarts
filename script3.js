@@ -593,44 +593,52 @@ function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
-  document.getElementById("scoreInputs").innerHTML = "";
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (scoreInputs) scoreInputs.innerHTML = "";
 
-  const overlay = document.createElement("div");
-  overlay.className = "shanghai-overlay";
-  overlay.innerHTML = `
-    <h1 style="transform: translateY(-50px);">SHANGHAI!!</h1>
-    <h2>🏆 ${winnerName} WINS! 🏆</h2>
-    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
-    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
-  `;
-  document.body.appendChild(overlay);
+  // Ensure the background container exists
+  let bg = document.getElementById("shanghaiBackground");
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "shanghaiBackground";
+    document.body.appendChild(bg);
+  }
 
-  document.getElementById("playAgainBtn").onclick = () => {
-    // Restart game with same players
-    players.forEach(p => p.scores = []);
-    currentHole = 1;
-    currentPlayerIndex = 0;
-    suddenDeath = false;
-    tiedPlayers = [];
-    gameStarted = true;
+  // Clear previous overlays
+  bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
 
-    // Reset UI
-    document.body.removeChild(overlay);
-    document.getElementById("scoreInputs").innerHTML = "";
+  // Preload the Shanghai image
+  const img = new Image();
+  img.src = "images/shanghai.jpg"; // make sure this matches your repo file
+
+  img.onload = () => {
+    bg.style.backgroundImage = `url('${img.src}')`;
+    bg.style.display = "block";
+
+    // Overlay content
+    const overlay = document.createElement("div");
+    overlay.className = "shanghai-overlay";
+    overlay.innerHTML = `
+      <h1>🏆 SHANGHAI!!</h1>
+      <h2>${winnerName} WINS!</h2>
+      <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}</p>
+    `;
+    bg.appendChild(overlay);
+
+    // Add our standard buttons below the overlay
+    addEndGameButtons(scoreInputs);
+
+    // Optional: scroll so both overlay and scorecard/buttons are visible
+    document.getElementById("scorecardWrapper").style.display = "block";
     updateLeaderboard();
     updateScorecard();
-    showHole();
-    saveGameState();
   };
 
-  /*if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
-  }*/
+  img.onerror = () => {
+    console.warn("Could not load Shanghai image, falling back to text only.");
+    bg.style.display = "block";
+  };
 }
-
 
 // ========== DISPLAY ==========
 
