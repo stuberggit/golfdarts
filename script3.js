@@ -593,55 +593,73 @@ function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
-  const scoreInputs = document.getElementById("scoreInputs");
-  if (scoreInputs) scoreInputs.innerHTML = "";
-
-  // Ensure the background container exists at very top of <body>
   let bg = document.getElementById("shanghaiBackground");
   if (!bg) {
     bg = document.createElement("div");
     bg.id = "shanghaiBackground";
-    document.body.insertBefore(bg, document.body.firstChild); // always first
+    document.body.insertBefore(bg, document.body.firstChild);
   }
 
   // Clear previous overlays
   bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
 
-  // Preload the Shanghai image
-  const img = new Image();
-  img.src = "images/shanghai.jpg";
+  // Build overlay
+  const overlay = document.createElement("div");
+  overlay.className = "shanghai-overlay";
+  overlay.innerHTML = `
+    <h1>SHANGHAI!!</h1>
+    <h2>🏆 ${winnerName} WINS! 🏆</h2>
+    <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
+    <div class="shanghai-buttons"></div>
+  `;
+  bg.appendChild(overlay);
 
-  img.onload = () => {
-    bg.style.backgroundImage = `url('${img.src}')`;
-    bg.style.display = "block";
-    document.body.classList.add("shanghai-bg");
+  // Insert the same buttons we normally add at endgame
+  const btnContainer = overlay.querySelector(".shanghai-buttons");
 
-    // Overlay content
-    const overlay = document.createElement("div");
-    overlay.className = "shanghai-overlay";
-    overlay.innerHTML = `
-      <h1>SHANGHAI!!</h1>
-      <h2>🏆 ${winnerName} WINS! 🏆</h2>
-      <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
-    `;
-    bg.appendChild(overlay);
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.onclick = () => showStats();
+  btnContainer.appendChild(statsBtn);
 
-    // Add end-of-game buttons
-    addEndGameButtons(scoreInputs);
+  const historyBtn = document.createElement("button");
+  historyBtn.innerText = "View History";
+  historyBtn.className = "primary-button full-width";
+  historyBtn.onclick = () => showHistory();
+  btnContainer.appendChild(historyBtn);
 
-    // Keep scorecard visible
-    const scorecard = document.getElementById("scorecardWrapper");
-    if (scorecard) scorecard.style.display = "block";
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      players.unshift(players.pop());
+      players.forEach(p => p.scores = []);
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
 
-    updateLeaderboard();
-    updateScorecard();
+      removeShanghaiDisplay();
+      updateLeaderboard();
+      updateScorecard();
+      showHole();
+      saveGameState();
+    } else {
+      location.reload();
+    }
   };
+  btnContainer.appendChild(startNewBtn);
 
-  img.onerror = () => {
-    console.warn("Could not load Shanghai image, falling back to text only.");
-    bg.style.display = "block";
-    document.body.classList.add("shanghai-bg");
-  };
+  bg.style.display = "block";
+  document.body.classList.add("shanghai-bg");
+
+  updateLeaderboard();
+  updateScorecard();
 }
 
 // ========== DISPLAY ==========
