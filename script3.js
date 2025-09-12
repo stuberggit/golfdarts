@@ -611,11 +611,9 @@ function showShanghaiWin(winnerName) {
   `;
   bg.appendChild(overlay);
 
-  // Get canonical buttons from endGame
-  const buttons = endGame({ viaShanghai: true }) || [];
   const btnContainer = overlay.querySelector(".shanghai-buttons");
 
-  // Match normal button width (same as scoreInputs area)
+  // Match width of normal endgame buttons
   const scoreInputs = document.getElementById("scoreInputs");
   if (scoreInputs) {
     btnContainer.style.width = getComputedStyle(scoreInputs).width;
@@ -625,7 +623,55 @@ function showShanghaiWin(winnerName) {
     btnContainer.style.margin = "0 auto";
   }
 
-  buttons.forEach(btn => btnContainer.appendChild(btn));
+  // Build buttons here instead of relying on endGame()
+  // 1. Game Stats
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.onclick = () => showStats();
+  btnContainer.appendChild(statsBtn);
+
+  // 2. Leaderboard
+  const lbBtn = document.createElement("button");
+  lbBtn.innerText = "Leaderboard";
+  lbBtn.className = "primary-button full-width";
+  lbBtn.onclick = () => {
+    const leaderboard = document.getElementById("leaderboard");
+    if (leaderboard) {
+      leaderboard.classList.remove("hidden");
+      leaderboard.style.display = "block";
+      leaderboard.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  btnContainer.appendChild(lbBtn);
+
+  // 3. Start New Round
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      players.unshift(players.pop());
+      players.forEach(p => (p.scores = []));
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
+
+      document.getElementById("scoreInputs").innerHTML = "";
+      removeShanghaiDisplay();
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
+  };
+  btnContainer.appendChild(startNewBtn);
 
   bg.style.display = "block";
   document.body.classList.add("shanghai-bg");
