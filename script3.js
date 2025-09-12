@@ -611,25 +611,43 @@ function showShanghaiWin(winnerName) {
   `;
   bg.appendChild(overlay);
 
-  const btnContainer = overlay.querySelector(".shanghai-buttons");
+    const btnContainer = overlay.querySelector(".shanghai-buttons");
   btnContainer.style.width = "min(520px, 90vw)";
   btnContainer.style.margin = "1rem auto 0";
   btnContainer.style.display = "flex";
   btnContainer.style.flexDirection = "column";
-  btnContainer.style.gap = "10px";
 
   // --- Game Stats ---
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
   statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.style.marginTop = "0.5rem";
   statsBtn.onclick = () => showStats();
   btnContainer.appendChild(statsBtn);
 
   // --- Leaderboard ---
   const lbBtn = document.createElement("button");
   lbBtn.innerText = "Leaderboard";
-  lbBtn.className = "primary-button full-width";
+  lbBtn.style.marginTop = "0.5rem";
+
+  // Try to clone the real in-game Leaderboard button style
+  const liveLbBtn = Array.from(document.querySelectorAll("button"))
+    .find(b => (b.textContent || "").trim().toLowerCase() === "leaderboard");
+  if (liveLbBtn) {
+    lbBtn.className = liveLbBtn.className; // copy its classes
+    lbBtn.style.cssText = liveLbBtn.style.cssText; // copy inline styles if any
+  } else {
+    // fallback: white button with green text/border
+    lbBtn.className = "full-width";
+    lbBtn.style.background = "#fff";
+    lbBtn.style.color = "#14853f";
+    lbBtn.style.border = "2px solid #0f6b33";
+    lbBtn.style.padding = "10px";
+    lbBtn.style.borderRadius = "6px";
+    lbBtn.style.fontWeight = "600";
+  }
+
   lbBtn.onclick = () => {
     const leaderboard = document.getElementById("leaderboard");
     if (leaderboard) {
@@ -644,6 +662,7 @@ function showShanghaiWin(winnerName) {
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
+  startNewBtn.style.marginTop = "0.5rem";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
       players.unshift(players.pop());
