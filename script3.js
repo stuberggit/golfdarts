@@ -614,10 +614,8 @@ function showShanghaiWin(winnerName) {
   `;
   bg.appendChild(overlay);
 
-  // Call endGame with viaShanghai flag → get back the buttons
+  // Reuse endGame logic to generate the buttons
   const buttons = endGame({ viaShanghai: true });
-
-  // Append those buttons into the overlay
   const btnContainer = overlay.querySelector(".shanghai-buttons");
   buttons.forEach(btn => btnContainer.appendChild(btn));
 
@@ -627,7 +625,6 @@ function showShanghaiWin(winnerName) {
   updateLeaderboard();
   updateScorecard();
 }
-
 
 // ========== DISPLAY ==========
 
@@ -947,10 +944,10 @@ function endGame(opts = {}) {
     scoreInputs.appendChild(winText);
   }
 
-  // Standard buttons (Stats / History / Start New Round)
-  // For Shanghai, caller can decide where these are appended
+  // --- Build buttons ---
   const buttons = [];
 
+  // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -958,19 +955,28 @@ function endGame(opts = {}) {
   statsBtn.onclick = () => showStats();
   buttons.push(statsBtn);
 
-  const historyBtn = document.createElement("button");
-  historyBtn.innerText = "View History";
-  historyBtn.className = "primary-button full-width";
-  historyBtn.onclick = () => showHistory();
-  buttons.push(historyBtn);
+  // Leaderboard
+  const lbBtn = document.createElement("button");
+  lbBtn.innerText = "View Leaderboard";
+  lbBtn.className = "primary-button full-width";
+  lbBtn.onclick = () => {
+    const leaderboard = document.getElementById("leaderboard");
+    if (leaderboard) {
+      leaderboard.classList.remove("hidden");
+      leaderboard.style.display = "block";
+      leaderboard.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  buttons.push(lbBtn);
 
+  // Start New Round
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
       players.unshift(players.pop());
-      players.forEach(p => p.scores = []);
+      players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
       currentPlayerIndex = 0;
@@ -990,12 +996,12 @@ function endGame(opts = {}) {
   };
   buttons.push(startNewBtn);
 
-  // Append buttons in correct place
+  // Place buttons in the correct spot
   if (viaShanghai) {
-    // Shanghai path: caller inserts them into overlay
+    // Shanghai overlay will handle appending these
     return buttons;
   } else {
-    // Normal game path: append to scoreInputs
+    // Normal end of game → append directly into scoreInputs
     buttons.forEach(btn => scoreInputs.appendChild(btn));
   }
 
