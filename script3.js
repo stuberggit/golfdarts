@@ -1064,19 +1064,39 @@ function showStats() {
     "Avalanche"      // -5 (best)
   ];
 
+  // Build a quick hazards tally from actionHistory
+  const hazardsByPlayer = {};
+  if (Array.isArray(actionHistory)) {
+    for (const ev of actionHistory) {
+      if (!ev || !ev.playerName) continue;
+      const h = Number(ev.hazards) || 0;
+      if (h > 0) {
+        hazardsByPlayer[ev.playerName] = (hazardsByPlayer[ev.playerName] || 0) + h;
+      }
+    }
+  }
+
   const hitCounts = allPlayers.map(player => {
     const counts = Array(scoreLabels.length).fill(0);
     player.scores.forEach(score => {
       const hitIndex = getHitsFromScore(score);
       if (hitIndex !== -1) counts[hitIndex]++;
     });
-    return { name: player.name, counts };
+
+    // Prefer actionHistory sum; fallback to player.hazards if present
+    const hazardsTotal = (hazardsByPlayer[player.name] != null)
+      ? hazardsByPlayer[player.name]
+      : (Number(player.hazards) || 0);
+
+    return { name: player.name, counts, hazardsTotal };
   });
 
   statsContainer.innerHTML = hitCounts.map(player => {
-    const bullets = player.counts
-      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
-      .filter(line => line).join("");
+    const bullets = [
+      `<li><strong>Hazards:</strong> ${player.hazardsTotal}</li>`,
+      ...player.counts.map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
+    ].filter(Boolean).join("");
+
     return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
   }).join("<hr>");
 
