@@ -378,89 +378,100 @@ body.shanghai-bg.modal-open::after {
   }
 }
 
-/* === Modal Styling === */
+/* === Modal Styling (unified) === */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  inset: 0; /* top/right/bottom/left:0 */
+  display: none;                 /* hidden by default */
+  align-items: center;           /* center vertically */
+  justify-content: center;       /* center horizontally */
+  padding: 24px;                 /* breathing room around the sheet */
+  background: rgba(0, 0, 0, 0.6);/* dark backdrop */
   z-index: 9999;
+}
+
+.modal-overlay:not(.hidden) {
+  display: flex;
 }
 
 .modal-content {
   max-width: 600px;
-  width: 90%;
-  padding: 3rem 2rem 3rem 2rem; /* more top padding to clear close button */
-  border: 2px solid white;
+  width: min(90vw, 600px);
+  /* top padding leaves space if you use an absolute "X" */
+  padding: 3rem 1.25rem 2rem 1.25rem;
+  border: 2px solid #fff;
   border-radius: 16px;
-  background-color: #004d00;
-  color: white;
+  background-color: #004d00;    /* your theme */
+  color: #fff;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
   text-align: left;
   box-sizing: border-box;
   word-wrap: break-word;
-  overflow-wrap: break-word;
-  position: relative; /* for absolute close button */
-  max-height: 85vh;   /* a bit taller */
-  overflow-y: auto;   /* allow scrolling */
+  overflow-wrap: anywhere;       /* avoid horizontal scroll from long text */
+  position: relative;            /* for absolute close button */
+  max-height: 85vh;              /* scroll inside the sheet */
+  overflow-y: auto;
+  overflow-x: hidden;            /* kill horizontal scroll */
 }
 
 .modal-content h2 {
-  margin-bottom: 16px;
+  margin: 0 0 16px 0;
   text-align: center;
 }
 
 .modal-content button {
-  margin: 20px auto 0 auto;
+  margin: 20px auto 0;
   display: block;
 }
 
-/* Specific for scoring modal, center text */
-#scoringModal .modal-content {
-  text-align: center;
+/* Optional row of actions at the bottom of a modal */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
+/* Specific tweaks */
+#scoringModal .modal-content { text-align: center; }
+
+/* Settings/leaderboard variants keep your look, inherit layout above */
 .settings-modal {
   max-width: 400px;
   background: #fff;
+  color: #000;
   padding: 20px;
   border-radius: 12px;
-  color: black;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
 }
 
-/* New close button styles */
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 28px;
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0;
-  user-select: none;
-  z-index: 10; /* ensure above content */
-}
-
-
-/* === Leaderboard (Masters-style) === */
 .leaderboard-modal {
   background: #004d00;
-  border: 3px solid white;
-  color: white;
+  border: 3px solid #fff;
+  color: #fff;
   padding: 1rem;
   max-width: 500px;
   width: 90%;
   box-sizing: border-box;
 }
+
+/* Close “X” in the top-right if you use it */
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 24px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+  z-index: 10;
+}
+
 
 .leaderboard-list {
   list-style: none;
@@ -516,11 +527,6 @@ body.shanghai-bg.modal-open::after {
     width: 95%;
     font-size: 1.1rem;
   }
-
-  .modal-content {
-    padding: 1rem;
-  }
-}
 
 /* Smaller screens: one column, smaller font */
 @media (max-width: 480px) {
@@ -936,10 +942,4 @@ function updateScorecard() {
 .history-scorecard td:first-child {
   text-align: left;
   white-space: nowrap;
-}
-
-/* Make history modal scrollable (if reused elsewhere) */
-#historyModal .modal-content {
-  max-height: 80vh;
-  overflow-y: auto;
 }
