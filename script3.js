@@ -1406,8 +1406,11 @@ function getHitsFromScore(score) {
 function showModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
-  modal.classList.remove('hidden');
+  modal.classList.remove("hidden");
+  const content = modal.querySelector(".modal-content");
+  if (content) content.scrollTop = 0;
 }
+
 
 function closeModal(id) {
   const modal = document.getElementById(id);
@@ -1650,6 +1653,24 @@ function addQuickExportButtonToEndScreen() {
   }
 }
 
+// In showHoF(): when injecting the modal HTML, use .modal-overlay (not .modal)
+document.body.insertAdjacentHTML("beforeend", `
+  <div id="hofModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2>🏆 Hall of Fame</h2>
+      <div id="hofDetails"></div>
+      <div class="modal-actions">
+        <button class="secondary-button" id="hofExportBtn">Export JSON</button>
+        <label class="secondary-button" style="display:inline-flex; align-items:center; gap:8px;">
+          Import JSON
+          <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
+        </label>
+        <button class="primary-button" id="hofCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+`);
+
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
@@ -1725,44 +1746,62 @@ document.addEventListener("DOMContentLoaded", () => {
     menu?.classList.add("hidden");
   });
 
-  // ---------- Delegated clicks: HoF & Quick Export ----------
-  document.body.addEventListener("click", (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
+  // ---------- Delegated clicks: HoF, Quick Export, & GLOBAL modal backdrop ----------
+document.body.addEventListener("click", (e) => {
+  const t = e.target;
+  if (!(t instanceof Element)) return;
 
-    // Export from HoF modal
-    if (t.id === "hofExportBtn") {
-      exportHoFAndMark();
-    }
+  // ✅ GLOBAL: click on ANY modal backdrop closes that modal
+  // (works for Rules, Scoring, HoF — anything using .modal-overlay)
+  if (t.classList.contains("modal-overlay")) {
+    t.classList.add("hidden");
+    return;
+  }
 
-    // Close HoF
-    if (t.id === "hofCloseBtn") {
-      document.getElementById("hofModal")?.classList.add("hidden");
-    }
+  // HoF export
+  if (t.id === "hofExportBtn") {
+    exportHoFAndMark();
+    return;
+  }
 
-    // Backdrop click closes HoF
-    if (t.id === "hofModal") {
-      t.classList.add("hidden");
-    }
+  // HoF close button
+  if (t.id === "hofCloseBtn") {
+    document.getElementById("hofModal")?.classList.add("hidden");
+    return;
+  }
 
-    // Quick Export button on end screen / stats modal
-    if (t.id === "quickExportBtn") {
-      e.preventDefault();
-      exportHoFAndMark();
-    }
+  // Quick Export (end screen / stats modal)
+  if (t.id === "quickExportBtn") {
+    e.preventDefault();
+    exportHoFAndMark();
+    return;
+  }
 
-    // Export toast buttons
-    if (t.id === "exportToastNow") {
-      exportHoFAndMark();
-    }
-    if (t.id === "exportToastLater") {
-      hideExportReminderToast();
-    }
-    if (t.id === "exportToastSnooze") {
-      localStorage.setItem("exportSnoozeDate", todayISO());
-      hideExportReminderToast();
-    }
-  });
+  // Export reminder toast actions
+  if (t.id === "exportToastNow") {
+    exportHoFAndMark();
+    return;
+  }
+  if (t.id === "exportToastLater") {
+    hideExportReminderToast();
+    return;
+  }
+  if (t.id === "exportToastSnooze") {
+    localStorage.setItem("exportSnoozeDate", todayISO());
+    hideExportReminderToast();
+    return;
+  }
+});
+
+// ---------- GLOBAL: ESC closes any open modal ----------
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    document
+      .querySelectorAll(".modal-overlay:not(.hidden)")
+      .forEach(m => m.classList.add("hidden"));
+  }
+});
+
 
   // ---------- Delegated file import ----------
   document.body.addEventListener("change", (e) => {
