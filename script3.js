@@ -672,11 +672,11 @@ function updateScorecard() {
           const holeIndex = i + start - 1;
           const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
           const isHaz = advancedMode && hazardHoles.includes(holeNumber);
+          const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
           return `
-            <th class="${isHaz ? 'hazard-col-header' : ''}"
+            <th class="${isHaz ? 'hazard-col-header' : ''}"${thStyle}
                 title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
               <span class="hole-number">${holeNumber}</span>
-              ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
             </th>`;
         }).join('')}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
@@ -715,7 +715,9 @@ function updateScorecard() {
               ? (isSudden && !isCompeting ? "-" : "&nbsp;")
               : s; // raw score only, no handicap
 
-            return `<td style="border: 1px solid #ccc; text-align:center;"
+            const baseStyle = 'border: 1px solid #ccc; text-align:center;';
+            const bg = isHazardCol ? ' background-color:#fff4f5;' : '';
+            return `<td style="${baseStyle}${bg}"
                        class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
           }).join("")
         }
@@ -728,7 +730,7 @@ function updateScorecard() {
     const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
     const sdHoles = [];
     for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20); // 19,20, then 1.. etc.
+      const label = i <= 20 ? i : (i - 20);
       sdHoles.push(label);
     }
 
@@ -738,11 +740,11 @@ function updateScorecard() {
       <th class="sudden-death-header">HCP</th>
       ${sdHoles.map(h => {
         const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
+        const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
         return `
-          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"
+          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"${thStyle}
               title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
             <span class="hole-number">${h}</span>
-            ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
           </th>`;
       }).join("")}
     </tr>`;
@@ -769,13 +771,15 @@ function updateScorecard() {
       `;
 
       for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19; // absolute index used for active-cell class binding
-        const label = holeNum <= 20 ? holeNum : (holeNum - 20); // display number (19,20,1,2,...)
+        const holeNum = i + 19;
+        const label = holeNum <= 20 ? holeNum : (holeNum - 20);
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
         const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
+        const baseStyle = 'text-align:center;';
+        const bg = isHazCol ? ' background-color:#fff4f5;' : '';
         let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
 
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}">${cellContent}</td>`;
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}" style="${baseStyle}${bg}">${cellContent}</td>`;
       }
 
       table += `</tr>`;
