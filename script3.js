@@ -145,6 +145,105 @@ function updateHallOfFameFromCurrentGame() {
   saveHoF(hof);
 }
 
+function showHoF() {
+  const hof = loadHoF();
+  const el = document.getElementById("hofDetails");
+  if (!el) return;
+
+  const g = hof.global || {};
+  const most = g.most || {};
+
+  const row = (label, rec) =>
+    `<tr><td>${label}</td><td>${rec ? (rec.value ?? rec.count) : "—"}</td><td>${rec?.player ?? "—"}</td><td>${rec?.date ?? "—"}</td>${rec?.hole ? `<td>Hole ${rec.hole}</td>` : "<td>—</td>"}</tr>`;
+
+  el.innerHTML = `
+    <h3>Global Records</h3>
+    <table class="scorecard-table" style="width:100%">
+      <thead><tr><th>Category</th><th>Value</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+      <tbody>
+        ${row("Best Round (18)", g.bestRound)}
+        ${row("Best Front 9",    g.bestFront9)}
+        ${row("Best Back 9",     g.bestBack9)}
+        ${row("Best Hole",       g.bestHole)}
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:16px;">Most in a Single Round</h3>
+    <table class="scorecard-table" style="width:100%">
+      <thead><tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+      <tbody>
+        ${SCORE_LABELS.map(l => row(l, most[l])).join("")}
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("hofModal").classList.remove("hidden");
+}
+
+function exportHoF() {
+  const data = loadHoF();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "golfdarts_hof.json";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+function importHoF(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const incoming = JSON.parse(reader.result);
+      const current = loadHoF();
+      const merged = mergeHoF(current, incoming);
+      saveHoF(merged);
+      alert("Hall of Fame imported and merged!");
+      showHoF();
+    } catch {
+      alert("Invalid HoF file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function mergeHoF(a, b) {
+  // start from an empty base to compute merged bests
+  const out = { version: 1, updatedAt: new Date().toISOString(), global: { most: {} }, perPlayer: {} };
+
+  // helpers
+  const mergeLower = (ea, eb) => takeBestLower(ea, eb);
+  const mergeMost  = (ma, mb) => {
+    const res = {};
+    const labels = new Set([...(ma ? Object.keys(ma):[]), ...(mb ? Object.keys(mb):[])]);
+    labels.forEach(l => res[l] = takeBestHigher(ma?.[l], mb?.[l]));
+    return res;
+  };
+
+  // global
+  out.global.bestRound  = mergeLower(a.global?.bestRound,  b.global?.bestRound);
+  out.global.bestFront9 = mergeLower(a.global?.bestFront9, b.global?.bestFront9);
+  out.global.bestBack9  = mergeLower(a.global?.bestBack9,  b.global?.bestBack9);
+  out.global.bestHole   = mergeLower(a.global?.bestHole,   b.global?.bestHole);
+  out.global.most       = mergeMost(a.global?.most, b.global?.most);
+
+  // per player
+  const names = new Set([...(Object.keys(a.perPlayer || {})), ...(Object.keys(b.perPlayer || {}))]);
+  names.forEach(name => {
+    const pa = a.perPlayer?.[name] || { most: {} };
+    const pb = b.perPlayer?.[name] || { most: {} };
+    out.perPlayer[name] = {
+      bestRound:  mergeLower(pa.bestRound,  pb.bestRound),
+      bestFront9: mergeLower(pa.bestFront9, pb.bestFront9),
+      bestBack9:  mergeLower(pa.bestBack9,  pb.bestBack9),
+      bestHole:   mergeLower(pa.bestHole,   pb.bestHole),
+      most:       mergeMost(pa.most, pb.most)
+    };
+  });
+
+  return out;
+}
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
