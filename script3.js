@@ -146,38 +146,53 @@ function updateHallOfFameFromCurrentGame() {
 }
 
 function showHoF() {
-  const hof = loadHoF();
+  ensureHoFModal();
+
+  // Open FIRST (more forgiving)
+  if (typeof showModal === "function") {
+    showModal("hofModal");
+  } else {
+    document.getElementById("hofModal")?.classList.remove("hidden");
+  }
+
   const el = document.getElementById("hofDetails");
   if (!el) return;
 
-  const g = hof.global || {};
-  const most = g.most || {};
+  try {
+    const hof = loadHoF();
+    const g = hof.global || {};
+    const most = g.most || {};
 
-  const row = (label, rec) =>
-    `<tr><td>${label}</td><td>${rec ? (rec.value ?? rec.count) : "—"}</td><td>${rec?.player ?? "—"}</td><td>${rec?.date ?? "—"}</td>${rec?.hole ? `<td>Hole ${rec.hole}</td>` : "<td>—</td>"}</tr>`;
+    const row = (label, rec) =>
+      `<tr><td>${label}</td><td>${rec ? (rec.value ?? rec.count) : "—"}</td><td>${rec?.player ?? "—"}</td><td>${rec?.date ?? "—"}</td>${rec?.hole ? `<td>Hole ${rec.hole}</td>` : "<td>—</td>"}</tr>`;
 
-  el.innerHTML = `
-    <h3>Global Records</h3>
-    <table class="scorecard-table" style="width:100%">
-      <thead><tr><th>Category</th><th>Value</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
-      <tbody>
-        ${row("Best Round (18)", g.bestRound)}
-        ${row("Best Front 9",    g.bestFront9)}
-        ${row("Best Back 9",     g.bestBack9)}
-        ${row("Best Hole",       g.bestHole)}
-      </tbody>
-    </table>
+    // If SCORE_LABELS isn’t defined yet, fall back to an empty list
+    const labels = (typeof SCORE_LABELS !== "undefined" && Array.isArray(SCORE_LABELS)) ? SCORE_LABELS : [];
 
-    <h3 style="margin-top:16px;">Most in a Single Round</h3>
-    <table class="scorecard-table" style="width:100%">
-      <thead><tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
-      <tbody>
-        ${SCORE_LABELS.map(l => row(l, most[l])).join("")}
-      </tbody>
-    </table>
-  `;
+    el.innerHTML = `
+      <h3>Global Records</h3>
+      <table class="scorecard-table" style="width:100%">
+        <thead><tr><th>Category</th><th>Value</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+        <tbody>
+          ${row("Best Round (18)", g.bestRound)}
+          ${row("Best Front 9",    g.bestFront9)}
+          ${row("Best Back 9",     g.bestBack9)}
+          ${row("Best Hole",       g.bestHole)}
+        </tbody>
+      </table>
 
-  document.getElementById("hofModal").classList.remove("hidden");
+      <h3 style="margin-top:16px;">Most in a Single Round</h3>
+      <table class="scorecard-table" style="width:100%">
+        <thead><tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+        <tbody>
+          ${labels.map(l => row(l, most[l])).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    console.error("[HoF] render error:", err);
+    el.innerHTML = `<p style="color:#b00020">Couldn’t render Hall of Fame: ${String(err)}</p>`;
+  }
 }
 
 function exportHoF() {
@@ -243,6 +258,28 @@ function mergeHoF(a, b) {
 
   return out;
 }
+
+function ensureHoFModal() {
+  if (!document.getElementById("hofModal")) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="hofModal" class="modal hidden">
+        <div class="modal-content">
+          <h2>🏆 Hall of Fame</h2>
+          <div id="hofDetails"></div>
+          <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
+            <button class="secondary-button" id="hofExportBtn">Export JSON</button>
+            <label class="secondary-button" style="display:inline-flex; align-items:center; gap:8px;">
+              Import JSON
+              <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
+            </label>
+            <button class="primary-button" id="hofCloseBtn">Close</button>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+}
+
 
 // ========== GAME SETUP ==========
 
@@ -1517,21 +1554,46 @@ window.importHoF = window.importHoF || importHoF;
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
-  // History page init
+  // ---------- Helpers ----------
+  function ensureHoFModal() {
+    if (!document.getElementById("hofModal")) {
+      document.body.insertAdjacentHTML("beforeend", `
+        <div id="hofModal" class="modal hidden">
+          <div class="modal-content">
+            <h2>🏆 Hall of Fame</h2>
+            <div id="hofDetails"></div>
+            <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
+              <button class="secondary-button" id="hofExportBtn">Export JSON</button>
+              <label class="secondary-button" style="display:inline-flex; align-items:center; gap:8px;">
+                Import JSON
+                <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
+              </label>
+              <button class="primary-button" id="hofCloseBtn">Close</button>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+  }
+
+  // ---------- History page init ----------
   if (document.getElementById("playerFilter")) {
     initHistoryPage();
   }
 
+  // ---------- Player count select (no early return!) ----------
   const select = document.getElementById("playerCount");
-  if (!select) return;
-
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
+  if (select) {
+    for (let i = 1; i <= 20; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
+      select.appendChild(option);
+    }
+    select.addEventListener("change", createPlayerInputs);
   }
 
+  // ---------- Toggles ----------
   document.getElementById("audioToggle")?.addEventListener("change", (e) => {
     audioEnabled = e.target.checked;
   });
@@ -1542,41 +1604,70 @@ document.addEventListener("DOMContentLoaded", () => {
     advancedMode = e.target.checked;
   });
 
-  select.addEventListener("change", createPlayerInputs);
-
-  document.getElementById("viewHistoryLink")?.addEventListener("click", (e) => {
-  e.preventDefault();
-  showHistory();
-});
-
-  document.addEventListener("DOMContentLoaded", () => {
-  const menu = document.getElementById("hamburgerMenu");
-  const hofLink = document.getElementById("hofLink");
-  hofLink?.addEventListener("click", (e) => {
-    e.preventDefault();
-    showHoF();
-    menu?.classList.add("hidden"); // auto-close menu
-  });
-
-  // If you have an "Import JSON" input without inline onchange, wire it too:
-  document.getElementById("hofImportInput")
-    ?.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (file) importHoF(file);
-    });
-});
-
-
- const viewHistoryLink = document.getElementById("viewHistoryLink");
+  // ---------- View History (single wiring) ----------
+  const viewHistoryLink = document.getElementById("viewHistoryLink");
   if (viewHistoryLink) {
-    console.log("🧷 View History listener attached"); // <== should log on page load
     viewHistoryLink.addEventListener("click", (e) => {
       e.preventDefault();
-      console.log("🖱️ View History clicked"); // <== should log when clicked
-      showHistory(); // <== should trigger your function
+      showHistory();
     });
   }
 
+  // ---------- HoF: ensure modal exists & wire everything ----------
+  ensureHoFModal();
+
+  const menu    = document.getElementById("hamburgerMenu");
+  const hofLink = document.getElementById("hofLink");
+
+  // Open HoF + auto-close hamburger
+  hofLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (typeof showHoF === "function") {
+      showHoF(); // builds + opens modal
+    } else {
+      console.error("[HoF] showHoF is not defined");
+    }
+    menu?.classList.add("hidden");
+  });
+
+  // Delegated buttons: export, close, backdrop click
+  document.body.addEventListener("click", (e) => {
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+
+    if (t.id === "hofExportBtn") {
+      if (typeof exportHoF === "function") exportHoF();
+      else console.error("[HoF] exportHoF is not defined");
+    }
+
+    if (t.id === "hofCloseBtn") {
+      document.getElementById("hofModal")?.classList.add("hidden");
+    }
+
+    // click outside content closes modal
+    if (t.id === "hofModal") {
+      t.classList.add("hidden");
+    }
+  });
+
+  // Delegated file import
+  document.body.addEventListener("change", (e) => {
+    const input = e.target;
+    if (input instanceof HTMLInputElement && input.id === "hofImportInput" && input.files?.[0]) {
+      if (typeof importHoF === "function") importHoF(input.files[0]);
+      else console.error("[HoF] importHoF is not defined");
+      input.value = ""; // allow re-selecting same file
+    }
+  });
+
+  // ESC closes HoF
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.getElementById("hofModal")?.classList.add("hidden");
+    }
+  });
+
+  // ---------- Load saved state ----------
   requestAnimationFrame(() => {
     loadGameState?.();
   });
