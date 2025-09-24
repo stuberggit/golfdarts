@@ -146,27 +146,25 @@ function updateHallOfFameFromCurrentGame() {
 }
 
 // Utility: format date to MM/DD/YY (handles ISO or YYYY-MM-DD)
+// Utility: format date to MM/DD/YY
 function shortDate(d) {
   if (!d) return "—";
-  // Handle plain YYYY-MM-DD fast
   if (/^\d{4}-\d{2}-\d{2}/.test(d)) {
-    const mm = d.slice(5,7);
-    const dd = d.slice(8,10);
-    const yy = d.slice(2,4);
+    const mm = d.slice(5,7), dd = d.slice(8,10), yy = d.slice(2,4);
     return `${mm}/${dd}/${yy}`;
   }
-  const date = new Date(d);
-  if (isNaN(date)) return String(d);
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  const yy = String(date.getFullYear()).slice(-2);
+  const x = new Date(d);
+  if (isNaN(x)) return String(d);
+  const mm = String(x.getMonth()+1).padStart(2,"0");
+  const dd = String(x.getDate()).padStart(2,"0");
+  const yy = String(x.getFullYear()).slice(-2);
   return `${mm}/${dd}/${yy}`;
 }
 
 function showHoF() {
-  // Ensure modal exists (or fix class if pre-rendered)
-  let hof = document.getElementById("hofModal");
-  if (!hof) {
+  // Ensure modal exists with the correct wrapper class
+  let wrap = document.getElementById("hofModal");
+  if (!wrap) {
     document.body.insertAdjacentHTML("beforeend", `
       <div id="hofModal" class="modal-overlay hidden">
         <div class="modal-content">
@@ -180,56 +178,73 @@ function showHoF() {
         </div>
       </div>
     `);
-    hof = document.getElementById("hofModal");
+    wrap = document.getElementById("hofModal");
   } else {
-    // Normalize classes if needed
-    hof.classList.add("modal-overlay");
-    hof.classList.remove("modal");
+    wrap.classList.add("modal-overlay");
+    wrap.classList.remove("modal");
   }
 
-  // OPEN first (centered, backdrop active)
+  // Open centered (and scroll content to top via showModal helper)
   showModal("hofModal");
 
   const el = document.getElementById("hofDetails");
   if (!el) return;
 
   try {
-    const hofData = loadHoF();
-    const g = hofData.global || {};
+    const hof = loadHoF();
+    const g = hof.global || {};
     const most = g.most || {};
-    const labels = (Array.isArray(SCORE_LABELS) ? SCORE_LABELS : []);
+    const labels = Array.isArray(SCORE_LABELS) ? SCORE_LABELS : [];
 
-    const row = (label, rec) =>
-      `<tr>
-         <td>${label}</td>
-         <td>${rec ? (rec.value ?? rec.count) : "—"}</td>
-         <td>${rec?.player ?? "—"}</td>
-         <td>${rec?.date ? shortDate(rec.date) : "—"}</td>
-         ${rec?.hole ? `<td>Hole ${rec.hole}</td>` : "<td>—</td>"}
-       </tr>`;
+    const row = (c, v, h, d, n) =>
+      `<tr><td>${c}</td><td>${v}</td><td>${h}</td><td>${d}</td><td>${n}</td></tr>`;
 
     el.innerHTML = `
       <h3>Global Records</h3>
       <table class="scorecard-table">
-        <thead><tr><th>Category</th><th>Value</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+        <colgroup>
+          <col class="col-category" />
+          <col class="col-value" />
+          <col class="col-holder" />
+          <col class="col-date" />
+          <col class="col-note" />
+        </colgroup>
+        <thead>
+          <tr><th>Category</th><th>Value</th><th>Holder</th><th>Date</th><th>Note</th></tr>
+        </thead>
         <tbody>
-          ${row("Best Round (18)", g.bestRound)}
-          ${row("Best Front 9",    g.bestFront9)}
-          ${row("Best Back 9",     g.bestBack9)}
-          ${row("Best Hole",       g.bestHole)}
+          ${row("Best Round (18)", g.bestRound?.value ?? "—", g.bestRound?.player ?? "—", g.bestRound?.date ? shortDate(g.bestRound.date) : "—", "—")}
+          ${row("Best Front 9",    g.bestFront9?.value ?? "—", g.bestFront9?.player ?? "—", g.bestFront9?.date ? shortDate(g.bestFront9.date) : "—", "—")}
+          ${row("Best Back 9",     g.bestBack9?.value ?? "—",  g.bestBack9?.player ?? "—",  g.bestBack9?.date ? shortDate(g.bestBack9.date) : "—",  "—")}
+          ${row("Best Hole",       g.bestHole?.value ?? "—",   g.bestHole?.player ?? "—",   g.bestHole?.date ? shortDate(g.bestHole.date) : "—",   g.bestHole?.hole ? ("Hole " + g.bestHole.hole) : "—")}
         </tbody>
       </table>
 
       <h3 style="margin-top:16px;">Most in a Single Round</h3>
       <table class="scorecard-table">
-        <thead><tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr></thead>
+        <colgroup>
+          <col class="col-label" />
+          <col class="col-value" />
+          <col class="col-holder" />
+          <col class="col-date" />
+          <col class="col-note" />
+        </colgroup>
+        <thead>
+          <tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr>
+        </thead>
         <tbody>
-          ${labels.map(l => row(l, most[l])).join("")}
+          ${labels.map(l => row(
+            l,
+            most[l]?.count ?? "—",
+            most[l]?.player ?? "—",
+            most[l]?.date ? shortDate(most[l].date) : "—",
+            most[l]?.hole ? ("Hole " + most[l].hole) : "—"
+          )).join("")}
         </tbody>
       </table>
     `;
 
-    // Ensure top of content is visible after rendering
+    // Make sure top is visible after render
     const content = document.querySelector("#hofModal .modal-content");
     if (content) content.scrollTop = 0;
 
