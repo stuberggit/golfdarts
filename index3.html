@@ -18,6 +18,7 @@
   <div class="hamburger-menu hidden" id="hamburgerMenu">
   <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
   <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="#" onclick="showHoF(); document.getElementById('hamburgerMenu').classList.add('hidden'); return false;">🏆 Hall of Fame</a>
   <a href="history3.html" target="_blank" rel="noopener noreferrer">📚 View History</a>
   <label><input type="checkbox" id="audioToggle" checked> Audio</label>
   <label><input type="checkbox" id="randomToggle"> Random</label>
@@ -128,6 +129,22 @@
     <button onclick="closeModal('historyModal')">Close</button>
   </div>
 </div>
+
+  <div id="hofModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>🏆 Hall of Fame</h2>
+    <div id="hofDetails"></div>
+    <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
+      <button class="secondary-button" onclick="exportHoF()">Export JSON</button>
+      <label class="secondary-button">
+        Import JSON
+        <input type="file" accept="application/json" onchange="importHoF(this.files[0])" style="display:none;">
+      </label>
+      <button class="primary-button" onclick="document.getElementById('hofModal').classList.add('hidden')">Close</button>
+    </div>
+  </div>
+</div>
+
 
 
   <script>
