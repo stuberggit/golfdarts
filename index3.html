@@ -133,14 +133,11 @@
   <div class="modal-content">
     <h2>🏆 Hall of Fame</h2>
     <div id="hofDetails"></div>
-    <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
-      <button class="secondary-button" onclick="exportHoF()">Export JSON</button>
-      <label class="secondary-button">
-        Import JSON
-        <input type="file" accept="application/json" onchange="importHoF(this.files[0])" style="display:none;">
-      </label>
-      <button class="primary-button" onclick="document.getElementById('hofModal').classList.add('hidden')">Close</button>
-    </div>
+    <div class="modal-actions">
+  <button id="hofExportBtn" class="secondary-button">Export JSON</button>
+  <button id="hofImportBtn" class="secondary-button">Import JSON</button>
+  <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
+</div>
   </div>
 </div>
 
