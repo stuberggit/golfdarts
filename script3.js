@@ -671,11 +671,13 @@ function updateScorecard() {
         ${[...Array(9)].map((_, i) => {
           const holeIndex = i + start - 1;
           const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
-          if (advancedMode && hazardHoles.includes(holeNumber)) {
-            return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
-          } else {
-            return `<th>${holeNumber}</th>`;
-          }
+          const isHaz = advancedMode && hazardHoles.includes(holeNumber);
+          return `
+            <th class="${isHaz ? 'hazard-col-header' : ''}"
+                title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
+              <span class="hole-number">${holeNumber}</span>
+              ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
+            </th>`;
         }).join('')}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
       </tr>
@@ -707,12 +709,14 @@ function updateScorecard() {
             const holeIndex = i + start - 1;
             const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
             const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
+            const isHazardCol = advancedMode && hazardHoles.includes(holeNumberForCell);
 
             const display = (s === undefined || s === null)
               ? (isSudden && !isCompeting ? "-" : "&nbsp;")
               : s; // raw score only, no handicap
 
-            return `<td style="border: 1px solid #ccc; text-align:center;" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
+            return `<td style="border: 1px solid #ccc; text-align:center;"
+                       class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
           }).join("")
         }
         <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
@@ -724,7 +728,7 @@ function updateScorecard() {
     const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
     const sdHoles = [];
     for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20);
+      const label = i <= 20 ? i : (i - 20); // 19,20, then 1.. etc.
       sdHoles.push(label);
     }
 
@@ -732,7 +736,15 @@ function updateScorecard() {
     table += `<tr>
       <th class="sudden-death-header">Player</th>
       <th class="sudden-death-header">HCP</th>
-      ${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}
+      ${sdHoles.map(h => {
+        const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
+        return `
+          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"
+              title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
+            <span class="hole-number">${h}</span>
+            ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
+          </th>`;
+      }).join("")}
     </tr>`;
 
     const competingNames = players.map(p => p.name);
@@ -757,11 +769,13 @@ function updateScorecard() {
       `;
 
       for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19;
+        const holeNum = i + 19; // absolute index used for active-cell class binding
+        const label = holeNum <= 20 ? holeNum : (holeNum - 20); // display number (19,20,1,2,...)
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+        const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
         let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
 
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${cellContent}</td>`;
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}">${cellContent}</td>`;
       }
 
       table += `</tr>`;
