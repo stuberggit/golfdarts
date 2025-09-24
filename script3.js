@@ -1514,12 +1514,6 @@ window.showHoF   = window.showHoF   || showHoF;
 window.exportHoF = window.exportHoF || exportHoF;
 window.importHoF = window.importHoF || importHoF;
 
-// Expose HoF functions for inline onclick handlers while keeping type="module"
-if (typeof window !== "undefined") {
-  window.showHoF   = showHoF;
-  window.exportHoF = exportHoF;
-  window.importHoF = importHoF;
-}
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
@@ -1554,6 +1548,24 @@ document.addEventListener("DOMContentLoaded", () => {
   e.preventDefault();
   showHistory();
 });
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const menu = document.getElementById("hamburgerMenu");
+  const hofLink = document.getElementById("hofLink");
+  hofLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    showHoF();
+    menu?.classList.add("hidden"); // auto-close menu
+  });
+
+  // If you have an "Import JSON" input without inline onchange, wire it too:
+  document.getElementById("hofImportInput")
+    ?.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (file) importHoF(file);
+    });
+});
+
 
  const viewHistoryLink = document.getElementById("viewHistoryLink");
   if (viewHistoryLink) {
