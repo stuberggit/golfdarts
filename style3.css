@@ -472,6 +472,43 @@ body.shanghai-bg.modal-open::after {
   z-index: 10;
 }
 
+/* HoF modal: narrower sheet */
+#hofModal .modal-content {
+  max-width: 520px;            /* was 600px globally */
+}
+
+/* HoF tables: fixed layout, no sideways scroll */
+#hofModal .scorecard-table {
+  width: 100%;
+  table-layout: fixed;
+}
+#hofModal .scorecard-table th,
+#hofModal .scorecard-table td {
+  word-break: break-word;
+}
+
+/* Narrow the Date and Note columns (4th and 5th) */
+#hofModal .scorecard-table th:nth-child(4),
+#hofModal .scorecard-table td:nth-child(4) {
+  width: 72px;                 /* MM/DD/YY fits */
+  white-space: nowrap;
+}
+#hofModal .scorecard-table th:nth-child(5),
+#hofModal .scorecard-table td:nth-child(5) {
+  width: 84px;                 /* "Hole N" */
+  white-space: nowrap;
+}
+
+/* Actions: Import/Export side-by-side, smaller than a full-width Close */
+#hofModal .modal-actions {
+  justify-content: space-between;
+}
+#hofExportBtn, #hofImportBtn {
+  flex: 1 1 48%;
+  max-width: 48%;
+}
+#hofExportBtn { border: 2px solid #f0c400; }  /* gold-ish for export */
+#hofImportBtn { border: 2px solid #66b3ff; }  /* blue-ish for import */
 
 .leaderboard-list {
   list-style: none;
