@@ -1509,6 +1509,11 @@ window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
 window.undoHole = undoHole;
 window.showHole = showHole;
+// Make HoF APIs available to inline onclick
+window.showHoF   = window.showHoF   || showHoF;
+window.exportHoF = window.exportHoF || exportHoF;
+window.importHoF = window.importHoF || importHoF;
+
 
 
 // ========== EVENT LISTENERS ==========
