@@ -145,8 +145,7 @@ function updateHallOfFameFromCurrentGame() {
   saveHoF(hof);
 }
 
-// Utility: format date to MM/DD/YY (handles ISO or YYYY-MM-DD)
-// Utility: format date to MM/DD/YY
+// Format to MM/DD/YY
 function shortDate(d) {
   if (!d) return "—";
   if (/^\d{4}-\d{2}-\d{2}/.test(d)) {
@@ -162,7 +161,7 @@ function shortDate(d) {
 }
 
 function showHoF() {
-  // Ensure modal exists with the correct wrapper class
+  // ensure modal exists (wrapper must be .modal-overlay)
   let wrap = document.getElementById("hofModal");
   if (!wrap) {
     document.body.insertAdjacentHTML("beforeend", `
@@ -171,8 +170,8 @@ function showHoF() {
           <h2>🏆 Hall of Fame</h2>
           <div id="hofDetails"></div>
           <div class="modal-actions">
-            <button class="secondary-button" id="hofExportBtn">Export JSON</button>
-            <button class="secondary-button" id="hofImportBtn">Import JSON</button>
+            <button id="hofExportBtn" class="secondary-button">Export JSON</button>
+            <button id="hofImportBtn" class="secondary-button">Import JSON</button>
             <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
           </div>
         </div>
@@ -184,24 +183,26 @@ function showHoF() {
     wrap.classList.remove("modal");
   }
 
-  // Open centered (and scroll content to top via showModal helper)
+  // open centered & scroll content to top (your helper)
   showModal("hofModal");
 
   const el = document.getElementById("hofDetails");
   if (!el) return;
 
   try {
-    const hof = loadHoF();
-    const g = hof.global || {};
+    const data = loadHoF();
+    const g = data.global || {};
     const most = g.most || {};
-    const labels = Array.isArray(SCORE_LABELS) ? SCORE_LABELS : [];
+    const LABELS = Array.isArray(window.SCORE_LABELS)
+      ? window.SCORE_LABELS
+      : ["Buster","Quad Bogey","Triple Bogey","Double Bogey","Bogey","Par","Birdie","Ace","Goose Egg","Icicle","Polar Bear","Frostbite","Snowman","Avalanche"];
 
     const row = (c, v, h, d, n) =>
       `<tr><td>${c}</td><td>${v}</td><td>${h}</td><td>${d}</td><td>${n}</td></tr>`;
 
     el.innerHTML = `
       <h3>Global Records</h3>
-      <table class="scorecard-table">
+      <table class="hof-table">
         <colgroup>
           <col class="col-category" />
           <col class="col-value" />
@@ -221,7 +222,7 @@ function showHoF() {
       </table>
 
       <h3 style="margin-top:16px;">Most in a Single Round</h3>
-      <table class="scorecard-table">
+      <table class="hof-table">
         <colgroup>
           <col class="col-label" />
           <col class="col-value" />
@@ -233,7 +234,7 @@ function showHoF() {
           <tr><th>Label</th><th>Count</th><th>Holder</th><th>Date</th><th>Note</th></tr>
         </thead>
         <tbody>
-          ${labels.map(l => row(
+          ${LABELS.map(l => row(
             l,
             most[l]?.count ?? "—",
             most[l]?.player ?? "—",
@@ -244,7 +245,7 @@ function showHoF() {
       </table>
     `;
 
-    // Make sure top is visible after render
+    // keep the sheet scrolled to top after render
     const content = document.querySelector("#hofModal .modal-content");
     if (content) content.scrollTop = 0;
 
