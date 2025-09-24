@@ -1794,6 +1794,15 @@ document.body.addEventListener("click", (e) => {
 });
 
 // ---------- GLOBAL: ESC closes any open modal ----------
+// Backdrop click closes ANY modal using .modal-overlay
+document.body.addEventListener("click", (e) => {
+  const el = e.target;
+  if (el instanceof Element && el.classList.contains("modal-overlay")) {
+    el.classList.add("hidden");
+  }
+});
+
+// ESC closes any open modal
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     document
@@ -1801,7 +1810,6 @@ document.addEventListener("keydown", (e) => {
       .forEach(m => m.classList.add("hidden"));
   }
 });
-
 
   // ---------- Delegated file import ----------
   document.body.addEventListener("change", (e) => {
