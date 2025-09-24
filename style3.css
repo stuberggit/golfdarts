@@ -482,39 +482,43 @@ body.shanghai-bg.modal-open::after {
 #hofModal .scorecard-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;                 /* enforce the widths below */
+  table-layout: fixed;                 /* enforce widths below */
 }
 #hofModal .scorecard-table th,
 #hofModal .scorecard-table td {
   padding: 6px 8px;
   word-break: break-word;
   overflow-wrap: anywhere;
+  min-width: 0;                        /* allow shrink to assigned widths */
+  box-sizing: border-box;
 }
 
-/* Column widths (Category | Value | Holder | Date | Note) */
+/* Column widths (Category/Label | Value | Holder | Date | Note) */
 #hofModal .scorecard-table th:nth-child(1),
-#hofModal .scorecard-table td:nth-child(1) {  /* Category */
-  width: 40%;
+#hofModal .scorecard-table td:nth-child(1) {  /* Category/Label */
+  width: 20ch;                               /* much tighter */
 }
 #hofModal .scorecard-table th:nth-child(2),
-#hofModal .scorecard-table td:nth-child(2) {  /* Value: 2 digits max (+ optional minus) */
-  width: 4ch;                                /* super tight */
+#hofModal .scorecard-table td:nth-child(2) {  /* Value: 2 digits (±) */
+  width: 4ch;                                 /* super tight */
   text-align: center;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
-#hofModal .scorecard-table th:nth-child(3),
-#hofModal .scorecard-table td:nth-child(3) {  /* Holder */
-  width: 26%;
-}
+/* Holder: no explicit width -> takes remaining space */
+
+/* Date: MM/DD/YY */
 #hofModal .scorecard-table th:nth-child(4),
-#hofModal .scorecard-table td:nth-child(4) {  /* Date: MM/DD/YY */
+#hofModal .scorecard-table td:nth-child(4) {
   width: 8ch;
   text-align: center;
   white-space: nowrap;
 }
+
+/* Note: "Hole N" */
 #hofModal .scorecard-table th:nth-child(5),
-#hofModal .scorecard-table td:nth-child(5) {  /* Note: "Hole N" */
-  width: 8ch;
+#hofModal .scorecard-table td:nth-child(5) {
+  width: 7ch;
   text-align: center;
   white-space: nowrap;
 }
@@ -533,12 +537,16 @@ body.shanghai-bg.modal-open::after {
 #hofExportBtn { border: 2px solid #f0c400; }  /* export: gold outline */
 #hofImportBtn { border: 2px solid #66b3ff; }  /* import: blue outline */
 
-/* Small screens: give a hair more breathing room if wrapping happens */
+/* Small phones: squeeze Category/Label slightly more */
+/* small tablets (iPad portrait etc.) */
+@media (max-width: 820px) {
+  #hofModal .modal-content { width: 94vw; }
+}
+
+/* phones */
 @media (max-width: 480px) {
   #hofModal .scorecard-table th:nth-child(1),
-  #hofModal .scorecard-table td:nth-child(1) { width: 38%; }
-  #hofModal .scorecard-table th:nth-child(3),
-  #hofModal .scorecard-table td:nth-child(3) { width: 28%; }
+  #hofModal .scorecard-table td:nth-child(1) { width: 18ch; }
 }
 
 .leaderboard-list {
