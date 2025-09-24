@@ -1514,7 +1514,12 @@ window.showHoF   = window.showHoF   || showHoF;
 window.exportHoF = window.exportHoF || exportHoF;
 window.importHoF = window.importHoF || importHoF;
 
-
+// Expose HoF functions for inline onclick handlers while keeping type="module"
+if (typeof window !== "undefined") {
+  window.showHoF   = showHoF;
+  window.exportHoF = exportHoF;
+  window.importHoF = importHoF;
+}
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
