@@ -1205,8 +1205,9 @@ function endGame() {
     winner = players[0];
   }
 
-updateHallOfFameFromCurrentGame();
-  
+  // Update Hall of Fame aggregates for this finished game
+  updateHallOfFameFromCurrentGame();
+
   // ✅ Restore full player list
   players = fullPlayerList;
   allPlayers = fullPlayerList;
@@ -1299,6 +1300,13 @@ updateHallOfFameFromCurrentGame();
     leaderboard.classList.remove("hidden");
     leaderboard.style.display = "block";
   }
+
+  // --- NEW: Export UX ---
+  // Gentle toast reminder + Quick Export button
+  // (helpers provided earlier: ensureExportToast, showExportReminderToast, addQuickExportButtonToEndScreen, exportHoFAndMark)
+  ensureExportToast();
+  showExportReminderToast();
+  addQuickExportButtonToEndScreen();
 
   document.body.removeAttribute("id");
 }
@@ -1551,37 +1559,106 @@ window.showHoF   = window.showHoF   || showHoF;
 window.exportHoF = window.exportHoF || exportHoF;
 window.importHoF = window.importHoF || importHoF;
 
+// ===== Export helpers & reminder UI =====
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-// ========== EVENT LISTENERS ==========
-document.addEventListener("DOMContentLoaded", () => {
-  // ---------- Helpers ----------
-  function ensureHoFModal() {
-    if (!document.getElementById("hofModal")) {
-      document.body.insertAdjacentHTML("beforeend", `
-        <div id="hofModal" class="modal hidden">
-          <div class="modal-content">
-            <h2>🏆 Hall of Fame</h2>
-            <div id="hofDetails"></div>
-            <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
-              <button class="secondary-button" id="hofExportBtn">Export JSON</button>
-              <label class="secondary-button" style="display:inline-flex; align-items:center; gap:8px;">
-                Import JSON
-                <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
-              </label>
-              <button class="primary-button" id="hofCloseBtn">Close</button>
-            </div>
-          </div>
-        </div>
-      `);
+// Create the toast once if missing
+function ensureExportToast() {
+  if (document.getElementById("exportToast")) return;
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="exportToast" style="
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      z-index: 10000; background: #111; color: #fff; padding: 12px 16px;
+      border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,.35);
+      display: none; align-items: center; gap: 10px; max-width: 95%;
+    ">
+      <span>✅ Game saved locally. Export JSON to update your master file.</span>
+      <button id="exportToastNow" class="primary-button" style="padding:6px 10px;">Export now</button>
+      <button id="exportToastLater" class="secondary-button" style="padding:6px 10px;">Later</button>
+      <button id="exportToastSnooze" class="secondary-button" style="padding:6px 10px;">Don’t remind today</button>
+    </div>
+  `);
+}
+
+// Show toast unless snoozed today
+function showExportReminderToast() {
+  ensureExportToast();
+  try {
+    const snooze = localStorage.getItem("exportSnoozeDate");
+    if (snooze === todayISO()) return; // snoozed for today
+    const toast = document.getElementById("exportToast");
+    toast.style.display = "flex";
+  } catch {
+    // if localStorage fails, still show
+    document.getElementById("exportToast").style.display = "flex";
+  }
+}
+
+// Hide toast
+function hideExportReminderToast() {
+  const toast = document.getElementById("exportToast");
+  if (toast) toast.style.display = "none";
+}
+
+// Wrap export to mark success (so reminders calm down)
+function exportHoFAndMark() {
+  try {
+    if (typeof exportHoF === "function") {
+      exportHoF();                     // your existing export
+      localStorage.setItem("lastExportDate", todayISO());
+      // Optional: also snooze reminders for today after a successful export
+      localStorage.setItem("exportSnoozeDate", todayISO());
+      hideExportReminderToast();
+    } else {
+      console.error("[HoF] exportHoF is not defined");
+    }
+  } catch (e) {
+    console.error("[HoF] export failed:", e);
+  }
+}
+
+// Try to place a Quick Export button where players will see it at end of game.
+// - Prefers an existing action area on your end screen (#scoreInputs)
+// - If the stats modal is open, it adds the button there too.
+function addQuickExportButtonToEndScreen() {
+  const BTN_HTML = `<button id="quickExportBtn" class="primary-button" style="margin-left:8px;">Quick Export</button>`;
+
+  // 1) End-screen action area (scoreInputs)
+  const inputs = document.getElementById("scoreInputs");
+  if (inputs && !document.getElementById("quickExportBtn")) {
+    // If there are existing buttons, append next to them. Otherwise, add at end.
+    const lastBtn = inputs.querySelector("button:last-of-type");
+    if (lastBtn && lastBtn.insertAdjacentHTML) {
+      lastBtn.insertAdjacentHTML("afterend", BTN_HTML);
+    } else {
+      inputs.insertAdjacentHTML("beforeend", BTN_HTML);
     }
   }
 
+  // 2) Stats modal (if you show it at end)
+  const statsModal = document.getElementById("gameStatsModal");
+  if (statsModal && !statsModal.querySelector("#quickExportBtn")) {
+    const content = statsModal.querySelector(".modal-content") || statsModal;
+    const actions = content.querySelector(".modal-actions");
+    if (actions) {
+      actions.insertAdjacentHTML("beforeend", BTN_HTML);
+    } else {
+      content.insertAdjacentHTML("beforeend", `<div class="modal-actions" style="margin-top:12px; display:flex; gap:8px;">${BTN_HTML}</div>`);
+    }
+  }
+}
+
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
   // ---------- History page init ----------
   if (document.getElementById("playerFilter")) {
     initHistoryPage();
   }
 
-  // ---------- Player count select (no early return!) ----------
+  // ---------- Player count select (no early return) ----------
   const select = document.getElementById("playerCount");
   if (select) {
     for (let i = 1; i <= 20; i++) {
@@ -1604,7 +1681,7 @@ document.addEventListener("DOMContentLoaded", () => {
     advancedMode = e.target.checked;
   });
 
-  // ---------- View History (single wiring) ----------
+  // ---------- View History ----------
   const viewHistoryLink = document.getElementById("viewHistoryLink");
   if (viewHistoryLink) {
     viewHistoryLink.addEventListener("click", (e) => {
@@ -1613,13 +1690,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------- HoF: ensure modal exists & wire everything ----------
-  ensureHoFModal();
+  // ---------- HoF modal ensure + wiring ----------
+  // If your page didn't include the HoF modal HTML, this will inject it once.
+  (function ensureHoFModal() {
+    if (!document.getElementById("hofModal")) {
+      document.body.insertAdjacentHTML("beforeend", `
+        <div id="hofModal" class="modal hidden">
+          <div class="modal-content">
+            <h2>🏆 Hall of Fame</h2>
+            <div id="hofDetails"></div>
+            <div class="modal-actions" style="display:flex; gap:8px; margin-top:12px;">
+              <button class="secondary-button" id="hofExportBtn">Export JSON</button>
+              <label class="secondary-button" style="display:inline-flex; align-items:center; gap:8px;">
+                Import JSON
+                <input id="hofImportInput" type="file" accept="application/json" style="display:none;">
+              </label>
+              <button class="primary-button" id="hofCloseBtn">Close</button>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+  })();
 
   const menu    = document.getElementById("hamburgerMenu");
   const hofLink = document.getElementById("hofLink");
-
-  // Open HoF + auto-close hamburger
   hofLink?.addEventListener("click", (e) => {
     e.preventDefault();
     if (typeof showHoF === "function") {
@@ -1630,27 +1725,46 @@ document.addEventListener("DOMContentLoaded", () => {
     menu?.classList.add("hidden");
   });
 
-  // Delegated buttons: export, close, backdrop click
+  // ---------- Delegated clicks: HoF & Quick Export ----------
   document.body.addEventListener("click", (e) => {
     const t = e.target;
     if (!(t instanceof Element)) return;
 
+    // Export from HoF modal
     if (t.id === "hofExportBtn") {
-      if (typeof exportHoF === "function") exportHoF();
-      else console.error("[HoF] exportHoF is not defined");
+      exportHoFAndMark();
     }
 
+    // Close HoF
     if (t.id === "hofCloseBtn") {
       document.getElementById("hofModal")?.classList.add("hidden");
     }
 
-    // click outside content closes modal
+    // Backdrop click closes HoF
     if (t.id === "hofModal") {
       t.classList.add("hidden");
     }
+
+    // Quick Export button on end screen / stats modal
+    if (t.id === "quickExportBtn") {
+      e.preventDefault();
+      exportHoFAndMark();
+    }
+
+    // Export toast buttons
+    if (t.id === "exportToastNow") {
+      exportHoFAndMark();
+    }
+    if (t.id === "exportToastLater") {
+      hideExportReminderToast();
+    }
+    if (t.id === "exportToastSnooze") {
+      localStorage.setItem("exportSnoozeDate", todayISO());
+      hideExportReminderToast();
+    }
   });
 
-  // Delegated file import
+  // ---------- Delegated file import ----------
   document.body.addEventListener("change", (e) => {
     const input = e.target;
     if (input instanceof HTMLInputElement && input.id === "hofImportInput" && input.files?.[0]) {
@@ -1660,12 +1774,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ESC closes HoF
+  // ---------- ESC closes HoF ----------
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       document.getElementById("hofModal")?.classList.add("hidden");
     }
   });
+
+  // ---------- Ensure toast node exists ----------
+  ensureExportToast();
 
   // ---------- Load saved state ----------
   requestAnimationFrame(() => {
@@ -1681,3 +1798,4 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
+
