@@ -685,6 +685,19 @@ body.shanghai-bg.modal-open::after {
   margin-bottom: 12px;
 }
 
+/* Hazard styling */
+.hazard-col-header .hole-number { color: #b00020; font-weight: 600; } /* red number */
+.hazard-col-header .hazard-badge { font-size: 0.85em; margin-left: 4px; }
+
+.hazard-col { background-color: #fff4f5; } /* light red wash for cells */
+.hazard-col.active-cell { box-shadow: inset 0 0 0 2px #b00020; } /* active stays obvious */
+
+/* accessibility / high-contrast backup */
+@media (prefers-contrast: more), (forced-colors: active) {
+  .hazard-col { outline: 2px solid #b00020; }
+  .hazard-col-header .hole-number { text-decoration: underline; }
+}
+
 /* Match button widths below "Submit Score" */
 .player-select,
 .handicap-select {
