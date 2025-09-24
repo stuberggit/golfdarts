@@ -32,6 +32,119 @@ if (isPreProd) {
 console.log("script.js loaded");
 console.log("Parsed History:", history);
 
+// ===== Hall of Fame (HoF) storage =====
+const HOF_KEY = "golfdarts_hof_v1";
+
+function loadHoF() {
+  try {
+    const raw = localStorage.getItem(HOF_KEY);
+    return raw ? JSON.parse(raw) : { version: 1, updatedAt: new Date().toISOString(), global: { most: {} }, perPlayer: {} };
+  } catch {
+    return { version: 1, updatedAt: new Date().toISOString(), global: { most: {} }, perPlayer: {} };
+  }
+}
+function saveHoF(hof) {
+  hof.updatedAt = new Date().toISOString();
+  localStorage.setItem(HOF_KEY, JSON.stringify(hof));
+}
+
+// lightweight game id (optional)
+function currentGameId() {
+  return window._gameId || (window._gameId = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`);
+}
+
+// labels you already use in stats (order must match your getHitsFromScore map)
+const SCORE_LABELS = [
+  "Buster","Quad Bogey","Triple Bogey","Double Bogey","Bogey","Par",
+  "Birdie","Ace","Goose Egg","Icicle","Polar Bear","Frostbite","Snowman","Avalanche"
+];
+
+// per-round counts for first 18 holes
+function countsForRound(scores) {
+  const counts = Object.fromEntries(SCORE_LABELS.map(l => [l, 0]));
+  const first18 = (scores || []).slice(0, 18);
+  first18.forEach(s => {
+    const idx = getHitsFromScore(s); // you already have this
+    if (idx !== -1) counts[SCORE_LABELS[idx]]++;
+  });
+  return { counts, first18 };
+}
+function sumScores(arr) { return arr.reduce((a, b) => a + (b ?? 0), 0); }
+
+// best-lower (e.g., totals & single-hole)
+function takeBestLower(existing, candidate) {
+  if (!candidate) return existing;
+  if (!existing) return candidate;
+  return (candidate.value < existing.value) ? candidate : existing;
+}
+// best-higher (e.g., "most X")
+function takeBestHigher(existing, candidate) {
+  if (!candidate) return existing;
+  if (!existing) return candidate;
+  return (candidate.count > existing.count) ? candidate : existing;
+}
+
+function ensurePlayerHoF(hof, name) {
+  if (!hof.perPlayer[name]) hof.perPlayer[name] = { most: {} };
+  if (!hof.perPlayer[name].most) hof.perPlayer[name].most = {};
+  return hof.perPlayer[name];
+}
+
+// 🚀 call this once at the end of a finished game
+function updateHallOfFameFromCurrentGame() {
+  const hof = loadHoF();
+  const dateStr = new Date().toISOString().slice(0,10);
+  const gid = currentGameId();
+
+  // correct display hole numbers (handles random mode)
+  const holeNumbers = (randomMode ? holeSequence.slice(0,18) : Array.from({length:18}, (_,i)=>i+1));
+
+  // consider everyone who played
+  (allPlayers || players).forEach(p => {
+    const { counts, first18 } = countsForRound(p.scores);
+    if (first18.length < 18) return; // skip incomplete rounds
+
+    const total  = sumScores(first18);
+    const front9 = sumScores(first18.slice(0,9));
+    const back9  = sumScores(first18.slice(9,18));
+
+    // best single hole (lowest)
+    const minHoleScore = Math.min(...first18);
+    const bestHoleIdx  = first18.indexOf(minHoleScore);
+    const bestHoleNo   = bestHoleIdx >= 0 ? holeNumbers[bestHoleIdx] : null;
+
+    // ---- GLOBAL ----
+    hof.global.bestRound  = takeBestLower(hof.global.bestRound,  { value: total,  player: p.name, date: dateStr, gameId: gid });
+    hof.global.bestFront9 = takeBestLower(hof.global.bestFront9, { value: front9, player: p.name, date: dateStr, gameId: gid });
+    hof.global.bestBack9  = takeBestLower(hof.global.bestBack9,  { value: back9,  player: p.name, date: dateStr, gameId: gid });
+    if (Number.isFinite(minHoleScore)) {
+      hof.global.bestHole = takeBestLower(hof.global.bestHole, { value: minHoleScore, player: p.name, hole: bestHoleNo, date: dateStr, gameId: gid });
+    }
+    // most X in a single round
+    hof.global.most = hof.global.most || {};
+    for (const label of SCORE_LABELS) {
+      const cand = { count: counts[label], player: p.name, date: dateStr, gameId: gid };
+      if (cand.count > 0) hof.global.most[label] = takeBestHigher(hof.global.most[label], cand);
+    }
+
+    // ---- PER-PLAYER ----
+    const ph = ensurePlayerHoF(hof, p.name);
+    ph.bestRound  = takeBestLower(ph.bestRound,  { value: total,  player: p.name, date: dateStr, gameId: gid });
+    ph.bestFront9 = takeBestLower(ph.bestFront9, { value: front9, player: p.name, date: dateStr, gameId: gid });
+    ph.bestBack9  = takeBestLower(ph.bestBack9,  { value: back9,  player: p.name, date: dateStr, gameId: gid });
+    if (Number.isFinite(minHoleScore)) {
+      ph.bestHole = takeBestLower(ph.bestHole, { value: minHoleScore, player: p.name, hole: bestHoleNo, date: dateStr, gameId: gid });
+    }
+    ph.most = ph.most || {};
+    for (const label of SCORE_LABELS) {
+      const cand = { count: counts[label], player: p.name, date: dateStr, gameId: gid };
+      if (cand.count > 0) ph.most[label] = takeBestHigher(ph.most[label], cand);
+    }
+  });
+
+  saveHoF(hof);
+}
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
@@ -956,6 +1069,8 @@ function endGame() {
     winner = players[0];
   }
 
+updateHallOfFameFromCurrentGame();
+  
   // ✅ Restore full player list
   players = fullPlayerList;
   allPlayers = fullPlayerList;
