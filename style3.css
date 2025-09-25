@@ -492,7 +492,8 @@ body.shanghai-bg.modal-open::after {
 }
 
 /* === Modal Styling (unified) === */
-/* === MODAL RESET === */
+.hidden { display: none !important; }
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -505,7 +506,6 @@ body.shanghai-bg.modal-open::after {
 }
 .modal-overlay:not(.hidden) { display: flex; }
 
-/* keep your existing green sheet look */
 .modal-content {
   max-width: 600px;
   width: min(90vw, 600px);
@@ -514,14 +514,11 @@ body.shanghai-bg.modal-open::after {
   overflow-x: hidden;
   border: 2px solid #fff;
   border-radius: 16px;
-  background-color: #004d00;
+  background: #004d00;
   color: #fff;
   padding: 3rem 1.25rem 2rem 1.25rem;
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
-
-.hidden { display: none !important; }
-
 
 .modal-content h2 {
   margin: 0 0 16px 0;
