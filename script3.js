@@ -32,6 +32,60 @@ if (isPreProd) {
 console.log("script.js loaded");
 console.log("Parsed History:", history);
 
+/* === EMERGENCY MODAL JS (hotfix) === */
+(function () {
+  const IDS = ['rulesModal', 'scoringModal', 'hofModal'];
+
+  // Normalize each modal: ensure wrapper + content + hidden by default
+  IDS.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    // force wrapper class & hidden
+    el.classList.add('modal-overlay', 'hidden');
+    el.classList.remove('modal'); // if an old class lingers
+
+    // if there's no .modal-content child, wrap existing children
+    if (!el.querySelector('.modal-content')) {
+      const content = document.createElement('div');
+      content.className = 'modal-content';
+      while (el.firstChild) content.appendChild(el.firstChild);
+      el.appendChild(content);
+    }
+  });
+
+  // preserve YOUR function names
+  window.showmodal = function (id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.classList.remove('hidden');
+    const c = m.querySelector('.modal-content');
+    if (c) c.scrollTop = 0;
+  };
+
+  window.closemodal = function (id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.classList.add('hidden');
+  };
+
+  // backdrop click closes any modal
+  document.body.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t instanceof Element && t.classList.contains('modal-overlay')) {
+      t.classList.add('hidden');
+    }
+  });
+
+  // ESC closes any open modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay:not(.hidden)')
+        .forEach((m) => m.classList.add('hidden'));
+    }
+  });
+})();
+
 // ===== Hall of Fame (HoF) storage =====
 const HOF_KEY = "golfdarts_hof_v1";
 
