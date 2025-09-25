@@ -1455,19 +1455,57 @@ function getHitsFromScore(score) {
 
 // ========== MODALS ==========
 
-function showModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal) return;
-  modal.classList.remove("hidden");
-  const content = modal.querySelector(".modal-content");
-  if (content) content.scrollTop = 0;
+/* === MODAL CORE (preserve your function names) === */
+function showmodal(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.classList.remove('hidden');        // relies on .modal-overlay + .hidden CSS
+  const c = m.querySelector('.modal-content');
+  if (c) c.scrollTop = 0;              // open at top
 }
 
-
-function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.classList.add('hidden');
+function closemodal(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.classList.add('hidden');
 }
+
+/* Optional aliases so existing code using camelCase still works */
+function showModal(id)  { return showmodal(id); }
+function closeModal(id) { return closemodal(id); }
+
+/* Backdrop click + ESC close (guarded to avoid double-binding) */
+if (!window.__modals_wired) {
+  window.__modals_wired = true;
+
+  document.body.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t instanceof Element && t.classList.contains('modal-overlay')) {
+      t.classList.add('hidden');
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay:not(.hidden)')
+        .forEach(m => m.classList.add('hidden'));
+    }
+  });
+}
+
+/* === MODAL NORMALIZER (run once on load) === */
+function normalizeModals() {
+  ['rulesModal', 'scoringModal', 'hofModal'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // ensure correct wrapper class and hidden by default
+    el.classList.add('modal-overlay', 'hidden');
+    el.classList.remove('modal');   // in case an old class lingered
+  });
+}
+
+document.addEventListener('DOMContentLoaded', normalizeModals);
+
 
 
 // ========== ADVANCED MODE ==========
