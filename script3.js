@@ -350,29 +350,32 @@ function toggleHamburgerMenu() {
 
 // ===== createPlayerInputs Function (Core: DO NOT OVERWRITE without discussion) =====
 function createPlayerInputs() {
-  const count = parseInt(document.getElementById("playerCount").value);
+  const countEl = document.getElementById("playerCount");
+  const count = parseInt(countEl?.value, 10);
   if (isNaN(count) || count < 1 || count > 20) {
     alert("Please select the number of players.");
     return;
   }
 
   const playerOptions = [
-    "Brandon", "Brock", "Dan", "Deanna", "Derrick", "Don", "Edgar",
-    "Erin", "Mullins", "Phillip", "Pusti", "Stuberg", "Tara", "Other"
+    "Brandon","Brock","Dan","Deanna","Derrick","Don","Edgar",
+    "Erin","Mullins","Phillip","Pusti","Stuberg","Tara","Other"
   ].sort();
 
   const container = document.getElementById("nameInputs");
+  if (!container) return;
+  container.classList.add("player-setup");
   container.innerHTML = "";
 
   for (let i = 0; i < count; i++) {
-    const selectId = `select-${i}`;
-    const inputId = `name-${i}`;
+    const selectId   = `select-${i}`;
+    const inputId    = `name-${i}`;
     const handicapId = `handicap-${i}`;
 
-    // Create the player name dropdown
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
-    selectEl.classList.add("player-select");
+    selectEl.className = "player-select player-name";
+    selectEl.setAttribute("aria-label", `Player ${i + 1} name`);
     selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
 
     const defaultOption = document.createElement("option");
@@ -383,22 +386,24 @@ function createPlayerInputs() {
     selectEl.appendChild(defaultOption);
 
     playerOptions.forEach(name => {
-      const option = document.createElement("option");
-      option.value = name;
-      option.textContent = name;
-      selectEl.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      selectEl.appendChild(opt);
     });
 
-    // Custom name input (hidden unless "Other" is chosen)
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
+    inputEl.type = "text";
     inputEl.placeholder = "Enter name";
+    inputEl.autocomplete = "off";
     inputEl.style.display = "none";
+    inputEl.className = "player-name-custom";
 
-    // Handicap dropdown
     const handicapSelect = document.createElement("select");
     handicapSelect.id = handicapId;
-    handicapSelect.classList.add("handicap-select");
+    handicapSelect.className = "handicap-select player-hcp";
+    handicapSelect.setAttribute("aria-label", `Player ${i + 1} handicap`);
 
     for (let h = -10; h <= 10; h++) {
       const opt = document.createElement("option");
@@ -408,24 +413,24 @@ function createPlayerInputs() {
       handicapSelect.appendChild(opt);
     }
 
-    // Wrapper for both dropdowns in one row
-    const wrapper = document.createElement("div");
-    wrapper.className = "playerInputRow";
-    wrapper.appendChild(selectEl);
-    wrapper.appendChild(inputEl); // still in DOM, just hidden
-    wrapper.appendChild(handicapSelect);
+    const row = document.createElement("div");
+    row.className = "playerInputRow setup-row";
+    row.dataset.index = String(i);
 
-    container.appendChild(wrapper);
+    row.appendChild(selectEl);
+    row.appendChild(inputEl);
+    row.appendChild(handicapSelect);
+
+    container.appendChild(row);
   }
 
-  document.getElementById("startBtn").style.display = "inline";
+  const startBtn = document.getElementById("startBtn");
+  if (startBtn) startBtn.style.display = "inline";
 }
-
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
 let scoreInputs;
-
 
 function handleNameDropdown(selectId, inputId) {
   const select = document.getElementById(selectId);
@@ -1259,19 +1264,15 @@ function endGame() {
     return;
   }
 
-  // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Determine winner if a single player remains
   let winner = null;
   if (players.length === 1) {
     winner = players[0];
   }
 
-  // Update Hall of Fame aggregates for this finished game
   updateHallOfFameFromCurrentGame();
 
-  // ✅ Restore full player list
   players = fullPlayerList;
   allPlayers = fullPlayerList;
 
@@ -1279,7 +1280,6 @@ function endGame() {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
-  // Save this game's results to local history
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
   const gameSummary = {
     date: new Date().toISOString(),
@@ -1295,10 +1295,8 @@ function endGame() {
   previousHistory.push(gameSummary);
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-  // Clear score input area
   scoreInputs.innerHTML = "";
 
-  // Winner text
   if (winner) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
@@ -1307,8 +1305,6 @@ function endGame() {
     scoreInputs.appendChild(winText);
   }
 
-  // --- End-of-game buttons ---
-  // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -1316,7 +1312,6 @@ function endGame() {
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  // Leaderboard
   const lbBtn = document.createElement("button");
   lbBtn.innerText = "Leaderboard";
   lbBtn.className = "primary-button full-width";
@@ -1330,13 +1325,11 @@ function endGame() {
   };
   scoreInputs.appendChild(lbBtn);
 
-  // Start New Round
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move last to front
       players.unshift(players.pop());
       players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
@@ -1357,19 +1350,15 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
-  // ✅ Ensure leaderboard remains visible
   const leaderboard = document.getElementById("leaderboard");
   if (leaderboard) {
     leaderboard.classList.remove("hidden");
     leaderboard.style.display = "block";
   }
 
-  // --- NEW: Export UX ---
-  // Gentle toast reminder + Quick Export button
-  // (helpers provided earlier: ensureExportToast, showExportReminderToast, addQuickExportButtonToEndScreen, exportHoFAndMark)
+  /* --- Export UX: keep toast only --- */
   ensureExportToast();
   showExportReminderToast();
-  addQuickExportButtonToEndScreen();
 
   document.body.removeAttribute("id");
 }
