@@ -492,40 +492,36 @@ body.shanghai-bg.modal-open::after {
 }
 
 /* === Modal Styling (unified) === */
+/* === MODAL RESET === */
 .modal-overlay {
   position: fixed;
-  inset: 0; /* top/right/bottom/left:0 */
+  inset: 0;
   display: none;                 /* hidden by default */
-  align-items: center;           /* center vertically */
-  justify-content: center;       /* center horizontally */
-  padding: 24px;                 /* breathing room around the sheet */
-  background: rgba(0, 0, 0, 0.6);/* dark backdrop */
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.6);
   z-index: 9999;
 }
+.modal-overlay:not(.hidden) { display: flex; }
 
-.modal-overlay:not(.hidden) {
-  display: flex;
-}
-
+/* keep your existing green sheet look */
 .modal-content {
   max-width: 600px;
   width: min(90vw, 600px);
-  /* top padding leaves space if you use an absolute "X" */
-  padding: 3rem 1.25rem 2rem 1.25rem;
+  max-height: 85vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 2px solid #fff;
   border-radius: 16px;
-  background-color: #004d00;    /* your theme */
+  background-color: #004d00;
   color: #fff;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
-  text-align: left;
-  box-sizing: border-box;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;       /* avoid horizontal scroll from long text */
-  position: relative;            /* for absolute close button */
-  max-height: 85vh;              /* scroll inside the sheet */
-  overflow-y: auto;
-  overflow-x: hidden;            /* kill horizontal scroll */
+  padding: 3rem 1.25rem 2rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
+
+.hidden { display: none !important; }
+
 
 .modal-content h2 {
   margin: 0 0 16px 0;
