@@ -328,6 +328,107 @@ body.shanghai-bg.modal-open::after {
   background-color: #ffe0e6 !important;
 }
 
+/* ---------- PLAYER SETUP + IN-GAME CONTROLS ---------- */
+
+/* Ensure selects/inputs sit side-by-side everywhere in the score area */
+#scoreInputs select,
+#scoreInputs input[type="number"] {
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+/* Put the game-time Hits + Hazards on one line with space */
+.playerInputRow {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: nowrap;
+}
+
+#nameInputs.player-setup {
+  display: grid;
+  grid-template-columns: 1fr;   /* one row per player */
+  gap: 10px;
+  justify-items: center;
+}
+
+#nameInputs .setup-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#nameInputs .player-name {
+  max-width: 220px;
+  width: auto;           /* don’t stretch full width */
+}
+
+#nameInputs .player-name-custom {  /* “Other” text input (when shown) */
+  max-width: 200px;
+  width: auto;
+}
+
+#nameInputs .player-hcp {
+  width: 64px;
+  text-align: center;
+}
+
+/* Compact, readable sizes for dropdowns */
+#scoreInputs #hits { min-width: 110px; }
+#scoreInputs .hazardSelect { min-width: 110px; }
+
+/* Player setup rows: keep select and handicap from stretching and touching */
+#scoreInputs select + input[type="number"] {
+  width: 64px;
+  text-align: center;
+  margin-left: 12px;
+}
+
+/* Cap generic select width inside scoreInputs so they don’t expand edge-to-edge */
+#scoreInputs select {
+  max-width: 220px;
+}
+
+/* ---------- IN-GAME CONTROLS (Hits + Hazards inline) ---------- */
+#scoreInputs .playerInputRow {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: nowrap;            /* keep them on one line */
+}
+
+#scoreInputs #hits,
+#scoreInputs .hazardSelect {
+  min-width: 110px;             /* compact, readable */
+}
+
+/* Prevent generic selects inside scoreInputs from widening too much */
+#scoreInputs select,
+#scoreInputs input[type="number"] {
+  display: inline-block !important;
+  vertical-align: middle;
+  width: auto;
+  max-width: 220px;
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 480px) {
+  #scoreInputs .playerInputRow { gap: 12px; }
+  #nameInputs .player-select { max-width: 200px; }
+}
+
+/* ---------- Hazard visibility (keep these) ---------- */
+.scorecard-table th.hazard-col-header .hole-number {
+  color: #c1121f !important;    /* red numbers on hazard holes */
+  font-weight: 700;
+}
+.scorecard-table th.hazard-col-header,
+.scorecard-table td.hazard-col {
+  background-color: #ffe0e6 !important;  /* slightly darker shading */
+
+
 /* Sudden Death Section */
 #suddenDeath {
   margin-top: 40px;
@@ -485,36 +586,43 @@ body.shanghai-bg.modal-open::after {
 }
 
 /* === Hall of Fame (modal-specific) === */
+/* Same sheet size as other modals */
 #hofModal .modal-content {
   max-width: 600px;
   width: min(90vw, 600px);
 }
 
-/* Table layout — works with either class */
+/* Table look (grid lines) and content-driven layout */
 #hofModal .hof-table,
-#hofModal .scorecard-table {           /* support either class name */
+#hofModal .scorecard-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto;                  /* content + colgroup decide */
+  table-layout: auto; /* colgroup + content decides */
+  margin-top: 8px;
 }
 #hofModal .hof-table th,  #hofModal .hof-table td,
 #hofModal .scorecard-table th, #hofModal .scorecard-table td {
+  border: 1px solid rgba(0,0,0,0.15);
   padding: 6px 8px;
+  min-width: 0;
   word-break: break-word;
   overflow-wrap: anywhere;
-  min-width: 0;
-  box-sizing: border-box;
+}
+#hofModal .hof-table thead th,
+#hofModal .scorecard-table thead th {
+  background: #fff;
+  font-weight: 700;
 }
 
-/* Column preferences via <colgroup> */
+/* Column preferences via <colgroup> (showHoF outputs these classes) */
 #hofModal col.col-category { width: 16ch; }
 #hofModal col.col-label    { width: 16ch; }
-#hofModal col.col-value    { width: 6ch;  } /* ~ header width */
-#hofModal col.col-holder   { width: auto; } /* expands */
+#hofModal col.col-value    { width: 6ch;  } /* ≈ “Value” header width */
+#hofModal col.col-holder   { width: auto; } /* gets the extra space */
 #hofModal col.col-date     { width: 8ch;  } /* MM/DD/YY */
-#hofModal col.col-note     { width: 7ch;  } /* "Hole N" */
+#hofModal col.col-note     { width: 7ch;  } /* “Hole N” */
 
-/* Center compact columns */
+/* Center the compact columns */
 #hofModal .hof-table th:nth-child(2),  #hofModal .hof-table td:nth-child(2),
 #hofModal .hof-table th:nth-child(4),  #hofModal .hof-table td:nth-child(4),
 #hofModal .hof-table th:nth-child(5),  #hofModal .hof-table td:nth-child(5),
@@ -526,7 +634,10 @@ body.shanghai-bg.modal-open::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* Footer actions: two compact buttons on one row (no Close button) */
+/* Headings spacing in HoF */
+#hofModal h3 { margin: 16px 0 8px; }
+
+/* Footer buttons: two small on one row (no Close) */
 #hofModal .modal-actions {
   display: flex;
   justify-content: space-between;
@@ -535,25 +646,22 @@ body.shanghai-bg.modal-open::after {
 }
 #hofModal .modal-actions button {
   margin: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   padding: 8px 10px;
   flex: 1 1 48%;
   max-width: 48%;
 }
-#hofExportBtn { border: 2px solid #f0c400; } /* export: gold */
-#hofImportBtn { border: 2px solid #66b3ff; } /* import: blue */
-#hofModal #hofCloseBtn { display: none !important; } /* ensure no stray Close */
 
-/* Tablets & phones */
-@media (max-width: 820px) {
-  #hofModal .modal-content { width: 94vw; }
-}
+/* Tablet/phone tweaks */
+@media (max-width: 820px) { #hofModal .modal-content { width: 94vw; } }
 @media (max-width: 480px) {
   #hofModal col.col-category { width: 14ch; }
   #hofModal col.col-label    { width: 14ch; }
 }
+
+  /* HoF footer buttons: use cool tones so they’re distinct from gold “Game Stats” */
+#hofExportBtn { border: 2px solid #38bdf8; } /* sky blue */
+#hofImportBtn { border: 2px solid #a78bfa; } /* violet */
+
 
 .leaderboard-list {
   list-style: none;
