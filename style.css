@@ -677,14 +677,6 @@ body.shanghai-bg.modal-open::after {
   cursor: not-allowed;
 }
 
-/* Match Hits / Hazards layout */
-.playerInputRow {
-  display: flex;
-  justify-content: center;
-  gap: 24px; /* same as Advanced Mode */
-  margin-bottom: 12px;
-}
-
 * red number for hazard headers */
 .hazard-col-header .hole-number { color: #b00020; font-weight: 600; }
 
@@ -692,6 +684,14 @@ body.shanghai-bg.modal-open::after {
    inline shading is also added below to guarantee visibility. */
 .scorecard-table th.hazard-col-header { background-color: #fff4f5 !important; }
 .scorecard-table td.hazard-col { background-color: #fff4f5 !important; }
+
+/* Match Hits / Hazards layout */
+.playerInputRow {
+  display: flex;
+  justify-content: center;
+  gap: 24px; /* same as Advanced Mode */
+  margin-bottom: 12px;
+}
 
 /* Match button widths below "Submit Score" */
 .player-select,
