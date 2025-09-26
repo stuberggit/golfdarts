@@ -120,7 +120,7 @@ select,
 input[type="text"],
 input[type="number"] {
   font-size: 1.2rem;
-  padding: 10px;
+  padding: 6px;
   border-radius: 8px;
   border: none;
   margin-top: 10px;
