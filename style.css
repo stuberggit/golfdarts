@@ -1,6 +1,6 @@
 /* === Base Styles === */
 body {
-  background-color: #3a5f0b;
+  background-color: #0c2605;
   color: white;
   font-family: 'Prata', serif;
   text-align: center;
@@ -677,13 +677,14 @@ body.shanghai-bg.modal-open::after {
   cursor: not-allowed;
 }
 
-* red number for hazard headers */
+/* red number for hazard headers */
 .hazard-col-header .hole-number { color: #b00020; font-weight: 600; }
 
 /* optional: if you prefer CSS shading instead of inline, keep these.
    inline shading is also added below to guarantee visibility. */
 .scorecard-table th.hazard-col-header { background-color: #fff4f5 !important; }
 .scorecard-table td.hazard-col { background-color: #fff4f5 !important; }
+
 
 /* Match Hits / Hazards layout */
 .playerInputRow {
