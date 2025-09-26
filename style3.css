@@ -1,0 +1,773 @@
+/* === Base Styles === */
+body {
+  background-color: #0c2605;
+  color: white;
+  font-family: 'Prata', serif;
+  text-align: center;
+  padding: 20px;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 2.8em;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 1px 1px 4px #000;
+}
+
+/* ===== HEADER BAR ===== */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 10px 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.header-bar h1 {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+  font-size: 2rem;
+  color: white;
+}
+
+/* ===== HAMBURGER ICON ===== */
+.hamburger {
+  font-size: 28px;
+  cursor: pointer;
+  color: white;
+  background-color: transparent;
+  padding: 5px;
+  z-index: 1000;
+  display: block; /* Ensure it's visible by default */
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* ===== HAMBURGER MENU DROPDOWN ===== */
+.hamburger-menu {
+  position: absolute;
+  top: 60px;
+  right: 16px;
+  background-color: #004d00;
+  border: 1px solid white;
+  border-radius: 10px;
+  padding: 12px 16px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 999;
+  font-size: 1rem;
+  color: white;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+.hamburger-menu.hidden {
+  display: none;
+}
+
+/* ===== HAMBURGER MENU ITEMS ===== */
+.hamburger-menu a {
+  text-align: left;
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+  margin: 2px 0;
+  cursor: pointer;
+}
+
+.hamburger-menu label {
+  margin: 4px 0;
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.hamburger-menu label input {
+  margin-right: 8px;
+}
+
+/* Hide the title in game mode */
+body#gameStarted .header-bar h1 {
+  display: none;
+}
+
+/* Keep hamburger visible during game */
+body#gameStarted .hamburger {
+  display: block;
+}
+
+body#gameStarted .header-bar {
+  justify-content: space-between;
+}
+
+
+/* === Form Elements === */
+label {
+  display: block;
+  margin: 20px auto 10px auto;
+  font-size: 1.2rem;
+}
+
+select,
+input[type="text"],
+input[type="number"] {
+  font-size: 1.2rem;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  width: 90%;
+  max-width: 400px;
+}
+
+#game {
+  margin-top: 30px;
+}
+
+/* === Buttons === */
+button {
+  background-color: #206a1e;
+  border: 2px solid white;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin: 14px auto;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background-color 0.3s ease;
+  display: block;
+  width: 90%;
+  max-width: 400px;
+}
+
+button:hover {
+  background-color: #2c8a2a;
+}
+
+.button-leaderboard {
+  background: #ffffff;
+  color: #206a1e;
+  border: 2px solid #0d380b;
+  font-size: 1.2rem;
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin: 14px auto;
+  cursor: pointer;
+  display: block;
+  width: 90%;
+  max-width: 400px;
+  transition: background-color 0.3s ease;
+}
+
+.button-leaderboard:hover {
+  background: #f9f9f9;
+}
+
+/* Half-size gameplay buttons */
+.form-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-actions .primary-button {
+  width: 100%;
+  max-width: 400px;
+  font-size: 1.1rem;
+}
+.primary-button, .primary-button.full-width {
+  width: 100%;
+  max-width: 400px;
+  font-size: 1.1rem;
+  padding: 12px;
+}
+
+/* Shanghai background container (fills screen, below overlay text) */
+#shanghaiBackground {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 2000;
+  display: none;
+  pointer-events: none; /* background itself ignores clicks */
+}
+
+#shanghaiBackground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('images/shanghai.jpg') no-repeat center center;
+  background-size: cover;
+  animation: shanghaiPulse 2s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none; /* image layer ignores clicks */
+}
+
+.shanghai-overlay {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3000;          /* above background */
+  pointer-events: auto;   /* overlay & buttons are clickable */
+  color: white;
+  text-align: center;
+  text-shadow: 2px 2px 5px black;
+  padding: 1rem;
+}
+
+.shanghai-overlay h1 {
+  font-size: 3rem;
+   margin: 0.25rem 0;
+  transform: translateY(-125px);
+  text-shadow: 2px 2px 6px black;
+}
+
+.shanghai-overlay h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 6px black;
+}
+
+.shanghai-overlay p {
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 4px black;
+}
+
+.shanghai-subtext {
+  font-size: 1.1rem;
+  margin-top: 0.5em;
+  font-style: italic;
+  color: #eee;
+}
+
+/* Dimmed effect when a modal is open */
+body.shanghai-bg.modal-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000; /* sits between bg (900) and overlay (1001); modals must be higher */
+}
+
+@keyframes shanghaiPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+
+/* === Scorecard Styles === */
+#scorecardWrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0 1rem;
+}
+
+#scorecard {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border-radius: 16px;
+  padding: 16px;
+  overflow-x: auto;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.scorecard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem; /* Match Back Nine font size */
+  color: black;
+  min-width: 600px;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+  white-space: nowrap;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.scorecard-table td:empty::before {
+  content: "\00a0";
+  display: inline-block;
+}
+
+/* Sudden Death Section */
+#suddenDeath {
+  margin-top: 40px;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 2px dashed #ffcc00;
+  border-radius: 12px;
+}
+
+#suddenDeath h2 {
+  color: #ffcc00;
+  text-shadow: 1px 1px 3px #000;
+}
+
+.scorecard-table th.sudden-death-header {
+  background-color: #ffcc00;
+  color: black;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.scorecard-table tr.sudden-death-row td {
+  background-color: #fff8dc;
+}
+
+.scorecard-table td.sudden-death-cell {
+  background-color: #fff3b0;
+}
+
+/* === Score Animation === */
+#scoreAnimation {
+  min-height: 2em;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: bold;
+  margin: 10px 0;
+  color: #0a3;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.animate {
+  animation-name: popIn;
+  animation-duration: 0.8s;
+  animation-timing-function: ease-out;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* === Modal Styling === */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  max-width: 600px;
+  width: 90%;
+  padding: 3rem 2rem 3rem 2rem; /* more top padding to clear close button */
+  border: 2px solid white;
+  border-radius: 16px;
+  background-color: #004d00;
+  color: white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+  text-align: left;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  position: relative; /* for absolute close button */
+  max-height: 85vh;   /* a bit taller */
+  overflow-y: auto;   /* allow scrolling */
+}
+
+.modal-content h2 {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modal-content button {
+  margin: 20px auto 0 auto;
+  display: block;
+}
+
+/* Specific for scoring modal, center text */
+#scoringModal .modal-content {
+  text-align: center;
+}
+
+.settings-modal {
+  max-width: 400px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  color: black;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+/* New close button styles */
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 28px;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  user-select: none;
+  z-index: 10; /* ensure above content */
+}
+
+
+/* === Leaderboard (Masters-style) === */
+.leaderboard-modal {
+  background: #004d00;
+  border: 3px solid white;
+  color: white;
+  padding: 1rem;
+  max-width: 500px;
+  width: 90%;
+  box-sizing: border-box;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leaderboard-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-family: 'Prata', serif;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+}
+
+.leaderboard-list li.first-place {
+  font-weight: bold;
+  color: #ffff66;
+}
+
+#leaderboardDetails {
+  text-align: left;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* === Hidden Utility === */
+.hidden {
+  display: none !important;
+}
+
+/* Scoring list with two columns and max height */
+.scoring-list {
+  text-align: left;
+  margin-top: 10px;
+  columns: 2;
+  column-gap: 20px;
+  list-style-position: inside;
+  padding-left: 0;
+  max-height: 60vh; /* scroll limit */
+  overflow-y: auto;
+  font-size: 0.9rem; /* slightly smaller */
+}
+
+/* === Mobile Adjustments === */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+
+  select,
+  input[type="text"] {
+    width: 95%;
+    font-size: 1.1rem;
+  }
+
+  .modal-content {
+    padding: 1rem;
+  }
+}
+
+/* Smaller screens: one column, smaller font */
+@media (max-width: 480px) {
+  .scoring-list {
+    columns: 1;
+    font-size: 0.85rem;
+  }
+  
+  .modal-content {
+    padding: 3rem 1rem 2rem 1rem; /* keep top padding */
+    max-height: 90vh;
+  }
+  
+  .modal-close {
+    font-size: 24px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* Full-width Submit Score on its own line */
+.form-actions > .primary-button:not(.small-button) {
+  flex-basis: 100%;
+  max-width: 100%;
+}
+
+/* Side-by-side small buttons */
+.form-actions .primary-button.small-button,
+.form-actions .button-leaderboard.small-button {
+  flex: 1 1 48%;
+  max-width: 48%;
+  font-size: 1rem;
+  padding: 10px;
+  margin: 5px 0;
+  display: inline-block;
+}
+
+/* Container for side-by-side inputs */
+.input-row {
+  display: flex;
+  gap: 1rem; /* space between dropdowns */
+  align-items: flex-end; /* aligns labels and selects nicely */
+  margin-bottom: 1rem;
+}
+
+/* Individual input groups (label + select) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* equal width for each dropdown */
+}
+
+/* Larger labels above dropdowns */
+.input-group label {
+  font-size: 1.5rem;
+  font-weight: bold; /* optional, for better readability */
+}
+
+/* Container mimics the flex layout of Undo/Leaderboard buttons */
+.advanced-inputs {
+  display: flex;
+  justify-content: center;        /* center horizontally */
+  gap: 24px;                      /* match spacing between buttons */
+  max-width: 600px;               /* same container width as buttons below Submit Score */
+  margin: 0 auto 1rem auto;       /* center with bottom spacing */
+}
+
+.advanced-inputs .input-group {
+  flex: 1 1 288px;               /* each dropdown max width matches buttons */
+  max-width: 288px;
+  display: flex;
+  flex-direction: column;         /* labels above selects */
+}
+
+.advanced-inputs label {
+  font-size: 1.5rem;                /* label bigger than dropdown text */
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.advanced-inputs select {
+  width: 100%;                    /* fill group width */
+  font-size: 1rem;               
+  padding: 0.4rem 0.5rem;
+}
+
+/* Single-select for normal mode */
+.single-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 288px;
+  margin: 0 auto 1rem auto;
+}
+
+.single-select label {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.single-select select {
+  width: 100%;
+  font-size: 1.2rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.button-stats {
+  background-color: #206a1e;
+  border: 3px solid #ffcc00; /* Sudden death yellow border */
+  color: white;
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin: 14px auto;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: block;
+  width: 90%;
+  max-width: 400px;
+  transition: background-color 0.3s ease;
+}
+
+.button-stats:hover {
+  background-color: #2c8a2a;
+}
+
+.settings-panel {
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-top: 20px;
+  border-radius: 10px;
+  max-width: 300px;
+  font-size: 0.95rem;
+}
+.settings-panel h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+.settings-panel label {
+  display: block;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+.hazard-hole {
+  background-color: rgba(255, 0, 0, 0.2); /* light red */
+}
+
+.hazardSelect:disabled {
+  background-color: #666; /* dark gray */
+  color: #ccc;            /* light gray text */
+  cursor: not-allowed;
+}
+
+/* Match Hits / Hazards layout */
+.playerInputRow {
+  display: flex;
+  justify-content: center;
+  gap: 24px; /* same as Advanced Mode */
+  margin-bottom: 12px;
+}
+
+/* Match button widths below "Submit Score" */
+.player-select,
+.handicap-select {
+  width: 288px;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Hidden name input shouldn't mess up layout */
+.playerInputRow input[type="text"] {
+  display: none;
+}
+
+.handicap-input {
+  width: 60px;
+  margin-left: 8px;
+  font-size: 1rem;
+  padding: 4px;
+}
+
+.history-page {
+  font-family: sans-serif;
+  padding: 20px;
+  background-color: #10216b;
+  color: white;
+}
+
+.history-page h1 {
+  text-align: center;
+  color: white;
+}
+
+.history-page select {
+  display: block;
+  margin: 0 auto 20px;
+  padding: 5px 10px;
+  font-size: 16px;
+}
+
+/* Game blocks that wrap each scorecard */
+.history-block {
+  background: #2a4f0c; /* ✅ slightly darker green */
+  padding: 16px;
+  margin: 16px 0;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  color: white;
+}
+
+.history-block h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #ffff66; /* soft yellow for title */
+}
+
+/* Scorecard table inside history blocks */
+.history-scorecard {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  background-color: white;
+  color: black;
+}
+
+.history-scorecard th,
+.history-scorecard td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+  background-color: white;
+}
+
+.history-scorecard th:first-child,
+.history-scorecard td:first-child {
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Make history modal scrollable (if reused elsewhere) */
+#historyModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
