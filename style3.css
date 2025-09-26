@@ -774,165 +774,6 @@ body.shanghai-bg.modal-open::after {
   .hazard-col-header .hole-number { text-decoration: underline; }
 }
 
-function updateScorecard() {
-  const container = document.getElementById("scorecard");
-  if (!container) return;
-
-  let table = `<table class="scorecard-table">`;
-
-  const renderSection = (label, start) => {
-    const highlight = (currentHole >= start && currentHole < start + 9);
-    table += `
-      <tr><th colspan="12"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr>
-        <th>Player</th>
-        <th>HCP</th>
-        ${[...Array(9)].map((_, i) => {
-          const holeIndex = i + start - 1;
-          const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
-          const isHaz = advancedMode && hazardHoles.includes(holeNumber);
-          return `
-            <th class="${isHaz ? 'hazard-col-header' : ''}"
-                title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
-              <span class="hole-number">${holeNumber}</span>
-              ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
-            </th>`;
-        }).join('')}
-        <th>${label === "Front Nine" ? "Out" : "In"}</th>
-      </tr>
-    `;
-
-    const isSudden = suddenDeath;
-    const competingNames = isSudden ? players.map(p => p.name) : [];
-
-    const sortedPlayers = [...allPlayers].sort((a, b) => {
-      const aIn = competingNames.includes(a.name);
-      const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // Competing players first
-    });
-
-    sortedPlayers.forEach(p => {
-      const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0); // raw subtotal only
-      const isCompeting = competingNames.includes(p.name);
-
-      const playerNameStyle = isSudden && !isCompeting
-        ? 'text-decoration: line-through; color: gray'
-        : '';
-
-      table += `<tr>
-        <td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>
-        <td style="border: 1px solid #ccc; text-align:center;">${p.handicap || 0}</td>
-        ${
-          scores.map((s, i) => {
-            const holeIndex = i + start - 1;
-            const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
-            const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
-            const isHazardCol = advancedMode && hazardHoles.includes(holeNumberForCell);
-
-            const display = (s === undefined || s === null)
-              ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-              : s; // raw score only, no handicap
-
-            return `<td style="border: 1px solid #ccc; text-align:center;"
-                       class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
-          }).join("")
-        }
-        <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
-      </tr>`;
-    });
-  };
-
-  const renderSuddenDeath = () => {
-    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
-    const sdHoles = [];
-    for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20); // 19,20, then 1.. etc.
-      sdHoles.push(label);
-    }
-
-    table += `<tr><th colspan="${sdHoles.length + 2}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr>
-      <th class="sudden-death-header">Player</th>
-      <th class="sudden-death-header">HCP</th>
-      ${sdHoles.map(h => {
-        const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
-        return `
-          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"
-              title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
-            <span class="hole-number">${h}</span>
-            ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
-          </th>`;
-      }).join("")}
-    </tr>`;
-
-    const competingNames = players.map(p => p.name);
-
-    const sortedPlayers = [...allPlayers].sort((a, b) => {
-      const aIn = competingNames.includes(a.name);
-      const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // Active players first
-    });
-
-    sortedPlayers.forEach(p => {
-      const isTiedPlayer = competingNames.includes(p.name);
-      const sdScores = p.scores.slice(18); // From hole 19 onward
-
-      const nameCellStyle = isTiedPlayer
-        ? 'class="sudden-death-cell"'
-        : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
-
-      table += `<tr class="sudden-death-row">
-        <td ${nameCellStyle}>${p.name}</td>
-        <td class="sudden-death-cell">${p.handicap || 0}</td>
-      `;
-
-      for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19; // absolute index used for active-cell class binding
-        const label = holeNum <= 20 ? holeNum : (holeNum - 20); // display number (19,20,1,2,...)
-        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-        const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
-        let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
-
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}">${cellContent}</td>`;
-      }
-
-      table += `</tr>`;
-    });
-  };
-
-  const turnNumber = randomMode ? currentHoleIndex + 1 : currentHole;
-  const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
-
-  if (suddenDeath) renderSuddenDeath();
-
-  if (turnNumber > 9 && allCompletedFront) {
-    renderSection("Back Nine", 10);
-    renderSection("Front Nine", 1);
-  } else {
-    renderSection("Front Nine", 1);
-    if (allCompletedFront) renderSection("Back Nine", 10);
-  }
-
-  table += "</table>";
-  container.innerHTML = table;
-
-  const activeCell = document.querySelector(".active-cell");
-  if (activeCell) {
-    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }
-
-  // Show winner message if game ends early (e.g. Shanghai win)
-  const scoreInputs = document.getElementById("scoreInputs");
-  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
-    const winText = document.createElement("h2");
-    winText.textContent = `${players[0].name} wins!!`;
-    winText.style.color = "#ffff00";
-    winText.style.textShadow = "1px 1px 4px black";
-    scoreInputs.appendChild(winText);
-  }
-}
-
 /* Match button widths below "Submit Score" */
 .player-select,
 .handicap-select {
@@ -1013,3 +854,31 @@ function updateScorecard() {
   text-align: left;
   white-space: nowrap;
 }
+
+/* --- Start Screen: compact dropdowns (setup only) --- */
+#nameInputs .player-select {          /* "Select Player" */
+  width: 150px !important;            /* ~half typical auto size */
+  max-width: 150px !important;
+}
+
+#nameInputs .handicap-select {        /* handicap +/- */
+  width: 56px !important;             /* tight, readable */
+  max-width: 56px !important;
+  text-align: center;
+}
+
+/* keep a little breathing room between them */
+#nameInputs .playerInputRow,
+#nameInputs .setup-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px !important;
+}
+
+/* avoid full-width stretching on iPad Safari */
+#nameInputs select,
+#nameInputs input[type="text"] {
+  width: auto !important;
+  display: inline-block !important;
+}
+  
