@@ -855,30 +855,33 @@ body.shanghai-bg.modal-open::after {
   white-space: nowrap;
 }
 
-/* --- Start Screen: compact dropdowns (setup only) --- */
-#nameInputs .player-select {          /* "Select Player" */
-  width: 150px !important;            /* ~half typical auto size */
+/* --- Start Screen: force compact widths inside #nameInputs --- */
+
+/* Keep the row inline and prevent flex stretching */
+#nameInputs .playerInputRow {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 12px;
+}
+#nameInputs .playerInputRow select,
+#nameInputs .playerInputRow input {
+  flex: 0 0 auto !important;     /* stop flex-grow from stretching */
+  width: auto !important;         /* neutralize any global 100% width */
+  max-width: none !important;
+  display: inline-block !important;
+}
+
+/* Player dropdown (ids like select-0, select-1, … OR class .player-select) */
+#nameInputs .playerInputRow select[id^="select-"],
+#nameInputs .playerInputRow select.player-select {
+  width: 150px !important;
   max-width: 150px !important;
 }
 
-#nameInputs .handicap-select {        /* handicap +/- */
-  width: 56px !important;             /* tight, readable */
+/* Handicap dropdown (ids like handicap-0, handicap-1, … OR class .handicap-select) */
+#nameInputs .playerInputRow select[id^="handicap-"],
+#nameInputs .playerInputRow select.handicap-select {
+  width: 56px !important;
   max-width: 56px !important;
   text-align: center;
 }
-
-/* keep a little breathing room between them */
-#nameInputs .playerInputRow,
-#nameInputs .setup-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px !important;
-}
-
-/* avoid full-width stretching on iPad Safari */
-#nameInputs select,
-#nameInputs input[type="text"] {
-  width: auto !important;
-  display: inline-block !important;
-}
-  
