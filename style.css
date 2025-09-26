@@ -195,41 +195,82 @@ button:hover {
   padding: 12px;
 }
 
-.shanghai-overlay {
+/* Shanghai background container (fills screen, below overlay text) */
+#shanghaiBackground {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, #fff700 0%, #ff4500 100%);
+  height: 100vh;
+  z-index: 2000;
+  display: none;
+  pointer-events: none; /* background itself ignores clicks */
+}
+
+#shanghaiBackground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url('images/shanghai.jpg') no-repeat center center;
+  background-size: cover;
+  animation: shanghaiPulse 2s ease-in-out infinite;
+  z-index: 1;
+  pointer-events: none; /* image layer ignores clicks */
+}
+
+.shanghai-overlay {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
+  z-index: 3000;          /* above background */
+  pointer-events: auto;   /* overlay & buttons are clickable */
+  color: white;
   text-align: center;
-  color: black;
-  font-size: 2rem;
-  animation: pulse 1.5s infinite;
+  text-shadow: 2px 2px 5px black;
+  padding: 1rem;
 }
 
 .shanghai-overlay h1 {
-  font-size: 4rem;
-  margin-bottom: 0.5em;
-  text-shadow: 2px 2px 4px white;
+  font-size: 3rem;
+   margin: 0.25rem 0;
+  transform: translateY(-125px);
+  text-shadow: 2px 2px 6px black;
+}
+
+.shanghai-overlay h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 6px black;
+}
+
+.shanghai-overlay p {
+  font-size: 1.2rem;
+  text-shadow: 1px 1px 4px black;
 }
 
 .shanghai-subtext {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   margin-top: 0.5em;
   font-style: italic;
-  color: #333;
+  color: #eee;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.05); opacity: 0.9; }
-  100% { transform: scale(1); opacity: 1; }
+/* Dimmed effect when a modal is open */
+body.shanghai-bg.modal-open::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1000; /* sits between bg (900) and overlay (1001); modals must be higher */
+}
+
+@keyframes shanghaiPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 
@@ -517,6 +558,77 @@ button:hover {
   display: inline-block;
 }
 
+/* Container for side-by-side inputs */
+.input-row {
+  display: flex;
+  gap: 1rem; /* space between dropdowns */
+  align-items: flex-end; /* aligns labels and selects nicely */
+  margin-bottom: 1rem;
+}
+
+/* Individual input groups (label + select) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* equal width for each dropdown */
+}
+
+/* Larger labels above dropdowns */
+.input-group label {
+  font-size: 1.5rem;
+  font-weight: bold; /* optional, for better readability */
+}
+
+/* Container mimics the flex layout of Undo/Leaderboard buttons */
+.advanced-inputs {
+  display: flex;
+  justify-content: center;        /* center horizontally */
+  gap: 24px;                      /* match spacing between buttons */
+  max-width: 600px;               /* same container width as buttons below Submit Score */
+  margin: 0 auto 1rem auto;       /* center with bottom spacing */
+}
+
+.advanced-inputs .input-group {
+  flex: 1 1 288px;               /* each dropdown max width matches buttons */
+  max-width: 288px;
+  display: flex;
+  flex-direction: column;         /* labels above selects */
+}
+
+.advanced-inputs label {
+  font-size: 1.5rem;                /* label bigger than dropdown text */
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.advanced-inputs select {
+  width: 100%;                    /* fill group width */
+  font-size: 1rem;               
+  padding: 0.4rem 0.5rem;
+}
+
+/* Single-select for normal mode */
+.single-select {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 288px;
+  margin: 0 auto 1rem auto;
+}
+
+.single-select label {
+  font-size: 1.5rem;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+}
+
+.single-select select {
+  width: 100%;
+  font-size: 1.2rem;
+  padding: 0.4rem 0.5rem;
+}
+
 .button-stats {
   background-color: #206a1e;
   border: 3px solid #ffcc00; /* Sudden death yellow border */
@@ -559,14 +671,51 @@ button:hover {
   background-color: rgba(255, 0, 0, 0.2); /* light red */
 }
 
+.hazardSelect:disabled {
+  background-color: #666; /* dark gray */
+  color: #ccc;            /* light gray text */
+  cursor: not-allowed;
+}
+
+/* Match Hits / Hazards layout */
+.playerInputRow {
+  display: flex;
+  justify-content: center;
+  gap: 24px; /* same as Advanced Mode */
+  margin-bottom: 12px;
+}
+
+/* Match button widths below "Submit Score" */
+.player-select,
+.handicap-select {
+  width: 288px;
+  font-size: 1rem;
+  padding: 0.3rem 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Hidden name input shouldn't mess up layout */
+.playerInputRow input[type="text"] {
+  display: none;
+}
+
+.handicap-input {
+  width: 60px;
+  margin-left: 8px;
+  font-size: 1rem;
+  padding: 4px;
+}
+
 .history-page {
   font-family: sans-serif;
   padding: 20px;
   background-color: #10216b;
+  color: white;
 }
 
 .history-page h1 {
   text-align: center;
+  color: white;
 }
 
 .history-page select {
@@ -576,90 +725,49 @@ button:hover {
   font-size: 16px;
 }
 
-.history-page .game-block {
-  background: white;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-
-.history-page .game-block h3 {
-  margin-top: 0;
-}
-
-.history-page .game-block ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.history-page .game-block li {
-  padding: 2px 0;
-}
-
+/* Game blocks that wrap each scorecard */
 .history-block {
-  background: white;
-  padding: 12px;
-  margin: 12px 0;
+  background: #2a4f0c; /* ✅ slightly darker green */
+  padding: 16px;
+  margin: 16px 0;
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  color: white;
 }
 
 .history-block h3 {
   margin-top: 0;
-  font-size: 1.1em;
+  font-size: 1.2rem;
+  color: #ffff66; /* soft yellow for title */
 }
 
-.history-block ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.history-block li {
-  padding: 3px 0;
-}
-
+/* Scorecard table inside history blocks */
 .history-scorecard {
   width: 100%;
   border-collapse: collapse;
-  margin: 10px 0;
-  font-size: 0.8rem;
-  overflow-x: auto;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  background-color: white;
+  color: black;
 }
 
 .history-scorecard th,
 .history-scorecard td {
   border: 1px solid #ccc;
+  padding: 6px;
   text-align: center;
-  background-color: #f9f9f9;
-  padding: 4px;
-  min-width: 30px;
+  background-color: white;
 }
 
-/* Mini Scorecard Table */
-.mini-scorecard {
-  border-collapse: collapse;
-  width: 100%;
-  margin-bottom: 1rem;
+.history-scorecard th:first-child,
+.history-scorecard td:first-child {
+  text-align: left;
+  white-space: nowrap;
 }
 
-.mini-scorecard th,
-.mini-scorecard td {
-  border: 1px solid #ccc;
-  padding: 4px 6px;
-  text-align: center;
-}
-
-.mini-scorecard th {
-  background-color: #f0f0f0;
-  font-weight: bold;
-}
-
-/* Optional: Style the link */
-.more-link {
-  display: block;
-  margin-top: 1rem;
-  text-align: right;
-  color: #0066cc;
-  font-weight: bold;
+/* Make history modal scrollable (if reused elsewhere) */
+#historyModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
 }
