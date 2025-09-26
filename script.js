@@ -687,11 +687,13 @@ function updateScorecard() {
         ${[...Array(9)].map((_, i) => {
           const holeIndex = i + start - 1;
           const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
-          if (advancedMode && hazardHoles.includes(holeNumber)) {
-            return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
-          } else {
-            return `<th>${holeNumber}</th>`;
-          }
+          const isHaz = advancedMode && hazardHoles.includes(holeNumber);
+          const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
+          return `
+            <th class="${isHaz ? 'hazard-col-header' : ''}"${thStyle}
+                title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
+              <span class="hole-number">${holeNumber}</span>
+            </th>`;
         }).join('')}
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
       </tr>
