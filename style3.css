@@ -316,119 +316,6 @@ body.shanghai-bg.modal-open::after {
   display: inline-block;
 }
 
-/* Red number on hazard hole headers */
-.scorecard-table th.hazard-col-header .hole-number {
-  color: #c1121f !important;
-  font-weight: 700;
-}
-
-/* Darker shading for hazard columns (header + body) */
-.scorecard-table th.hazard-col-header,
-.scorecard-table td.hazard-col {
-  background-color: #ffe0e6 !important;
-}
-
-/* ---------- PLAYER SETUP + IN-GAME CONTROLS ---------- */
-
-/* Ensure selects/inputs sit side-by-side everywhere in the score area */
-#scoreInputs select,
-#scoreInputs input[type="number"] {
-  display: inline-block !important;
-  vertical-align: middle;
-}
-
-/* Put the game-time Hits + Hazards on one line with space */
-.playerInputRow {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: nowrap;
-}
-
-#nameInputs.player-setup {
-  display: grid;
-  grid-template-columns: 1fr;   /* one row per player */
-  gap: 10px;
-  justify-items: center;
-}
-
-#nameInputs .setup-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#nameInputs .player-name {
-  max-width: 220px;
-  width: auto;           /* don’t stretch full width */
-}
-
-#nameInputs .player-name-custom {  /* “Other” text input (when shown) */
-  max-width: 200px;
-  width: auto;
-}
-
-#nameInputs .player-hcp {
-  width: 64px;
-  text-align: center;
-}
-
-/* Compact, readable sizes for dropdowns */
-#scoreInputs #hits { min-width: 110px; }
-#scoreInputs .hazardSelect { min-width: 110px; }
-
-/* Player setup rows: keep select and handicap from stretching and touching */
-#scoreInputs select + input[type="number"] {
-  width: 64px;
-  text-align: center;
-  margin-left: 12px;
-}
-
-/* Cap generic select width inside scoreInputs so they don’t expand edge-to-edge */
-#scoreInputs select {
-  max-width: 220px;
-}
-
-/* ---------- IN-GAME CONTROLS (Hits + Hazards inline) ---------- */
-#scoreInputs .playerInputRow {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  flex-wrap: nowrap;            /* keep them on one line */
-}
-
-#scoreInputs #hits,
-#scoreInputs .hazardSelect {
-  min-width: 110px;             /* compact, readable */
-}
-
-/* Prevent generic selects inside scoreInputs from widening too much */
-#scoreInputs select,
-#scoreInputs input[type="number"] {
-  display: inline-block !important;
-  vertical-align: middle;
-  width: auto;
-  max-width: 220px;
-}
-
-/* ---------- Small screens ---------- */
-@media (max-width: 480px) {
-  #scoreInputs .playerInputRow { gap: 12px; }
-  #nameInputs .player-select { max-width: 200px; }
-}
-
-/* ---------- Hazard visibility (keep these) ---------- */
-.scorecard-table th.hazard-col-header .hole-number {
-  color: #c1121f !important;    /* red numbers on hazard holes */
-  font-weight: 700;
-}
-.scorecard-table th.hazard-col-header,
-.scorecard-table td.hazard-col {
-  background-color: #ffe0e6 !important;  /* slightly darker shading */
-
-
 /* Sudden Death Section */
 #suddenDeath {
   margin-top: 40px;
@@ -492,32 +379,39 @@ body.shanghai-bg.modal-open::after {
 }
 
 /* === Modal Styling (unified) === */
-.hidden { display: none !important; }
-
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  inset: 0; /* top/right/bottom/left:0 */
   display: none;                 /* hidden by default */
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0,0,0,0.6);
+  align-items: center;           /* center vertically */
+  justify-content: center;       /* center horizontally */
+  padding: 24px;                 /* breathing room around the sheet */
+  background: rgba(0, 0, 0, 0.6);/* dark backdrop */
   z-index: 9999;
 }
-.modal-overlay:not(.hidden) { display: flex; }
+
+.modal-overlay:not(.hidden) {
+  display: flex;
+}
 
 .modal-content {
   max-width: 600px;
   width: min(90vw, 600px);
-  max-height: 85vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* top padding leaves space if you use an absolute "X" */
+  padding: 3rem 1.25rem 2rem 1.25rem;
   border: 2px solid #fff;
   border-radius: 16px;
-  background: #004d00;
+  background-color: #004d00;    /* your theme */
   color: #fff;
-  padding: 3rem 1.25rem 2rem 1.25rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+  text-align: left;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;       /* avoid horizontal scroll from long text */
+  position: relative;            /* for absolute close button */
+  max-height: 85vh;              /* scroll inside the sheet */
+  overflow-y: auto;
+  overflow-x: hidden;            /* kill horizontal scroll */
 }
 
 .modal-content h2 {
@@ -579,43 +473,36 @@ body.shanghai-bg.modal-open::after {
 }
 
 /* === Hall of Fame (modal-specific) === */
-/* Same sheet size as other modals */
 #hofModal .modal-content {
   max-width: 600px;
   width: min(90vw, 600px);
 }
 
-/* Table look (grid lines) and content-driven layout */
+/* Table layout — works with either class */
 #hofModal .hof-table,
-#hofModal .scorecard-table {
+#hofModal .scorecard-table {           /* support either class name */
   width: 100%;
   border-collapse: collapse;
-  table-layout: auto; /* colgroup + content decides */
-  margin-top: 8px;
+  table-layout: auto;                  /* content + colgroup decide */
 }
 #hofModal .hof-table th,  #hofModal .hof-table td,
 #hofModal .scorecard-table th, #hofModal .scorecard-table td {
-  border: 1px solid rgba(0,0,0,0.15);
   padding: 6px 8px;
-  min-width: 0;
   word-break: break-word;
   overflow-wrap: anywhere;
-}
-#hofModal .hof-table thead th,
-#hofModal .scorecard-table thead th {
-  background: #fff;
-  font-weight: 700;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-/* Column preferences via <colgroup> (showHoF outputs these classes) */
+/* Column preferences via <colgroup> */
 #hofModal col.col-category { width: 16ch; }
 #hofModal col.col-label    { width: 16ch; }
-#hofModal col.col-value    { width: 6ch;  } /* ≈ “Value” header width */
-#hofModal col.col-holder   { width: auto; } /* gets the extra space */
+#hofModal col.col-value    { width: 6ch;  } /* ~ header width */
+#hofModal col.col-holder   { width: auto; } /* expands */
 #hofModal col.col-date     { width: 8ch;  } /* MM/DD/YY */
-#hofModal col.col-note     { width: 7ch;  } /* “Hole N” */
+#hofModal col.col-note     { width: 7ch;  } /* "Hole N" */
 
-/* Center the compact columns */
+/* Center compact columns */
 #hofModal .hof-table th:nth-child(2),  #hofModal .hof-table td:nth-child(2),
 #hofModal .hof-table th:nth-child(4),  #hofModal .hof-table td:nth-child(4),
 #hofModal .hof-table th:nth-child(5),  #hofModal .hof-table td:nth-child(5),
@@ -627,10 +514,7 @@ body.shanghai-bg.modal-open::after {
   font-variant-numeric: tabular-nums;
 }
 
-/* Headings spacing in HoF */
-#hofModal h3 { margin: 16px 0 8px; }
-
-/* Footer buttons: two small on one row (no Close) */
+/* Footer actions: two compact buttons on one row (no Close button) */
 #hofModal .modal-actions {
   display: flex;
   justify-content: space-between;
@@ -639,22 +523,25 @@ body.shanghai-bg.modal-open::after {
 }
 #hofModal .modal-actions button {
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 10px;
   flex: 1 1 48%;
   max-width: 48%;
 }
+#hofExportBtn { border: 2px solid #f0c400; } /* export: gold */
+#hofImportBtn { border: 2px solid #66b3ff; } /* import: blue */
+#hofModal #hofCloseBtn { display: none !important; } /* ensure no stray Close */
 
-/* Tablet/phone tweaks */
-@media (max-width: 820px) { #hofModal .modal-content { width: 94vw; } }
+/* Tablets & phones */
+@media (max-width: 820px) {
+  #hofModal .modal-content { width: 94vw; }
+}
 @media (max-width: 480px) {
   #hofModal col.col-category { width: 14ch; }
   #hofModal col.col-label    { width: 14ch; }
 }
-
-  /* HoF footer buttons: use cool tones so they’re distinct from gold “Game Stats” */
-#hofExportBtn { border: 2px solid #38bdf8; } /* sky blue */
-#hofImportBtn { border: 2px solid #a78bfa; } /* violet */
-
 
 .leaderboard-list {
   list-style: none;
@@ -885,6 +772,165 @@ body.shanghai-bg.modal-open::after {
 @media (prefers-contrast: more), (forced-colors: active) {
   .hazard-col { outline: 2px solid #b00020; }
   .hazard-col-header .hole-number { text-decoration: underline; }
+}
+
+function updateScorecard() {
+  const container = document.getElementById("scorecard");
+  if (!container) return;
+
+  let table = `<table class="scorecard-table">`;
+
+  const renderSection = (label, start) => {
+    const highlight = (currentHole >= start && currentHole < start + 9);
+    table += `
+      <tr><th colspan="12"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr>
+        <th>Player</th>
+        <th>HCP</th>
+        ${[...Array(9)].map((_, i) => {
+          const holeIndex = i + start - 1;
+          const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
+          const isHaz = advancedMode && hazardHoles.includes(holeNumber);
+          return `
+            <th class="${isHaz ? 'hazard-col-header' : ''}"
+                title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
+              <span class="hole-number">${holeNumber}</span>
+              ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
+            </th>`;
+        }).join('')}
+        <th>${label === "Front Nine" ? "Out" : "In"}</th>
+      </tr>
+    `;
+
+    const isSudden = suddenDeath;
+    const competingNames = isSudden ? players.map(p => p.name) : [];
+
+    const sortedPlayers = [...allPlayers].sort((a, b) => {
+      const aIn = competingNames.includes(a.name);
+      const bIn = competingNames.includes(b.name);
+      return bIn - aIn; // Competing players first
+    });
+
+    sortedPlayers.forEach(p => {
+      const scores = p.scores.slice(start - 1, start + 8);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0); // raw subtotal only
+      const isCompeting = competingNames.includes(p.name);
+
+      const playerNameStyle = isSudden && !isCompeting
+        ? 'text-decoration: line-through; color: gray'
+        : '';
+
+      table += `<tr>
+        <td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>
+        <td style="border: 1px solid #ccc; text-align:center;">${p.handicap || 0}</td>
+        ${
+          scores.map((s, i) => {
+            const holeIndex = i + start - 1;
+            const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
+            const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
+            const isHazardCol = advancedMode && hazardHoles.includes(holeNumberForCell);
+
+            const display = (s === undefined || s === null)
+              ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+              : s; // raw score only, no handicap
+
+            return `<td style="border: 1px solid #ccc; text-align:center;"
+                       class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
+          }).join("")
+        }
+        <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
+      </tr>`;
+    });
+  };
+
+  const renderSuddenDeath = () => {
+    const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
+    const sdHoles = [];
+    for (let i = 19; i <= maxHole; i++) {
+      const label = i <= 20 ? i : (i - 20); // 19,20, then 1.. etc.
+      sdHoles.push(label);
+    }
+
+    table += `<tr><th colspan="${sdHoles.length + 2}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr>
+      <th class="sudden-death-header">Player</th>
+      <th class="sudden-death-header">HCP</th>
+      ${sdHoles.map(h => {
+        const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
+        return `
+          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"
+              title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
+            <span class="hole-number">${h}</span>
+            ${isHaz ? '<span class="hazard-badge" aria-label="hazard">⚠️</span>' : ''}
+          </th>`;
+      }).join("")}
+    </tr>`;
+
+    const competingNames = players.map(p => p.name);
+
+    const sortedPlayers = [...allPlayers].sort((a, b) => {
+      const aIn = competingNames.includes(a.name);
+      const bIn = competingNames.includes(b.name);
+      return bIn - aIn; // Active players first
+    });
+
+    sortedPlayers.forEach(p => {
+      const isTiedPlayer = competingNames.includes(p.name);
+      const sdScores = p.scores.slice(18); // From hole 19 onward
+
+      const nameCellStyle = isTiedPlayer
+        ? 'class="sudden-death-cell"'
+        : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
+
+      table += `<tr class="sudden-death-row">
+        <td ${nameCellStyle}>${p.name}</td>
+        <td class="sudden-death-cell">${p.handicap || 0}</td>
+      `;
+
+      for (let i = 0; i < sdHoles.length; i++) {
+        const holeNum = i + 19; // absolute index used for active-cell class binding
+        const label = holeNum <= 20 ? holeNum : (holeNum - 20); // display number (19,20,1,2,...)
+        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
+        const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
+        let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
+
+        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}">${cellContent}</td>`;
+      }
+
+      table += `</tr>`;
+    });
+  };
+
+  const turnNumber = randomMode ? currentHoleIndex + 1 : currentHole;
+  const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
+
+  if (suddenDeath) renderSuddenDeath();
+
+  if (turnNumber > 9 && allCompletedFront) {
+    renderSection("Back Nine", 10);
+    renderSection("Front Nine", 1);
+  } else {
+    renderSection("Front Nine", 1);
+    if (allCompletedFront) renderSection("Back Nine", 10);
+  }
+
+  table += "</table>";
+  container.innerHTML = table;
+
+  const activeCell = document.querySelector(".active-cell");
+  if (activeCell) {
+    activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+
+  // Show winner message if game ends early (e.g. Shanghai win)
+  const scoreInputs = document.getElementById("scoreInputs");
+  if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
+    const winText = document.createElement("h2");
+    winText.textContent = `${players[0].name} wins!!`;
+    winText.style.color = "#ffff00";
+    winText.style.textShadow = "1px 1px 4px black";
+    scoreInputs.appendChild(winText);
+  }
 }
 
 /* Match button widths below "Submit Score" */
