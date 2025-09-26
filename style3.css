@@ -116,6 +116,7 @@ label {
   font-size: 1.2rem;
 }
 
+/* Make controls compact and inline (instead of 90% width) */
 select,
 input[type="text"],
 input[type="number"] {
@@ -124,8 +125,30 @@ input[type="number"] {
   border-radius: 8px;
   border: none;
   margin-top: 10px;
-  width: 90%;
-  max-width: 400px;
+
+  display: inline-block;   /* was block via width:90% */
+  width: auto;             /* was 90% */
+  max-width: none;         /* was 400px */
+  vertical-align: middle;
+  box-sizing: border-box;
+
+  margin-right: 12px;      /* add space so they don’t touch */
+}
+
+/* Remove the extra right margin on the last control in a row */
+.playerInputRow > *:last-child {
+  margin-right: 0;
+}
+
+/* Tight widths just for start screen controls */
+#nameInputs select[id^="select-"] {   /* “Select Player” */
+  width: 150px;
+  max-width: 150px;
+}
+#nameInputs select[id^="handicap-"] { /* handicap +/- */
+  width: 56px;
+  max-width: 56px;
+  text-align: center;
 }
 
 #game {
