@@ -32,60 +32,6 @@ if (isPreProd) {
 console.log("script.js loaded");
 console.log("Parsed History:", history);
 
-/* === EMERGENCY MODAL JS (hotfix) === */
-(function () {
-  const IDS = ['rulesModal', 'scoringModal', 'hofModal'];
-
-  // Normalize each modal: ensure wrapper + content + hidden by default
-  IDS.forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    // force wrapper class & hidden
-    el.classList.add('modal-overlay', 'hidden');
-    el.classList.remove('modal'); // if an old class lingers
-
-    // if there's no .modal-content child, wrap existing children
-    if (!el.querySelector('.modal-content')) {
-      const content = document.createElement('div');
-      content.className = 'modal-content';
-      while (el.firstChild) content.appendChild(el.firstChild);
-      el.appendChild(content);
-    }
-  });
-
-  // preserve YOUR function names
-  window.showmodal = function (id) {
-    const m = document.getElementById(id);
-    if (!m) return;
-    m.classList.remove('hidden');
-    const c = m.querySelector('.modal-content');
-    if (c) c.scrollTop = 0;
-  };
-
-  window.closemodal = function (id) {
-    const m = document.getElementById(id);
-    if (!m) return;
-    m.classList.add('hidden');
-  };
-
-  // backdrop click closes any modal
-  document.body.addEventListener('click', (e) => {
-    const t = e.target;
-    if (t instanceof Element && t.classList.contains('modal-overlay')) {
-      t.classList.add('hidden');
-    }
-  });
-
-  // ESC closes any open modal
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay:not(.hidden)')
-        .forEach((m) => m.classList.add('hidden'));
-    }
-  });
-})();
-
 // ===== Hall of Fame (HoF) storage =====
 const HOF_KEY = "golfdarts_hof_v1";
 
@@ -404,32 +350,29 @@ function toggleHamburgerMenu() {
 
 // ===== createPlayerInputs Function (Core: DO NOT OVERWRITE without discussion) =====
 function createPlayerInputs() {
-  const countEl = document.getElementById("playerCount");
-  const count = parseInt(countEl?.value, 10);
+  const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
     alert("Please select the number of players.");
     return;
   }
 
   const playerOptions = [
-    "Brandon","Brock","Dan","Deanna","Derrick","Don","Edgar",
-    "Erin","Mullins","Phillip","Pusti","Stuberg","Tara","Other"
+    "Brandon", "Brock", "Dan", "Deanna", "Derrick", "Don", "Edgar",
+    "Erin", "Mullins", "Phillip", "Pusti", "Stuberg", "Tara", "Other"
   ].sort();
 
   const container = document.getElementById("nameInputs");
-  if (!container) return;
-  container.classList.add("player-setup");
   container.innerHTML = "";
 
   for (let i = 0; i < count; i++) {
-    const selectId   = `select-${i}`;
-    const inputId    = `name-${i}`;
+    const selectId = `select-${i}`;
+    const inputId = `name-${i}`;
     const handicapId = `handicap-${i}`;
 
+    // Create the player name dropdown
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
-    selectEl.className = "player-select player-name";
-    selectEl.setAttribute("aria-label", `Player ${i + 1} name`);
+    selectEl.classList.add("player-select");
     selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
 
     const defaultOption = document.createElement("option");
@@ -440,24 +383,22 @@ function createPlayerInputs() {
     selectEl.appendChild(defaultOption);
 
     playerOptions.forEach(name => {
-      const opt = document.createElement("option");
-      opt.value = name;
-      opt.textContent = name;
-      selectEl.appendChild(opt);
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      selectEl.appendChild(option);
     });
 
+    // Custom name input (hidden unless "Other" is chosen)
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
-    inputEl.type = "text";
     inputEl.placeholder = "Enter name";
-    inputEl.autocomplete = "off";
     inputEl.style.display = "none";
-    inputEl.className = "player-name-custom";
 
+    // Handicap dropdown
     const handicapSelect = document.createElement("select");
     handicapSelect.id = handicapId;
-    handicapSelect.className = "handicap-select player-hcp";
-    handicapSelect.setAttribute("aria-label", `Player ${i + 1} handicap`);
+    handicapSelect.classList.add("handicap-select");
 
     for (let h = -10; h <= 10; h++) {
       const opt = document.createElement("option");
@@ -467,24 +408,24 @@ function createPlayerInputs() {
       handicapSelect.appendChild(opt);
     }
 
-    const row = document.createElement("div");
-    row.className = "playerInputRow setup-row";
-    row.dataset.index = String(i);
+    // Wrapper for both dropdowns in one row
+    const wrapper = document.createElement("div");
+    wrapper.className = "playerInputRow";
+    wrapper.appendChild(selectEl);
+    wrapper.appendChild(inputEl); // still in DOM, just hidden
+    wrapper.appendChild(handicapSelect);
 
-    row.appendChild(selectEl);
-    row.appendChild(inputEl);
-    row.appendChild(handicapSelect);
-
-    container.appendChild(row);
+    container.appendChild(wrapper);
   }
 
-  const startBtn = document.getElementById("startBtn");
-  if (startBtn) startBtn.style.display = "inline";
+  document.getElementById("startBtn").style.display = "inline";
 }
+
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
 let scoreInputs;
+
 
 function handleNameDropdown(selectId, inputId) {
   const select = document.getElementById(selectId);
@@ -1027,9 +968,6 @@ function updateScorecard() {
   const container = document.getElementById("scorecard");
   if (!container) return;
 
-  // Slightly darker hazard shading than before
-  const HAZARD_BG = "#ffe0e6";
-
   let table = `<table class="scorecard-table">`;
 
   const renderSection = (label, start) => {
@@ -1043,7 +981,7 @@ function updateScorecard() {
           const holeIndex = i + start - 1;
           const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
           const isHaz = advancedMode && hazardHoles.includes(holeNumber);
-          const thStyle = isHaz ? ` style="background-color:${HAZARD_BG};"` : "";
+          const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
           return `
             <th class="${isHaz ? 'hazard-col-header' : ''}"${thStyle}
                 title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
@@ -1060,7 +998,7 @@ function updateScorecard() {
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // competing first
+      return bIn - aIn; // Competing players first
     });
 
     sortedPlayers.forEach(p => {
@@ -1077,8 +1015,8 @@ function updateScorecard() {
         <td style="border: 1px solid #ccc; text-align:center;">${p.handicap || 0}</td>
         ${
           scores.map((s, i) => {
-            const holeIndex2 = i + start - 1;
-            const holeNumberForCell = randomMode ? holeSequence[holeIndex2] : (i + start);
+            const holeIndex = i + start - 1;
+            const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
             const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
             const isHazardCol = advancedMode && hazardHoles.includes(holeNumberForCell);
 
@@ -1087,7 +1025,7 @@ function updateScorecard() {
               : s; // raw score only, no handicap
 
             const baseStyle = 'border: 1px solid #ccc; text-align:center;';
-            const bg = isHazardCol ? ` background-color:${HAZARD_BG};` : '';
+            const bg = isHazardCol ? ' background-color:#fff4f5;' : '';
             return `<td style="${baseStyle}${bg}"
                        class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
           }).join("")
@@ -1101,7 +1039,7 @@ function updateScorecard() {
     const maxHole = Math.max(...allPlayers.map(p => p.scores.length));
     const sdHoles = [];
     for (let i = 19; i <= maxHole; i++) {
-      const label = i <= 20 ? i : (i - 20); // 19,20, then 1.. etc.
+      const label = i <= 20 ? i : (i - 20);
       sdHoles.push(label);
     }
 
@@ -1111,7 +1049,7 @@ function updateScorecard() {
       <th class="sudden-death-header">HCP</th>
       ${sdHoles.map(h => {
         const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
-        const thStyle = isHaz ? ` style="background-color:${HAZARD_BG};"` : "";
+        const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
         return `
           <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"${thStyle}
               title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
@@ -1125,7 +1063,7 @@ function updateScorecard() {
     const sortedPlayers = [...allPlayers].sort((a, b) => {
       const aIn = competingNames.includes(a.name);
       const bIn = competingNames.includes(b.name);
-      return bIn - aIn; // active first
+      return bIn - aIn; // Active players first
     });
 
     sortedPlayers.forEach(p => {
@@ -1142,12 +1080,12 @@ function updateScorecard() {
       `;
 
       for (let i = 0; i < sdHoles.length; i++) {
-        const holeNum = i + 19;                // absolute number for active-cell class
-        const label = holeNum <= 20 ? holeNum : (holeNum - 20); // display number (19,20,1,2,...)
+        const holeNum = i + 19;
+        const label = holeNum <= 20 ? holeNum : (holeNum - 20);
         const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
         const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
         const baseStyle = 'text-align:center;';
-        const bg = isHazCol ? ` background-color:${HAZARD_BG};` : '';
+        const bg = isHazCol ? ' background-color:#fff4f5;' : '';
         let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
 
         table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}" style="${baseStyle}${bg}">${cellContent}</td>`;
@@ -1178,7 +1116,7 @@ function updateScorecard() {
     activeCell.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
-  // Winner message if game ends early (e.g., Shanghai)
+  // Show winner message if game ends early (e.g. Shanghai win)
   const scoreInputs = document.getElementById("scoreInputs");
   if (!gameStarted && players.length === 1 && scoreInputs.innerText.includes("Game complete")) {
     const winText = document.createElement("h2");
@@ -1318,15 +1256,19 @@ function endGame() {
     return;
   }
 
+  // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
+  // Determine winner if a single player remains
   let winner = null;
   if (players.length === 1) {
     winner = players[0];
   }
 
+  // Update Hall of Fame aggregates for this finished game
   updateHallOfFameFromCurrentGame();
 
+  // ✅ Restore full player list
   players = fullPlayerList;
   allPlayers = fullPlayerList;
 
@@ -1334,6 +1276,7 @@ function endGame() {
   updateScorecard();
   localStorage.removeItem("golfdartsState");
 
+  // Save this game's results to local history
   const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
   const gameSummary = {
     date: new Date().toISOString(),
@@ -1349,8 +1292,10 @@ function endGame() {
   previousHistory.push(gameSummary);
   localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
+  // Clear score input area
   scoreInputs.innerHTML = "";
 
+  // Winner text
   if (winner) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
@@ -1359,6 +1304,8 @@ function endGame() {
     scoreInputs.appendChild(winText);
   }
 
+  // --- End-of-game buttons ---
+  // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -1366,6 +1313,7 @@ function endGame() {
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
+  // Leaderboard
   const lbBtn = document.createElement("button");
   lbBtn.innerText = "Leaderboard";
   lbBtn.className = "primary-button full-width";
@@ -1379,11 +1327,13 @@ function endGame() {
   };
   scoreInputs.appendChild(lbBtn);
 
+  // Start New Round
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      // Rotate players: move last to front
       players.unshift(players.pop());
       players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
@@ -1404,15 +1354,19 @@ function endGame() {
   };
   scoreInputs.appendChild(startNewBtn);
 
+  // ✅ Ensure leaderboard remains visible
   const leaderboard = document.getElementById("leaderboard");
   if (leaderboard) {
     leaderboard.classList.remove("hidden");
     leaderboard.style.display = "block";
   }
 
-  /* --- Export UX: keep toast only --- */
+  // --- NEW: Export UX ---
+  // Gentle toast reminder + Quick Export button
+  // (helpers provided earlier: ensureExportToast, showExportReminderToast, addQuickExportButtonToEndScreen, exportHoFAndMark)
   ensureExportToast();
   showExportReminderToast();
+  addQuickExportButtonToEndScreen();
 
   document.body.removeAttribute("id");
 }
@@ -1509,57 +1463,19 @@ function getHitsFromScore(score) {
 
 // ========== MODALS ==========
 
-/* === MODAL CORE (preserve your function names) === */
-function showmodal(id) {
-  const m = document.getElementById(id);
-  if (!m) return;
-  m.classList.remove('hidden');        // relies on .modal-overlay + .hidden CSS
-  const c = m.querySelector('.modal-content');
-  if (c) c.scrollTop = 0;              // open at top
+function showModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  const content = modal.querySelector(".modal-content");
+  if (content) content.scrollTop = 0;
 }
 
-function closemodal(id) {
-  const m = document.getElementById(id);
-  if (!m) return;
-  m.classList.add('hidden');
+
+function closeModal(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('hidden');
 }
-
-/* Optional aliases so existing code using camelCase still works */
-function showModal(id)  { return showmodal(id); }
-function closeModal(id) { return closemodal(id); }
-
-/* Backdrop click + ESC close (guarded to avoid double-binding) */
-if (!window.__modals_wired) {
-  window.__modals_wired = true;
-
-  document.body.addEventListener('click', (e) => {
-    const t = e.target;
-    if (t instanceof Element && t.classList.contains('modal-overlay')) {
-      t.classList.add('hidden');
-    }
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay:not(.hidden)')
-        .forEach(m => m.classList.add('hidden'));
-    }
-  });
-}
-
-/* === MODAL NORMALIZER (run once on load) === */
-function normalizeModals() {
-  ['rulesModal', 'scoringModal', 'hofModal'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    // ensure correct wrapper class and hidden by default
-    el.classList.add('modal-overlay', 'hidden');
-    el.classList.remove('modal');   // in case an old class lingered
-  });
-}
-
-document.addEventListener('DOMContentLoaded', normalizeModals);
-
 
 
 // ========== ADVANCED MODE ==========
@@ -1993,4 +1909,3 @@ window.addEventListener("beforeunload", function (e) {
     e.returnValue = "";
   }
 });
-
