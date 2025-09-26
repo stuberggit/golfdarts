@@ -7,17 +7,27 @@ let gameStarted = false;
 let suddenDeath = false;
 let tiedPlayers = [];
 let audioEnabled = true;
-let randomizedMode = false;
 let advancedMode = false;
 let hazardHoles = [];
 let actionHistory = [];
-
-const isPreProd = location.href.includes("index") || location.href.includes("script");
-const historyKey = isPreProd ? "golfdartsHistory_preprod" : "golfdartsHistory_prod";
-
+let randomMode = false;
 let history = [];
 let filterSelect;
 let container;
+
+// Detect environment
+const isPreProd = window.location.pathname.includes("index2.html");
+const isAde = window.location.pathname.includes("index3.html");
+
+// History key per environment
+let historyKey;
+if (isPreProd) {
+  historyKey = "golfdartsHistory_preprod";
+} else if (isAde) {
+  historyKey = "golfdartsHistory_ade";
+} else {
+  historyKey = "golfdartsHistory_prod";
+}
 
 console.log("script.js loaded");
 console.log("Parsed History:", history);
@@ -48,13 +58,12 @@ function createPlayerInputs() {
   for (let i = 0; i < count; i++) {
     const selectId = `select-${i}`;
     const inputId = `name-${i}`;
+    const handicapId = `handicap-${i}`;
 
-    const label = document.createElement("label");
-    label.setAttribute("for", selectId);
-    label.textContent = `Player ${i + 1}:`;
-
+    // Create the player name dropdown
     const selectEl = document.createElement("select");
     selectEl.id = selectId;
+    selectEl.classList.add("player-select");
     selectEl.addEventListener("change", () => handleNameDropdown(selectId, inputId));
 
     const defaultOption = document.createElement("option");
@@ -71,22 +80,38 @@ function createPlayerInputs() {
       selectEl.appendChild(option);
     });
 
+    // Custom name input (hidden unless "Other" is chosen)
     const inputEl = document.createElement("input");
     inputEl.id = inputId;
     inputEl.placeholder = "Enter name";
     inputEl.style.display = "none";
 
+    // Handicap dropdown
+    const handicapSelect = document.createElement("select");
+    handicapSelect.id = handicapId;
+    handicapSelect.classList.add("handicap-select");
+
+    for (let h = -10; h <= 10; h++) {
+      const opt = document.createElement("option");
+      opt.value = h;
+      opt.textContent = (h > 0 ? "+" : "") + h;
+      if (h === 0) opt.selected = true;
+      handicapSelect.appendChild(opt);
+    }
+
+    // Wrapper for both dropdowns in one row
     const wrapper = document.createElement("div");
-    wrapper.className = "playerInputBlock";
-    wrapper.appendChild(label);
+    wrapper.className = "playerInputRow";
     wrapper.appendChild(selectEl);
-    wrapper.appendChild(inputEl);
+    wrapper.appendChild(inputEl); // still in DOM, just hidden
+    wrapper.appendChild(handicapSelect);
 
     container.appendChild(wrapper);
   }
 
   document.getElementById("startBtn").style.display = "inline";
 }
+
 
 // Fix duplicate declaration error by using single declaration for shared variables
 let activeCell;
@@ -99,6 +124,27 @@ function handleNameDropdown(selectId, inputId) {
   input.style.display = select.value === "Other" ? "inline" : "none";
 }
 
+let holeSequence = [];
+let currentHoleIndex = 0;
+
+function shuffleArray(array) {
+  let currentIndex = array.length, randomIndex;
+
+  // While there remain elements to shuffle.
+  while (currentIndex !== 0) {
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // Swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
+
+console.log("Random Mode is", randomMode);
+
 function startGame() {
   const count = parseInt(document.getElementById("playerCount").value);
   if (isNaN(count) || count < 1 || count > 20) {
@@ -106,20 +152,27 @@ function startGame() {
     return;
   }
 
+  if (randomMode && advancedMode) {
+    alert("You cannot start a game with both Random Mode and Advanced Mode selected.");
+    return;
+  }
+
   players = [];
   for (let i = 0; i < count; i++) {
     const select = document.getElementById(`select-${i}`);
     const input = document.getElementById(`name-${i}`);
+    const handicapSelect = document.getElementById(`handicap-${i}`);
+    
     const selected = select.value;
     const inputted = input.value.trim();
     const name = selected === "Other" ? inputted : selected;
+    const handicap = parseInt(handicapSelect?.value || 0, 10);
 
     if (!name) {
       alert(`Player ${i + 1} must have a name.`);
       return;
     }
-
-    players.push({ name, scores: [] });
+    players.push({ name, scores: [], handicap: handicap });
   }
 
   allPlayers = JSON.parse(JSON.stringify(players));
@@ -127,25 +180,29 @@ function startGame() {
   suddenDeath = false;
   tiedPlayers = [];
   currentHole = 1;
+  currentHoleIndex = 0;
   currentPlayerIndex = 0;
-
-  // <<< Reset action history for undo
   actionHistory = [];
 
-  // 🔹 Select hazard holes if Advanced Mode is enabled
   if (advancedMode) {
     setupHazardHoles();
   }
 
+  if (randomMode) {
+    holeSequence = shuffleArray([...Array.from({ length: 20 }, (_, i) => i + 1), "🎯"]);
+  } else {
+    holeSequence = Array.from({ length: 20 }, (_, i) => i + 1);
+  }
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
-  
+
   const title = document.querySelector(".header-bar h1");
   if (title) title.style.display = "none";
 
   const hamburger = document.getElementById("hamburgerIcon");
   if (hamburger) hamburger.style.display = "block";
-   
+
   showHole();
   updateLeaderboard();
   updateScorecard();
@@ -154,48 +211,76 @@ function startGame() {
   document.body.id = "gameStarted";
 }
 
-
-// ========== GAMEPLAY ==========
-
 function showHole() {
-  document.getElementById("holeHeader").innerText = `Hole ${currentHole}`;
+  let displayHole;
+
+  if (randomMode) {
+    displayHole = suddenDeath ? currentHole : holeSequence[currentHoleIndex];
+  } else {
+    displayHole = currentHole;
+  }
+
+  const headerText = displayHole === "🎯" ? "🎯" : `Hole ${displayHole}`;
+  document.getElementById("holeHeader").innerText = headerText;
+
   const container = document.getElementById("scoreInputs");
   const player = players[currentPlayerIndex];
 
-  // Start with hits input
-  container.innerHTML = `
-    <div class="input-group">
+  container.innerHTML = '';
+
+  if (advancedMode && displayHole !== "🎯") {
+    const advancedWrapper = document.createElement('div');
+    advancedWrapper.className = 'advanced-inputs';
+
+    // Player hits
+    const playerGroup = document.createElement('div');
+    playerGroup.className = 'input-group';
+    playerGroup.innerHTML = `
       <label>${player.name} hits:</label>
-      <select id="hits" class="full-width">
+      <select id="hits">
         <option value="miss">Miss!</option>
         ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
       </select>
-    </div>
-  `;
+    `;
+    advancedWrapper.appendChild(playerGroup);
 
-  // Append hazard dropdown only if this is a hazard hole in advanced mode
-  if (advancedMode && hazardHoles.includes(currentHole)) {
-    const hazardWrapper = document.createElement("div");
-    hazardWrapper.className = "hazard-toggle";
-    hazardWrapper.innerHTML = `
+    // Hazard hits (always visible, disabled on non-hazard holes)
+    const hazardGroup = document.createElement('div');
+    hazardGroup.className = 'input-group';
+    const isHazard = hazardHoles.includes(displayHole);
+    hazardGroup.innerHTML = `
       <label>Hazards hit:</label>
-      <select class="hazardSelect">
+      <select class="hazardSelect" ${isHazard ? '' : 'disabled'}>
         <option value="0">0</option>
         <option value="1">1</option>
         <option value="2">2</option>
         <option value="3">3</option>
       </select>
     `;
-    container.appendChild(hazardWrapper);
+    advancedWrapper.appendChild(hazardGroup);
+
+    container.appendChild(advancedWrapper);
+  } else {
+    // Non-advanced or normal/random mode: single player hits dropdown centered
+    const singleWrapper = document.createElement('div');
+    singleWrapper.className = 'single-select';
+    singleWrapper.innerHTML = `
+      <label>${player.name} hits:</label>
+      <select id="hits">
+        <option value="miss">Miss!</option>
+        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+      </select>
+    `;
+    container.appendChild(singleWrapper);
   }
 
-  // Highlight the hazard hole in the scorecard
-  highlightHazardHole(currentHole);
+  if (advancedMode && displayHole !== "🎯") {
+    highlightHazardHole(displayHole);
+  }
 
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
-
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
@@ -207,7 +292,7 @@ function getScore(hits) {
   return scores[hits - 1] ?? 5;
 }
 
-function getScoreLabelAndColor(score) {
+function getScoreLabelAndColor(hits) {
   const labels = {
     8: "Buster",
     7: "Quad Bogey",
@@ -242,12 +327,15 @@ function getScoreLabelAndColor(score) {
     "-5": "#2f4f4f"   // Dark Slate Gray (Avalanche)
   };
 
-  const label = labels[score] ?? "Unknown";
-  const color = colors[score] ?? "#ffffff"; // white fallback
+  const label = labels[hits] ?? "Unknown";
+  const color = colors[hits] ?? "#ffffff"; // white fallback
 
   return { label, color };
 }
 
+
+// Track number of holes actually played
+let holesPlayedCount = 0;
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
@@ -428,6 +516,11 @@ function submitPlayerScore() {
   showHole();
 }
 
+// Random sudden death hole (1–20 or Bullseye)
+function getRandomSuddenDeathHole() {
+  const options = [...Array(20).keys()].map(n => n + 1).concat(["🎯"]);
+  return options[Math.floor(Math.random() * options.length)];
+}
 
   function undoHole() {
   if (!actionHistory || actionHistory.length === 0) {
@@ -481,50 +574,100 @@ function submitPlayerScore() {
   updateScorecard();
 }
 
+// Call this before resetting/starting a new round
+// Call this before resetting/starting a new round or when opening Stats/Leaderboard from Shanghai
+function removeShanghaiDisplay() {
+  const bg = document.getElementById("shanghaiBackground");
+  if (bg) {
+    bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
+    bg.style.display = "none";
+    // If you set background via JS elsewhere, also clear it:
+    // bg.style.backgroundImage = "";
+  }
+  document.body.classList.remove("shanghai-bg");
+}
 
 
 function showShanghaiWin(winnerName) {
   gameStarted = false;
   localStorage.removeItem("golfdartsState");
 
-  document.getElementById("scoreInputs").innerHTML = "";
+  let bg = document.getElementById("shanghaiBackground");
+  if (!bg) {
+    bg = document.createElement("div");
+    bg.id = "shanghaiBackground";
+    document.body.insertBefore(bg, document.body.firstChild);
+  }
+
+  bg.querySelectorAll(".shanghai-overlay").forEach(el => el.remove());
 
   const overlay = document.createElement("div");
   overlay.className = "shanghai-overlay";
   overlay.innerHTML = `
-    <h1 style="transform: translateY(-50px);">SHANGHAI!!</h1>
+    <h1>SHANGHAI!!</h1>
     <h2>🏆 ${winnerName} WINS! 🏆</h2>
     <p class="shanghai-subtext">Single + Double + Triple on Hole ${currentHole}!</p>
-    <button id="playAgainBtn" class="primary-button full-width">Play Again</button>
+    <div class="shanghai-buttons"></div>
   `;
-  document.body.appendChild(overlay);
+  bg.appendChild(overlay);
 
-  document.getElementById("playAgainBtn").onclick = () => {
-    // Restart game with same players
-    players.forEach(p => p.scores = []);
-    currentHole = 1;
-    currentPlayerIndex = 0;
-    suddenDeath = false;
-    tiedPlayers = [];
-    gameStarted = true;
+      const btnContainer = overlay.querySelector(".shanghai-buttons");
+  btnContainer.style.width = "min(520px, 90vw)";
+  btnContainer.style.margin = "1rem auto 0";
+  btnContainer.style.display = "flex";
+  btnContainer.style.flexDirection = "column";
 
-    // Reset UI
-    document.body.removeChild(overlay);
-    document.getElementById("scoreInputs").innerHTML = "";
-    updateLeaderboard();
-    updateScorecard();
-    showHole();
-    saveGameState();
+  // --- Game Stats ---
+  const statsBtn = document.createElement("button");
+  statsBtn.innerText = "Game Stats";
+  statsBtn.className = "primary-button full-width";
+  statsBtn.style.borderColor = "#ffcc00";
+  statsBtn.style.marginTop = "0.25rem";
+  statsBtn.onclick = () => showStats();
+  btnContainer.appendChild(statsBtn);
+
+    // --- Leaderboard ---
+  const lbBtn = document.createElement("button");
+  lbBtn.innerText = "Leaderboard";
+  lbBtn.className = "button-leaderboard small-button full-width"; // match real button + force full width
+  lbBtn.style.marginTop = "0.25rem";
+  lbBtn.onclick = () => showModal('leaderboardModal'); // same as your in-game button
+  btnContainer.appendChild(lbBtn);
+
+  // --- Start New Round ---
+  const startNewBtn = document.createElement("button");
+  startNewBtn.innerText = "Start New Round";
+  startNewBtn.className = "primary-button full-width";
+  startNewBtn.style.marginTop = "0.25rem";
+  startNewBtn.onclick = () => {
+    if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
+      players.unshift(players.pop());
+      players.forEach(p => (p.scores = []));
+      allPlayers = JSON.parse(JSON.stringify(players));
+      currentHole = 1;
+      currentPlayerIndex = 0;
+      suddenDeath = false;
+      tiedPlayers = [];
+      gameStarted = true;
+
+      document.getElementById("scoreInputs").innerHTML = "";
+      removeShanghaiDisplay();
+      saveGameState();
+      showHole();
+      updateLeaderboard();
+      updateScorecard();
+    } else {
+      location.reload();
+    }
   };
+  btnContainer.appendChild(startNewBtn);
 
-  /*if ('speechSynthesis' in window) {
-    const utter = new SpeechSynthesisUtterance(`${winnerName} wins with a Shanghai!`);
-    utter.pitch = 1.3;
-    utter.rate = 1;
-    speechSynthesis.speak(utter);
-  }*/
+  bg.style.display = "block";
+  document.body.classList.add("shanghai-bg");
+
+  updateLeaderboard();
+  updateScorecard();
 }
-
 
 // ========== DISPLAY ==========
 
@@ -537,10 +680,13 @@ function updateScorecard() {
   const renderSection = (label, start) => {
     const highlight = (currentHole >= start && currentHole < start + 9);
     table += `
-      <tr><th colspan="11"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
-      <tr><th>Player</th>
+      <tr><th colspan="12"${highlight ? ' style="background-color:#d2ffd2"' : ''}>🏌️ ${label}</th></tr>
+      <tr>
+        <th>Player</th>
+        <th>HCP</th>
         ${[...Array(9)].map((_, i) => {
-          const holeNumber = i + start;
+          const holeIndex = i + start - 1;
+          const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
           if (advancedMode && hazardHoles.includes(holeNumber)) {
             return `<th title="Hazard Hole (${holeNumber})">⚠️</th>`;
           } else {
@@ -562,23 +708,31 @@ function updateScorecard() {
 
     sortedPlayers.forEach(p => {
       const scores = p.scores.slice(start - 1, start + 8);
-      const total = scores.reduce((s, v) => s + (v ?? 0), 0);
+      const total = scores.reduce((s, v) => s + (v ?? 0), 0); // raw subtotal only
       const isCompeting = competingNames.includes(p.name);
 
       const playerNameStyle = isSudden && !isCompeting
         ? 'text-decoration: line-through; color: gray'
         : '';
 
-      table += `<tr><td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>${
-        scores.map((s, i) => {
-          const holeNum = i + start;
-          const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-          const display = (s === undefined || s === null)
-            ? (isSudden && !isCompeting ? "-" : "&nbsp;")
-            : s;
-          return `<td style="border: 1px solid #ccc" class="hole-cell-${holeNum}${isActive ? ' active-cell' : ''}">${display}</td>`;
-        }).join("")
-      }<td style="border: 1px solid #ccc"><strong>${scores.length === 9 ? total : ""}</strong></td></tr>`;
+      table += `<tr>
+        <td style="border: 1px solid #ccc; ${playerNameStyle}">${p.name}</td>
+        <td style="border: 1px solid #ccc; text-align:center;">${p.handicap || 0}</td>
+        ${
+          scores.map((s, i) => {
+            const holeIndex = i + start - 1;
+            const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
+            const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
+
+            const display = (s === undefined || s === null)
+              ? (isSudden && !isCompeting ? "-" : "&nbsp;")
+              : s; // raw score only, no handicap
+
+            return `<td style="border: 1px solid #ccc; text-align:center;" class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}">${display}</td>`;
+          }).join("")
+        }
+        <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
+      </tr>`;
     });
   };
 
@@ -590,8 +744,12 @@ function updateScorecard() {
       sdHoles.push(label);
     }
 
-    table += `<tr><th colspan="${sdHoles.length + 1}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
-    table += `<tr><th class="sudden-death-header">Player</th>${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}</tr>`;
+    table += `<tr><th colspan="${sdHoles.length + 2}" class="sudden-death-header">🏌️ Sudden Death</th></tr>`;
+    table += `<tr>
+      <th class="sudden-death-header">Player</th>
+      <th class="sudden-death-header">HCP</th>
+      ${sdHoles.map(h => `<th class="sudden-death-header">${h}</th>`).join("")}
+    </tr>`;
 
     const competingNames = players.map(p => p.name);
 
@@ -609,7 +767,10 @@ function updateScorecard() {
         ? 'class="sudden-death-cell"'
         : 'class="sudden-death-cell" style="text-decoration: line-through; color: gray"';
 
-      table += `<tr class="sudden-death-row"><td ${nameCellStyle}>${p.name}</td>`;
+      table += `<tr class="sudden-death-row">
+        <td ${nameCellStyle}>${p.name}</td>
+        <td class="sudden-death-cell">${p.handicap || 0}</td>
+      `;
 
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
@@ -623,12 +784,12 @@ function updateScorecard() {
     });
   };
 
-  // Render sections
+  const turnNumber = randomMode ? currentHoleIndex + 1 : currentHole;
   const allCompletedFront = allPlayers.every(p => p.scores.length >= 9);
 
-  if (suddenDeath) renderSuddenDeath();  // ✅ Sudden Death shown on top
+  if (suddenDeath) renderSuddenDeath();
 
-  if (currentHole >= 10 && allCompletedFront) {
+  if (turnNumber > 9 && allCompletedFront) {
     renderSection("Back Nine", 10);
     renderSection("Front Nine", 1);
   } else {
@@ -655,22 +816,27 @@ function updateScorecard() {
   }
 }
 
-
 function updateLeaderboard(final = false) {
   const leaderboardDetails = document.getElementById("leaderboardDetails");
   if (!leaderboardDetails) return;
 
-  const sorted = [...players].map(p => ({
-    name: p.name,
-    total: p.scores.reduce((sum, s) => sum + (s ?? 0), 0)
-  })).sort((a, b) => a.total - b.total);
+  // Calculate gross and net for each player
+  const sorted = [...players].map(p => {
+    const grossTotal = p.scores.reduce((sum, s) => sum + (s ?? 0), 0);
+    const netTotal = grossTotal + (p.handicap || 0); // handicap applied
+    return {
+      name: p.name,
+      gross: grossTotal,
+      net: netTotal
+    };
+  }).sort((a, b) => a.net - b.net); // sort by net score
 
   leaderboardDetails.innerHTML = `
     <ul class="leaderboard-list">
       ${sorted.map((p, i) => `
         <li${i === 0 ? ' class="first-place"' : ''}>
           <span>${p.name}</span>
-          <span>${p.total}</span>
+          <span>Gross: ${p.gross} | Net: ${p.net}</span>
         </li>
       `).join("")}
     </ul>
@@ -726,7 +892,9 @@ function loadGameState() {
   gameStarted = state.gameStarted;
   allPlayers = JSON.parse(JSON.stringify(players));
 
-  document.querySelector(".top-links").style.display = "none";
+  const topLinks = document.querySelector(".top-links");
+  if (topLinks) topLinks.style.display = "none";
+
   document.getElementById("setup").style.display = "none";
   document.getElementById("game").style.display = "block";
   const title = document.querySelector(".header-bar h1");
@@ -763,7 +931,6 @@ if (advancedMode && hazardHoles.includes(currentHole)) {
   });
 }
 
-
 function endGame() {
   gameStarted = false;
 
@@ -776,7 +943,7 @@ function endGame() {
   // ✅ Clone full player list before any filtering
   const fullPlayerList = JSON.parse(JSON.stringify(allPlayers));
 
-  // Save winner if applicable
+  // Determine winner if a single player remains
   let winner = null;
   if (players.length === 1) {
     winner = players[0];
@@ -791,23 +958,25 @@ function endGame() {
   localStorage.removeItem("golfdartsState");
 
   // Save this game's results to local history
-const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
+  const gameSummary = {
+    date: new Date().toISOString(),
+    players: allPlayers.map(p => ({
+      name: p.name,
+      scores: [...p.scores],
+      total: p.scores.reduce((sum, s) => sum + s, 0),
+    })),
+    suddenDeath,
+    advancedMode,
+    randomMode
+  };
+  previousHistory.push(gameSummary);
+  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
 
-const gameSummary = {
-  date: new Date().toISOString(),
-  players: allPlayers.map(p => ({
-    name: p.name,
-    scores: [...p.scores],
-    total: p.scores.reduce((sum, s) => sum + s, 0),
-  })),
-  suddenDeath: suddenDeath,
-  advancedMode: advancedMode
-};
+  // Clear score input area
+  scoreInputs.innerHTML = "";
 
-previousHistory.push(gameSummary);
-localStorage.setItem(historyKey, JSON.stringify(previousHistory));
-
-  // Declare winner
+  // Winner text
   if (winner) {
     const winText = document.createElement("h2");
     winText.textContent = `${winner.name} wins!!`;
@@ -816,7 +985,8 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
     scoreInputs.appendChild(winText);
   }
 
-  // Game Stats Button
+  // --- End-of-game buttons ---
+  // Game Stats
   const statsBtn = document.createElement("button");
   statsBtn.innerText = "Game Stats";
   statsBtn.className = "primary-button full-width";
@@ -824,23 +994,29 @@ localStorage.setItem(historyKey, JSON.stringify(previousHistory));
   statsBtn.onclick = () => showStats();
   scoreInputs.appendChild(statsBtn);
 
-  const historyBtn = document.createElement("button");
-historyBtn.innerText = "View History";
-historyBtn.className = "primary-button full-width";
-historyBtn.onclick = () => showHistory();
-scoreInputs.appendChild(historyBtn);
+  // Leaderboard
+  const lbBtn = document.createElement("button");
+  lbBtn.innerText = "Leaderboard";
+  lbBtn.className = "primary-button full-width";
+  lbBtn.onclick = () => {
+    const leaderboard = document.getElementById("leaderboard");
+    if (leaderboard) {
+      leaderboard.classList.remove("hidden");
+      leaderboard.style.display = "block";
+      leaderboard.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  scoreInputs.appendChild(lbBtn);
 
-
-  // Start New Round Button
+  // Start New Round
   const startNewBtn = document.createElement("button");
   startNewBtn.innerText = "Start New Round";
   startNewBtn.className = "primary-button full-width";
   startNewBtn.onclick = () => {
     if (confirm("Select OK to start a new round with the same players? Cancel to select new players.")) {
-      // Rotate players: move LAST to FRONT
+      // Rotate players: move last to front
       players.unshift(players.pop());
-
-      players.forEach(p => p.scores = []);
+      players.forEach(p => (p.scores = []));
       allPlayers = JSON.parse(JSON.stringify(players));
       currentHole = 1;
       currentPlayerIndex = 0;
@@ -849,7 +1025,6 @@ scoreInputs.appendChild(historyBtn);
       gameStarted = true;
 
       scoreInputs.innerHTML = "";
-
       saveGameState();
       showHole();
       updateLeaderboard();
@@ -862,107 +1037,18 @@ scoreInputs.appendChild(historyBtn);
 
   // ✅ Ensure leaderboard remains visible
   const leaderboard = document.getElementById("leaderboard");
-if (leaderboard) {
-  leaderboard.classList.remove("hidden");
-  leaderboard.style.display = "block";
-}
+  if (leaderboard) {
+    leaderboard.classList.remove("hidden");
+    leaderboard.style.display = "block";
+  }
 
   document.body.removeAttribute("id");
 }
-
-function showHistory() {
-  console.log("📚 showHistory() was called");
-
-  const container = document.getElementById("historyDetails");
-  container.innerHTML = "";
- 
-  const previousHistory = JSON.parse(localStorage.getItem(historyKey)) || [];
-
-  const gameSummary = {
-    date: new Date().toISOString(),
-    players: allPlayers.map(p => ({
-      name: p.name,
-      scores: [...p.scores],
-      total: p.scores.reduce((sum, s) => sum + s, 0),
-    })),
-    suddenDeath: suddenDeath,
-    advancedMode: advancedMode
-  };
-
-  previousHistory.push(gameSummary);
-  localStorage.setItem(historyKey, JSON.stringify(previousHistory));
-
-  if (previousHistory.length === 0) {
-    container.innerHTML = "<p>No past games saved.</p>";
-    showModal("historyModal");
-    return;
-  }
-
-  const latestGames = previousHistory.slice(-10).reverse();
-
-  latestGames.forEach((game, index) => {
-    const date = new Date(game.date).toLocaleString();
-    const mode = game.advancedMode ? "Advanced" : "Standard";
-    const sudden = game.suddenDeath ? " (Sudden Death)" : "";
-
-    const header = document.createElement("h3");
-    header.textContent = `Game ${previousHistory.length - index} – ${date} – ${mode}${sudden}`;
-    container.appendChild(header);
-
-    game.players.forEach(player => {
-      const table = document.createElement("table");
-      table.className = "mini-scorecard";
-
-      const nameRow = document.createElement("tr");
-      const nameCell = document.createElement("th");
-      nameCell.colSpan = 11;
-      nameCell.textContent = player.name;
-      nameRow.appendChild(nameCell);
-      table.appendChild(nameRow);
-
-      const front9 = player.scores.slice(0, 9);
-      const back9 = player.scores.slice(9, 18);
-      const subtotal = front9.reduce((sum, s) => sum + s, 0);
-
-      const frontRow = document.createElement("tr");
-      frontRow.innerHTML = "<td>1–9</td>" + front9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(frontRow);
-
-      const subtotalRow = document.createElement("tr");
-      subtotalRow.innerHTML = `<td>Subtotal</td><td colspan="9">${subtotal}</td>`;
-      table.appendChild(subtotalRow);
-
-      const backRow = document.createElement("tr");
-      backRow.innerHTML = "<td>10–18</td>" + back9.map(s => `<td>${s}</td>`).join("");
-      table.appendChild(backRow);
-
-      const totalRow = document.createElement("tr");
-      totalRow.innerHTML = `<td>Total</td><td colspan="9">${player.total}</td>`;
-      table.appendChild(totalRow);
-
-      container.appendChild(table);
-    });
-
-    container.appendChild(document.createElement("hr"));
-  });
-
-  if (previousHistory.length > 10) {
-    const moreLink = document.createElement("a");
-    moreLink.href = "history.html";
-    moreLink.textContent = "➡️ View More Rounds";
-    moreLink.className = "more-link";
-    container.appendChild(moreLink);
-  }
-
-  showModal("historyModal");
-}
-
 
 function clearHistory() {
   localStorage.removeItem(historyKey);
   alert("History cleared!");
 }
-
 
 function showStats() {
   const modal = document.getElementById("gameStatsModal");
@@ -971,13 +1057,26 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
+  // ✅ Ordered worst → best so display makes sense
   const scoreLabels = [
-    "Double Bogey", "Par", "Birdie", "Ace", "Goose Egg",
-    "Icicle", "Polar Bear", "Frostbite", "Snowman", "Avalanche"
+    "Buster",        // 8 strokes (worst)
+    "Quad Bogey",    // 7 strokes
+    "Triple Bogey",  // 6 strokes
+    "Double Bogey",  // 5 strokes
+    "Bogey",         // 4 strokes
+    "Par",           // 3 strokes
+    "Birdie",        // 2 strokes
+    "Ace",           // 1 stroke
+    "Goose Egg",     // 0
+    "Icicle",        // -1
+    "Polar Bear",    // -2
+    "Frostbite",     // -3
+    "Snowman",       // -4
+    "Avalanche"      // -5 (best)
   ];
 
   const hitCounts = allPlayers.map(player => {
-    const counts = Array(10).fill(0);
+    const counts = Array(scoreLabels.length).fill(0);
     player.scores.forEach(score => {
       const hitIndex = getHitsFromScore(score);
       if (hitIndex !== -1) counts[hitIndex]++;
@@ -995,30 +1094,32 @@ function showStats() {
   modal.classList.remove("hidden");
 }
 
-// Helper: map score back to hit count
+// ✅ Mapping matches your actual numeric scores
 function getHitsFromScore(score) {
   const map = {
-    5: 0,
-    3: 1,
-    2: 2,
-    1: 3,
-    0: 4,
-    [-1]: 5,
-    [-2]: 6,
-    [-3]: 7,
-    [-4]: 8,
-    [-5]: 9
+    8: 0,    // Buster
+    7: 1,    // Quad Bogey
+    6: 2,    // Triple Bogey
+    5: 3,    // Double Bogey
+    4: 4,    // Bogey
+    3: 5,    // Par
+    2: 6,    // Birdie
+    1: 7,    // Ace
+    0: 8,    // Goose Egg
+    [-1]: 9, // Icicle
+    [-2]: 10,// Polar Bear
+    [-3]: 11,// Frostbite
+    [-4]: 12,// Snowman
+    [-5]: 13 // Avalanche
   };
   return map[score] ?? -1;
 }
-
 
 // ========== MODALS ==========
 
 function showModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
-  if (!gameStarted && id === 'leaderboardModal') return;
   modal.classList.remove('hidden');
 }
 
@@ -1137,12 +1238,36 @@ function renderHistory() {
   });
 }
 
+function showHistory() {
+  const historyModal = document.getElementById("historyModal");
+  if (!historyModal) {
+    console.warn("History modal not found");
+    return;
+  }
+
+  // Show the modal
+  historyModal.classList.remove("hidden");
+  historyModal.style.display = "block";
+
+  // Dim background if desired
+  document.getElementById("shanghaiScreen")?.classList.add("dimmed"); 
+
+  // Render the history inside the modal container
+  const container = historyModal.querySelector(".history-container");
+  if (container) {
+    renderHistory(container);
+  }
+}
+
+// Expose globally
+window.showHistory = showHistory;
 window.startGame = startGame;
 window.showModal = showModal;
 window.closeModal = closeModal;
 window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
 window.undoHole = undoHole;
+window.showHole = showHole;
 
 
 // ========== EVENT LISTENERS ==========
@@ -1166,7 +1291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     audioEnabled = e.target.checked;
   });
   document.getElementById("randomToggle")?.addEventListener("change", (e) => {
-    randomizedMode = e.target.checked;
+    randomMode = e.target.checked;
   });
   document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
     advancedMode = e.target.checked;
