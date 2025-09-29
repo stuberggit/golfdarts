@@ -355,7 +355,7 @@ function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
-  const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
+  const hits = (hitsValue === "miss") ? 0 : parseInt(hitsValue, 10);
 
   if (isNaN(hits) || hits < 0 || hits > 9) {
     alert("Enter a valid number of hits.");
@@ -364,66 +364,35 @@ function submitPlayerScore() {
 
   const player = players[currentPlayerIndex];
 
-  // Check for Shanghai
+  // Shanghai check (unchanged)
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(
+      `Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? ` +
+      `Cancel to score -2 and return to game. OK to accept humiliating defeat`
+    );
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  // Calculate base score with exact logic:
-  // Miss + hazards
-  // Miss = hits === 0
-  // Buster = Miss + 3 hazards = 8
-  // Quad Bogey = Miss + 2 hazards = 7
-  // Triple Bogey = Miss + 1 hazard = 6
-  // Double Bogey = Miss only = 5
-  // Bogey = Hit 1 + 1 hazard = 4
-  // Par = Hit 1 no hazard = 3
-  // Birdie = Hit 2 = 2
-  // Ace = Hit 3 = 1
-  // Goose Egg = Hit 4 = 0
-  // Icicle = Hit 5 = -1
-  // Polar Bear = Hit 6 = -2
-  // Frostbite = Hit 7 = -3
-  // Snowman = Hit 8 = -4
-  // Avalanche = Hit 9 = -5
-
-  let score;
+  // Read hazards only if this is a hazard hole in Advanced Mode
   let hazards = 0;
-  let hazardAdded = false;
-
-  if (advancedMode && hazardHoles.includes(currentHole)) {
+  const isHazardHole = advancedMode && hazardHoles.includes(currentHole);
+  if (isHazardHole) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+    hazards = Math.max(0, Math.min(3, parseInt(hazardSelect?.value, 10) || 0));
   }
 
-  if (hits === 0) {
-    // Miss + hazards
-    score = 5 + hazards; // 5 to 8
-  } else if (hits === 1 && hazards === 1) {
-    // Hit 1 + 1 hazard = Bogey
-    score = 4;
-  } else if (hits === 1 && hazards === 0) {
-    // Par
-    score = 3;
-  } else if (hits >= 2 && hits <= 9) {
-    // For hits 2-9, score decreases by 1 for each hit above 1
-    score = 4 - hits;
-  } else if (hits === 1 && hazards > 1) {
-    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
-    score = 4 + (hazards - 1);
-  } else {
-    // Fallback to par
-    score = 3;
-  }
+  // ✅ unified, correct scoring for all hit counts
+  const score = computeHoleScore({
+    hits,
+    hazards,
+    isHazardHole,
+    advancedMode
+  });
 
-  // Add hazards to player's hazard count only if hazards > 0
-  if (hazards > 0) {
-    hazardAdded = true;
-  }
+  const hazardAdded = hazards > 0;
 
   if (player) {
     const allPlayer = allPlayers.find(p => p.name === player.name);
@@ -435,9 +404,9 @@ function submitPlayerScore() {
       playerIndex: currentPlayerIndex,
       playerName: player.name,
       hole: currentHole,
-      score: score,
-      hazardAdded: hazardAdded,
-      hazards: hazards
+      score,
+      hazardAdded,
+      hazards
     });
   } else {
     console.warn("No current player found during score submission.");
@@ -448,7 +417,7 @@ function submitPlayerScore() {
 
   const { label, color } = getScoreLabelAndColor(score);
 
-  // End-game & sudden death logic here stays unchanged
+  // End-game & sudden death logic (unchanged)
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
@@ -474,14 +443,13 @@ function submitPlayerScore() {
     }
   }
 
-  // Show animation
+  // Show animation & refresh UI
   showScoreAnimation(`${player.name}: ${label}!`, color);
-
   updateLeaderboard();
   updateScorecard();
 
+  // Turn rotation (unchanged)
   currentPlayerIndex++;
-
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
@@ -522,7 +490,7 @@ function submitPlayerScore() {
         }
 
         players = winners;
-        currentHole = currentHole === 20 ? 1 : currentHole + 1;
+        currentHole = (currentHole === 20) ? 1 : (currentHole + 1);
       }
     } else {
       currentHole++;
@@ -949,7 +917,6 @@ function setupHazardHoles() {
   }
   hazardHoles = Array.from(set).sort((a, b) => a - b);
 }
-
 
 function isAdjacent(number1, number2) {
   const dartboardOrder = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
