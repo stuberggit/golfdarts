@@ -228,6 +228,12 @@ function showHole() {
 
   container.innerHTML = '';
 
+  // Build hits options once (Miss → 1-BDP → 1..9)
+  const hitsOptions =
+    `<option value="miss">Miss!</option>
+     <option value="bdp">1 - BDP</option>
+     ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
+
   if (advancedMode && displayHole !== "🎯") {
     const advancedWrapper = document.createElement('div');
     advancedWrapper.className = 'advanced-inputs';
@@ -238,13 +244,12 @@ function showHole() {
     playerGroup.innerHTML = `
       <label>${player.name} hits:</label>
       <select id="hits">
-        <option value="miss">Miss!</option>
-        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+        ${hitsOptions}
       </select>
     `;
     advancedWrapper.appendChild(playerGroup);
 
-    // Hazard hits (always visible, disabled on non-hazard holes)
+    // Hazard hits (visible always; disabled on non-hazard holes)
     const hazardGroup = document.createElement('div');
     hazardGroup.className = 'input-group';
     const isHazard = hazardHoles.includes(displayHole);
@@ -261,14 +266,13 @@ function showHole() {
 
     container.appendChild(advancedWrapper);
   } else {
-    // Non-advanced or normal/random mode: single player hits dropdown centered
+    // Non-advanced or 🎯: single player hits dropdown centered
     const singleWrapper = document.createElement('div');
     singleWrapper.className = 'single-select';
     singleWrapper.innerHTML = `
       <label>${player.name} hits:</label>
       <select id="hits">
-        <option value="miss">Miss!</option>
-        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+        ${hitsOptions}
       </select>
     `;
     container.appendChild(singleWrapper);
@@ -337,9 +341,26 @@ function getScoreLabelAndColor(hits) {
 // Track number of holes actually played
 let holesPlayedCount = 0;
 
+function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
+  // Clamp inputs
+  const h  = Math.max(0, Math.min(9, Number(hits) || 0));
+  const hz = Math.max(0, Math.min(3, Number(hazards) || 0));
+
+  // Base table by hits:
+  // 0→5, 1→3, 2→2, 3→1, 4→0, 5→-1, 6→-2, 7→-3, 8→-4, 9→-5
+  const base = (h === 0) ? 5 : (4 - h);
+
+  // Hazard penalty applies only on hazard holes in Advanced Mode
+  const penalty = (advancedMode && isHazardHole) ? hz : 0;
+
+  // Cap top end at 8 (Buster). Lower end naturally ≥ -5 from base table.
+  return Math.min(8, base + penalty);
+}
+
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
-  const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
+  const isBDPSelected = hitsValue === "bdp";
+  const hits = (hitsValue === "miss") ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
 
   if (isNaN(hits) || hits < 0 || hits > 9) {
     alert("Enter a valid number of hits.");
@@ -347,92 +368,77 @@ function submitPlayerScore() {
   }
 
   const player = players[currentPlayerIndex];
+  if (!player) {
+    console.warn("No current player found during score submission.");
+    return;
+  }
 
-  // Check for Shanghai
+  // Shanghai prompt (unchanged)
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(
+      `Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? ` +
+      `Cancel to score -2 and return to game. OK to accept humiliating defeat`
+    );
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  // Calculate base score with exact logic:
-  // Miss + hazards
-  // Miss = hits === 0
-  // Buster = Miss + 3 hazards = 8
-  // Quad Bogey = Miss + 2 hazards = 7
-  // Triple Bogey = Miss + 1 hazard = 6
-  // Double Bogey = Miss only = 5
-  // Bogey = Hit 1 + 1 hazard = 4
-  // Par = Hit 1 no hazard = 3
-  // Birdie = Hit 2 = 2
-  // Ace = Hit 3 = 1
-  // Goose Egg = Hit 4 = 0
-  // Icicle = Hit 5 = -1
-  // Polar Bear = Hit 6 = -2
-  // Frostbite = Hit 7 = -3
-  // Snowman = Hit 8 = -4
-  // Avalanche = Hit 9 = -5
-
-  let score;
+  // Hazards only matter on hazard holes in advanced mode
   let hazards = 0;
-  let hazardAdded = false;
-
   if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+    hazards = hazardSelect ? (parseInt(hazardSelect.value, 10) || 0) : 0;
   }
 
-  if (hits === 0) {
-    // Miss + hazards
-    score = 5 + hazards; // 5 to 8
-  } else if (hits === 1 && hazards === 1) {
-    // Hit 1 + 1 hazard = Bogey
-    score = 4;
-  } else if (hits === 1 && hazards === 0) {
-    // Par
-    score = 3;
-  } else if (hits >= 2 && hits <= 9) {
-    // For hits 2-9, score decreases by 1 for each hit above 1
-    score = 4 - hits;
-  } else if (hits === 1 && hazards > 1) {
-    // Defensive: if hazards > 1 but hits=1 (not expected), treat as bogey + hazards
-    score = 4 + (hazards - 1);
-  } else {
-    // Fallback to par
-    score = 3;
+  // Base score from hits
+  // miss => 5 ; hits 1..9 => 4 - hits
+  const base = (hits === 0) ? 5 : (4 - hits);
+
+  // Final score: ALWAYS add hazards
+  const score = base + hazards;
+
+  // BDP only when user chose it AND it's truly a Par (hits=1 & hazards=0)
+  const wasBDP = isBDPSelected && hits === 1 && hazards === 0;
+
+  // Persist to both active and allPlayers mirrors
+  const mirror = allPlayers.find(p => p.name === player.name);
+
+  player.scores.push(score);
+  if (mirror) mirror.scores.push(score);
+
+  // Track hazards sum
+  player.hazards = (player.hazards || 0) + hazards;
+  if (mirror) mirror.hazards = (mirror.hazards || 0) + hazards;
+
+  // Track BDP flags/count
+  player.bdpFlags = player.bdpFlags || [];
+  player.bdpFlags.push(!!wasBDP);
+  if (wasBDP) player.bdpCount = (player.bdpCount || 0) + 1;
+
+  if (mirror) {
+    mirror.bdpFlags = mirror.bdpFlags || [];
+    mirror.bdpFlags.push(!!wasBDP);
+    if (wasBDP) mirror.bdpCount = (mirror.bdpCount || 0) + 1;
   }
 
-  // Add hazards to player's hazard count only if hazards > 0
-  if (hazards > 0) {
-    hazardAdded = true;
-  }
-
-  if (player) {
-    const allPlayer = allPlayers.find(p => p.name === player.name);
-    player.scores.push(score);
-    if (allPlayer) allPlayer.scores.push(score);
-    player.hazards = (player.hazards || 0) + hazards;
-
-    actionHistory.push({
-      playerIndex: currentPlayerIndex,
-      playerName: player.name,
-      hole: currentHole,
-      score: score,
-      hazardAdded: hazardAdded,
-      hazards: hazards
-    });
-  } else {
-    console.warn("No current player found during score submission.");
-    return;
-  }
+  // For undo
+  actionHistory.push({
+    playerIndex: currentPlayerIndex,
+    playerName: player.name,
+    hole: currentHole,
+    score,
+    hazardAdded: hazards > 0,
+    hazards,
+    bdp: wasBDP
+  });
 
   saveGameState();
 
   const { label, color } = getScoreLabelAndColor(score);
 
-  // End-game & sudden death logic here stays unchanged
+  // --- existing end-game & sudden death logic (unchanged) ---
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
@@ -458,7 +464,6 @@ function submitPlayerScore() {
     }
   }
 
-  // Show animation
   showScoreAnimation(`${player.name}: ${label}!`, color);
 
   updateLeaderboard();
@@ -926,8 +931,12 @@ function loadGameState() {
 
 // ========== ADVANCED MODE ==========
 function setupHazardHoles() {
-  const allHoleIndices = [...Array(18).keys()];
-  hazardHoles = allHoleIndices.sort(() => 0.5 - Math.random()).slice(0, 6);
+  const set = new Set();
+  while (set.size < 6) {
+    // pick numbers 1 through 18 (golf holes)
+    set.add(Math.floor(Math.random() * 18) + 1);
+  }
+  hazardHoles = Array.from(set).sort((a, b) => a - b);
 }
 
 function isAdjacent(number1, number2) {
@@ -1075,40 +1084,76 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
-  // ✅ Ordered worst → best so display makes sense
+  // If player.hazards wasn't maintained, derive from actionHistory
+  const hazardsFromHistory = (playerName) => {
+    try {
+      return (actionHistory || []).reduce((sum, a) =>
+        sum + ((a.playerName === playerName && typeof a.hazards === "number") ? a.hazards : 0), 0
+      );
+    } catch {
+      return 0;
+    }
+  };
+
+  // Worst → best (matches your scoring map)
   const scoreLabels = [
-    "Buster",        // 8 strokes (worst)
-    "Quad Bogey",    // 7 strokes
-    "Triple Bogey",  // 6 strokes
-    "Double Bogey",  // 5 strokes
-    "Bogey",         // 4 strokes
-    "Par",           // 3 strokes
-    "Birdie",        // 2 strokes
-    "Ace",           // 1 stroke
+    "Buster",        // 8
+    "Quad Bogey",    // 7
+    "Triple Bogey",  // 6
+    "Double Bogey",  // 5
+    "Bogey",         // 4
+    "Par",           // 3  <-- BDP will be inserted right after this position
+    "Birdie",        // 2
+    "Ace",           // 1
     "Goose Egg",     // 0
     "Icicle",        // -1
     "Polar Bear",    // -2
     "Frostbite",     // -3
     "Snowman",       // -4
-    "Avalanche"      // -5 (best)
+    "Avalanche"      // -5
   ];
 
-  const hitCounts = allPlayers.map(player => {
+  const hitCounts = (allPlayers || []).map(player => {
     const counts = Array(scoreLabels.length).fill(0);
-    player.scores.forEach(score => {
-      const hitIndex = getHitsFromScore(score);
-      if (hitIndex !== -1) counts[hitIndex]++;
+    (player.scores || []).forEach(score => {
+      const idx = getHitsFromScore(score);
+      if (idx !== -1) counts[idx]++;
     });
-    return { name: player.name, counts };
+
+    const bdpTotal = (typeof player.bdpCount === "number")
+      ? player.bdpCount
+      : ((player.bdpFlags || []).filter(Boolean).length);
+
+    let hazardsTotal = (typeof player.hazards === "number") ? player.hazards : hazardsFromHistory(player.name);
+    if (!Number.isFinite(hazardsTotal)) hazardsTotal = 0;
+
+    return { name: player.name, counts, bdpTotal, hazardsTotal };
   });
 
-  statsContainer.innerHTML = hitCounts.map(player => {
-    const bullets = player.counts
-      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
-      .filter(line => line).join("");
-    return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
+  statsContainer.innerHTML = hitCounts.map(p => {
+    const lines = [];
+
+    // Hazards first — only if > 0
+    if (p.hazardsTotal > 0) lines.push(`<li>${p.hazardsTotal} Hazards</li>`);
+
+    // Score breakdown in order, inserting BDP after "Par"
+    for (let i = 0; i < scoreLabels.length; i++) {
+      const label = scoreLabels[i];
+      const count = p.counts[i];
+
+      // Normal score label (omit zeros)
+      if (count > 0) lines.push(`<li>${count} ${label}</li>`);
+
+      // Immediately after "Par", show BDP if > 0
+      if (label === "Par" && p.bdpTotal > 0) {
+        lines.push(`<li>${p.bdpTotal} BDP</li>`);
+      }
+    }
+
+    return `<strong>${p.name}</strong><ul>${lines.join("")}</ul>`;
   }).join("<hr>");
 
+  // Open the modal (use your existing show logic if different)
   modal.classList.remove("hidden");
 }
 
@@ -1136,15 +1181,35 @@ function getHitsFromScore(score) {
 // ========== MODALS ==========
 
 function showModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal) return;
-  modal.classList.remove('hidden');
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
 }
 
 function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.classList.add('hidden');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
 }
+
+// --- Close on outside click (clicking the overlay, not the card) ---
+document.addEventListener('click', (e) => {
+  // Find any open modal(s)
+  const openModals = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'));
+  if (openModals.length === 0) return;
+
+  // For each open modal, close if the click was on the overlay area (outside .modal-content)
+  openModals.forEach((overlay) => {
+    const content = overlay.querySelector('.modal-content');
+    if (!content) return;
+
+    // If click target is the overlay itself, or within overlay but NOT inside content, then close
+    const clickedInsideContent = content.contains(e.target);
+    const clickedInsideOverlay = overlay.contains(e.target);
+
+    if (clickedInsideOverlay && !clickedInsideContent) {
+      closeModal(overlay.id);
+    }
+  });
+});
 
 
 // ========== ADVANCED MODE ==========
