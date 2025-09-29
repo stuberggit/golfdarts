@@ -1084,7 +1084,7 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
-  // Fallback: if player.hazards wasn’t kept, derive from actionHistory
+  // If player.hazards wasn't maintained, derive from actionHistory
   const hazardsFromHistory = (playerName) => {
     try {
       return (actionHistory || []).reduce((sum, a) =>
@@ -1095,13 +1095,14 @@ function showStats() {
     }
   };
 
+  // Worst → best (matches your scoring map)
   const scoreLabels = [
     "Buster",        // 8
     "Quad Bogey",    // 7
     "Triple Bogey",  // 6
     "Double Bogey",  // 5
     "Bogey",         // 4
-    "Par",           // 3
+    "Par",           // 3  <-- BDP will be inserted right after this position
     "Birdie",        // 2
     "Ace",           // 1
     "Goose Egg",     // 0
@@ -1119,12 +1120,10 @@ function showStats() {
       if (idx !== -1) counts[idx]++;
     });
 
-    // BDP total (from count or flags)
     const bdpTotal = (typeof player.bdpCount === "number")
       ? player.bdpCount
       : ((player.bdpFlags || []).filter(Boolean).length);
 
-    // Hazards total (prefer stored; else derive from history)
     let hazardsTotal = (typeof player.hazards === "number") ? player.hazards : hazardsFromHistory(player.name);
     if (!Number.isFinite(hazardsTotal)) hazardsTotal = 0;
 
@@ -1134,19 +1133,27 @@ function showStats() {
   statsContainer.innerHTML = hitCounts.map(p => {
     const lines = [];
 
-    // Show Hazards and BDP first
-    lines.push(`<li>${p.hazardsTotal} Hazards</li>`);
-    lines.push(`<li>${p.bdpTotal} BDP</li>`);
+    // Hazards first — only if > 0
+    if (p.hazardsTotal > 0) lines.push(`<li>${p.hazardsTotal} Hazards</li>`);
 
-    // Then the normal score breakdown
-    for (let i = 0; i < p.counts.length; i++) {
+    // Score breakdown in order, inserting BDP after "Par"
+    for (let i = 0; i < scoreLabels.length; i++) {
+      const label = scoreLabels[i];
       const count = p.counts[i];
-      if (count > 0) lines.push(`<li>${count} ${scoreLabels[i]}</li>`);
+
+      // Normal score label (omit zeros)
+      if (count > 0) lines.push(`<li>${count} ${label}</li>`);
+
+      // Immediately after "Par", show BDP if > 0
+      if (label === "Par" && p.bdpTotal > 0) {
+        lines.push(`<li>${p.bdpTotal} BDP</li>`);
+      }
     }
 
     return `<strong>${p.name}</strong><ul>${lines.join("")}</ul>`;
   }).join("<hr>");
 
+  // Open the modal (use your existing show logic if different)
   modal.classList.remove("hidden");
 }
 
