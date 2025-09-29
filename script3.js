@@ -228,6 +228,12 @@ function showHole() {
 
   container.innerHTML = '';
 
+  // Build hits options once (Miss → 1-BDP → 1..9)
+  const hitsOptions =
+    `<option value="miss">Miss!</option>
+     <option value="bdp">1 - BDP</option>
+     ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
+
   if (advancedMode && displayHole !== "🎯") {
     const advancedWrapper = document.createElement('div');
     advancedWrapper.className = 'advanced-inputs';
@@ -238,13 +244,12 @@ function showHole() {
     playerGroup.innerHTML = `
       <label>${player.name} hits:</label>
       <select id="hits">
-        <option value="miss">Miss!</option>
-        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+        ${hitsOptions}
       </select>
     `;
     advancedWrapper.appendChild(playerGroup);
 
-    // Hazard hits (always visible, disabled on non-hazard holes)
+    // Hazard hits (visible always; disabled on non-hazard holes)
     const hazardGroup = document.createElement('div');
     hazardGroup.className = 'input-group';
     const isHazard = hazardHoles.includes(displayHole);
@@ -261,14 +266,13 @@ function showHole() {
 
     container.appendChild(advancedWrapper);
   } else {
-    // Non-advanced or normal/random mode: single player hits dropdown centered
+    // Non-advanced or 🎯: single player hits dropdown centered
     const singleWrapper = document.createElement('div');
     singleWrapper.className = 'single-select';
     singleWrapper.innerHTML = `
       <label>${player.name} hits:</label>
       <select id="hits">
-        <option value="miss">Miss!</option>
-        ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}
+        ${hitsOptions}
       </select>
     `;
     container.appendChild(singleWrapper);
@@ -355,7 +359,11 @@ function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
-  const hits = (hitsValue === "miss") ? 0 : parseInt(hitsValue, 10);
+
+  // BDP = 1 hit achieved on last dart; scores exactly like a normal 1,
+  // but only counts as BDP when hazards === 0 (i.e., true Par)
+  const isBDPSelected = hitsValue === "bdp";
+  const hits = hitsValue === "miss" ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
 
   if (isNaN(hits) || hits < 0 || hits > 9) {
     alert("Enter a valid number of hits.");
@@ -366,47 +374,75 @@ function submitPlayerScore() {
 
   // Shanghai check (unchanged)
   if (hits === 6) {
-    const isShanghai = confirm(
-      `Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? ` +
-      `Cancel to score -2 and return to game. OK to accept humiliating defeat`
-    );
+    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  // Read hazards only if this is a hazard hole in Advanced Mode
+  let score;
   let hazards = 0;
-  const isHazardHole = advancedMode && hazardHoles.includes(currentHole);
-  if (isHazardHole) {
+
+  if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    hazards = Math.max(0, Math.min(3, parseInt(hazardSelect?.value, 10) || 0));
+    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
   }
 
-  // ✅ unified, correct scoring for all hit counts
-  const score = computeHoleScore({
-    hits,
-    hazards,
-    isHazardHole,
-    advancedMode
-  });
+  // --- Scoring logic (unchanged, just organized) ---
+  if (hits === 0) {
+    // Miss + hazards => 5..8
+    score = 5 + hazards;
+  } else if (hits === 1 && hazards === 1) {
+    // Bogey
+    score = 4;
+  } else if (hits === 1 && hazards === 0) {
+    // Par
+    score = 3;
+  } else if (hits >= 2 && hits <= 9) {
+    // 2..9 => 4 - hits  (2→2, 3→1, 4→0, 5→-1, 6→-2, 7→-3, 8→-4, 9→-5)
+    score = 4 - hits;
+  } else if (hits === 1 && hazards > 1) {
+    // Defensive fallback; treat as bogey + extra hazards
+    score = 4 + (hazards - 1);
+  } else {
+    score = 3; // fallback to Par
+  }
 
-  const hazardAdded = hazards > 0;
+  // BDP counts only when it's truly a Par (no hazards and 1 hit)
+  const wasBDP = isBDPSelected && hits === 1 && hazards === 0;
 
   if (player) {
     const allPlayer = allPlayers.find(p => p.name === player.name);
+
+    // push score
     player.scores.push(score);
     if (allPlayer) allPlayer.scores.push(score);
-    player.hazards = (player.hazards || 0) + hazards;
 
+    // track hazards (existing behavior)
+    player.hazards = (player.hazards || 0) + hazards;
+    if (allPlayer) allPlayer.hazards = (allPlayer.hazards || 0) + hazards;
+
+    // track BDP per-hole + total
+    player.bdpFlags = player.bdpFlags || [];
+    player.bdpFlags.push(!!wasBDP);
+    player.bdpCount = (player.bdpCount || 0) + (wasBDP ? 1 : 0);
+
+    if (allPlayer) {
+      allPlayer.bdpFlags = allPlayer.bdpFlags || [];
+      allPlayer.bdpFlags.push(!!wasBDP);
+      allPlayer.bdpCount = (allPlayer.bdpCount || 0) + (wasBDP ? 1 : 0);
+    }
+
+    // action history (extend with BDP info so undo can work consistently if you use it)
     actionHistory.push({
       playerIndex: currentPlayerIndex,
       playerName: player.name,
       hole: currentHole,
       score,
-      hazardAdded,
-      hazards
+      hazardAdded: hazards > 0,
+      hazards,
+      bdp: wasBDP
     });
   } else {
     console.warn("No current player found during score submission.");
@@ -417,7 +453,7 @@ function submitPlayerScore() {
 
   const { label, color } = getScoreLabelAndColor(score);
 
-  // End-game & sudden death logic (unchanged)
+  // End-game & sudden death logic unchanged
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
@@ -443,13 +479,13 @@ function submitPlayerScore() {
     }
   }
 
-  // Show animation & refresh UI
   showScoreAnimation(`${player.name}: ${label}!`, color);
+
   updateLeaderboard();
   updateScorecard();
 
-  // Turn rotation (unchanged)
   currentPlayerIndex++;
+
   if (currentPlayerIndex >= players.length) {
     currentPlayerIndex = 0;
 
@@ -490,7 +526,7 @@ function submitPlayerScore() {
         }
 
         players = winners;
-        currentHole = (currentHole === 20) ? 1 : (currentHole + 1);
+        currentHole = currentHole === 20 ? 1 : currentHole + 1;
       }
     } else {
       currentHole++;
@@ -1063,58 +1099,47 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
-  // ✅ Ordered worst → best so display makes sense
   const scoreLabels = [
-    "Buster",        // 8 strokes (worst)
-    "Quad Bogey",    // 7 strokes
-    "Triple Bogey",  // 6 strokes
-    "Double Bogey",  // 5 strokes
-    "Bogey",         // 4 strokes
-    "Par",           // 3 strokes
-    "Birdie",        // 2 strokes
-    "Ace",           // 1 stroke
+    "Buster",        // 8
+    "Quad Bogey",    // 7
+    "Triple Bogey",  // 6
+    "Double Bogey",  // 5
+    "Bogey",         // 4
+    "Par",           // 3
+    "Birdie",        // 2
+    "Ace",           // 1
     "Goose Egg",     // 0
     "Icicle",        // -1
     "Polar Bear",    // -2
     "Frostbite",     // -3
     "Snowman",       // -4
-    "Avalanche"      // -5 (best)
+    "Avalanche"      // -5
   ];
-
-  // Build a quick hazards tally from actionHistory
-  const hazardsByPlayer = {};
-  if (Array.isArray(actionHistory)) {
-    for (const ev of actionHistory) {
-      if (!ev || !ev.playerName) continue;
-      const h = Number(ev.hazards) || 0;
-      if (h > 0) {
-        hazardsByPlayer[ev.playerName] = (hazardsByPlayer[ev.playerName] || 0) + h;
-      }
-    }
-  }
 
   const hitCounts = allPlayers.map(player => {
     const counts = Array(scoreLabels.length).fill(0);
-    player.scores.forEach(score => {
-      const hitIndex = getHitsFromScore(score);
-      if (hitIndex !== -1) counts[hitIndex]++;
+    (player.scores || []).forEach(score => {
+      const idx = getHitsFromScore(score);
+      if (idx !== -1) counts[idx]++;
     });
 
-    // Prefer actionHistory sum; fallback to player.hazards if present
-    const hazardsTotal = (hazardsByPlayer[player.name] != null)
-      ? hazardsByPlayer[player.name]
-      : (Number(player.hazards) || 0);
+    // BDP total: prefer stored count; otherwise derive from flags
+    const bdpTotal = (player.bdpCount != null)
+      ? player.bdpCount
+      : ((player.bdpFlags || []).filter(Boolean).length);
 
-    return { name: player.name, counts, hazardsTotal };
+    return { name: player.name, counts, bdpTotal };
   });
 
   statsContainer.innerHTML = hitCounts.map(player => {
-    const bullets = [
-      `<li><strong>Hazards:</strong> ${player.hazardsTotal}</li>`,
-      ...player.counts.map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
-    ].filter(Boolean).join("");
+    const bullets = player.counts
+      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
+      .filter(Boolean)
+      .join("");
 
-    return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
+    const bdpLine = `<li>${player.bdpTotal || 0} BDP</li>`;
+
+    return `<strong>${player.name}</strong><ul>${bdpLine}${bullets}</ul>`;
   }).join("<hr>");
 
   modal.classList.remove("hidden");
