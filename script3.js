@@ -1136,15 +1136,35 @@ function getHitsFromScore(score) {
 // ========== MODALS ==========
 
 function showModal(id) {
-  const modal = document.getElementById(id);
-  if (!modal) return;
-  modal.classList.remove('hidden');
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
 }
 
 function closeModal(id) {
-  const modal = document.getElementById(id);
-  if (modal) modal.classList.add('hidden');
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
 }
+
+// --- Close on outside click (clicking the overlay, not the card) ---
+document.addEventListener('click', (e) => {
+  // Find any open modal(s)
+  const openModals = Array.from(document.querySelectorAll('.modal-overlay:not(.hidden)'));
+  if (openModals.length === 0) return;
+
+  // For each open modal, close if the click was on the overlay area (outside .modal-content)
+  openModals.forEach((overlay) => {
+    const content = overlay.querySelector('.modal-content');
+    if (!content) return;
+
+    // If click target is the overlay itself, or within overlay but NOT inside content, then close
+    const clickedInsideContent = content.contains(e.target);
+    const clickedInsideOverlay = overlay.contains(e.target);
+
+    if (clickedInsideOverlay && !clickedInsideContent) {
+      closeModal(overlay.id);
+    }
+  });
+});
 
 
 // ========== ADVANCED MODE ==========
