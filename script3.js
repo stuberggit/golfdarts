@@ -337,6 +337,22 @@ function getScoreLabelAndColor(hits) {
 // Track number of holes actually played
 let holesPlayedCount = 0;
 
+function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
+  // Clamp inputs
+  const h  = Math.max(0, Math.min(9, Number(hits) || 0));
+  const hz = Math.max(0, Math.min(3, Number(hazards) || 0));
+
+  // Base table by hits:
+  // 0→5, 1→3, 2→2, 3→1, 4→0, 5→-1, 6→-2, 7→-3, 8→-4, 9→-5
+  const base = (h === 0) ? 5 : (4 - h);
+
+  // Hazard penalty applies only on hazard holes in Advanced Mode
+  const penalty = (advancedMode && isHazardHole) ? hz : 0;
+
+  // Cap top end at 8 (Buster). Lower end naturally ≥ -5 from base table.
+  return Math.min(8, base + penalty);
+}
+
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
   const hits = hitsValue === "miss" ? 0 : parseInt(hitsValue);
@@ -926,9 +942,14 @@ function loadGameState() {
 
 // ========== ADVANCED MODE ==========
 function setupHazardHoles() {
-  const allHoleIndices = [...Array(18).keys()];
-  hazardHoles = allHoleIndices.sort(() => 0.5 - Math.random()).slice(0, 6);
+  const set = new Set();
+  while (set.size < 6) {
+    // pick numbers 1 through 18 (golf holes)
+    set.add(Math.floor(Math.random() * 18) + 1);
+  }
+  hazardHoles = Array.from(set).sort((a, b) => a - b);
 }
+
 
 function isAdjacent(number1, number2) {
   const dartboardOrder = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
@@ -1093,19 +1114,39 @@ function showStats() {
     "Avalanche"      // -5 (best)
   ];
 
+  // Build a quick hazards tally from actionHistory
+  const hazardsByPlayer = {};
+  if (Array.isArray(actionHistory)) {
+    for (const ev of actionHistory) {
+      if (!ev || !ev.playerName) continue;
+      const h = Number(ev.hazards) || 0;
+      if (h > 0) {
+        hazardsByPlayer[ev.playerName] = (hazardsByPlayer[ev.playerName] || 0) + h;
+      }
+    }
+  }
+
   const hitCounts = allPlayers.map(player => {
     const counts = Array(scoreLabels.length).fill(0);
     player.scores.forEach(score => {
       const hitIndex = getHitsFromScore(score);
       if (hitIndex !== -1) counts[hitIndex]++;
     });
-    return { name: player.name, counts };
+
+    // Prefer actionHistory sum; fallback to player.hazards if present
+    const hazardsTotal = (hazardsByPlayer[player.name] != null)
+      ? hazardsByPlayer[player.name]
+      : (Number(player.hazards) || 0);
+
+    return { name: player.name, counts, hazardsTotal };
   });
 
   statsContainer.innerHTML = hitCounts.map(player => {
-    const bullets = player.counts
-      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
-      .filter(line => line).join("");
+    const bullets = [
+      `<li><strong>Hazards:</strong> ${player.hazardsTotal}</li>`,
+      ...player.counts.map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
+    ].filter(Boolean).join("");
+
     return `<strong>${player.name}</strong><ul>${bullets}</ul>`;
   }).join("<hr>");
 
