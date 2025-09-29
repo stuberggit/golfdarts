@@ -1084,6 +1084,17 @@ function showStats() {
   const statsContainer = document.getElementById("statsDetails");
   if (!statsContainer) return;
 
+  // Fallback: if player.hazards wasn’t kept, derive from actionHistory
+  const hazardsFromHistory = (playerName) => {
+    try {
+      return (actionHistory || []).reduce((sum, a) =>
+        sum + ((a.playerName === playerName && typeof a.hazards === "number") ? a.hazards : 0), 0
+      );
+    } catch {
+      return 0;
+    }
+  };
+
   const scoreLabels = [
     "Buster",        // 8
     "Quad Bogey",    // 7
@@ -1101,30 +1112,39 @@ function showStats() {
     "Avalanche"      // -5
   ];
 
-  const hitCounts = allPlayers.map(player => {
+  const hitCounts = (allPlayers || []).map(player => {
     const counts = Array(scoreLabels.length).fill(0);
     (player.scores || []).forEach(score => {
       const idx = getHitsFromScore(score);
       if (idx !== -1) counts[idx]++;
     });
 
-    // BDP total: prefer stored count; otherwise derive from flags
-    const bdpTotal = (player.bdpCount != null)
+    // BDP total (from count or flags)
+    const bdpTotal = (typeof player.bdpCount === "number")
       ? player.bdpCount
       : ((player.bdpFlags || []).filter(Boolean).length);
 
-    return { name: player.name, counts, bdpTotal };
+    // Hazards total (prefer stored; else derive from history)
+    let hazardsTotal = (typeof player.hazards === "number") ? player.hazards : hazardsFromHistory(player.name);
+    if (!Number.isFinite(hazardsTotal)) hazardsTotal = 0;
+
+    return { name: player.name, counts, bdpTotal, hazardsTotal };
   });
 
-  statsContainer.innerHTML = hitCounts.map(player => {
-    const bullets = player.counts
-      .map((count, i) => count > 0 ? `<li>${count} ${scoreLabels[i]}</li>` : '')
-      .filter(Boolean)
-      .join("");
+  statsContainer.innerHTML = hitCounts.map(p => {
+    const lines = [];
 
-    const bdpLine = `<li>${player.bdpTotal || 0} BDP</li>`;
+    // Show Hazards and BDP first
+    lines.push(`<li>${p.hazardsTotal} Hazards</li>`);
+    lines.push(`<li>${p.bdpTotal} BDP</li>`);
 
-    return `<strong>${player.name}</strong><ul>${bdpLine}${bullets}</ul>`;
+    // Then the normal score breakdown
+    for (let i = 0; i < p.counts.length; i++) {
+      const count = p.counts[i];
+      if (count > 0) lines.push(`<li>${count} ${scoreLabels[i]}</li>`);
+    }
+
+    return `<strong>${p.name}</strong><ul>${lines.join("")}</ul>`;
   }).join("<hr>");
 
   modal.classList.remove("hidden");
