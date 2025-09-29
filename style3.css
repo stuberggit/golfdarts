@@ -390,6 +390,7 @@ body.shanghai-bg.modal-open::after {
   justify-content: center;
   align-items: center;
   z-index: 9999;
+  cursor: pointer;
 }
 
 .modal-content {
@@ -408,6 +409,7 @@ body.shanghai-bg.modal-open::after {
   position: relative; /* for absolute close button */
   max-height: 85vh;   /* a bit taller */
   overflow-y: auto;   /* allow scrolling */
+  cursor: auto;
 }
 
 .modal-content h2 {
