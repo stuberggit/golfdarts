@@ -18,6 +18,7 @@
   <div class="hamburger-menu hidden" id="hamburgerMenu">
   <a href="#" onclick="showModal('rulesModal')">📜 Rules</a>
   <a href="#" onclick="showModal('scoringModal')">📊 Scoring</a>
+  <a href="#" onclick="showModal('hofModal')">🏆 Hall of Fame</a>
   <a href="history3.html" target="_blank" rel="noopener noreferrer">📚 View History</a>
   <label><input type="checkbox" id="audioToggle" checked> Audio</label>
   <label><input type="checkbox" id="randomToggle"> Random</label>
@@ -75,13 +76,11 @@
         In Advanced Mode, 6 random holes will be selected as Hazard holes and indicated with the hole number and scorecard cell in red. If a player hits a triple or double of the holes next to the Hazard hole, a hazard is indicated when scoring the hole and +1 is added for each hazard. A total of 3 hazards can be applied.<br><br>
         See the "scoring" summary for how scoring is calculated.
       </p>
-      <button onclick="closeModal('rulesModal')">Close</button>
     </div>
   </div>
 
  <div id="scoringModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <button class="modal-close" onclick="closeModal('scoringModal')" aria-label="Close modal">&times;</button>
     <h2>📊 Scoring</h2>
     <h3># of Hits</h3>
     <h4>1 hit = Par (3)</h4>
@@ -103,13 +102,19 @@
     </ul>
   </div>
 </div>
+  
+<div id="hofModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <h2>🏆 Hall of Fame</h2>
+    <div id="hofList"></div>
+  </div>
+</div>
 
 
   <div id="leaderboardModal" class="modal-overlay hidden">
     <div class="modal-content leaderboard-modal">
       <h2>🏆 Leaderboard</h2>
       <div id="leaderboardDetails"></div>
-      <button onclick="closeModal('leaderboardModal')">Close</button>
     </div>
   </div>
 
@@ -117,7 +122,6 @@
     <div class="modal-content">
       <h2>📈 Game Stats</h2>
       <div id="statsDetails"></div>
-      <button onclick="closeModal('gameStatsModal')">Close</button>
     </div>
   </div>
 
@@ -125,7 +129,6 @@
   <div class="modal-content">
     <h2>📚 Game History</h2>
     <div id="historyDetails"></div>
-    <button onclick="closeModal('historyModal')">Close</button>
   </div>
 </div>
 
