@@ -359,11 +359,8 @@ function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
 
 function submitPlayerScore() {
   const hitsValue = document.getElementById("hits").value;
-
-  // BDP = 1 hit achieved on last dart; scores exactly like a normal 1,
-  // but only counts as BDP when hazards === 0 (i.e., true Par)
   const isBDPSelected = hitsValue === "bdp";
-  const hits = hitsValue === "miss" ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
+  const hits = (hitsValue === "miss") ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
 
   if (isNaN(hits) || hits < 0 || hits > 9) {
     alert("Enter a valid number of hits.");
@@ -371,89 +368,77 @@ function submitPlayerScore() {
   }
 
   const player = players[currentPlayerIndex];
+  if (!player) {
+    console.warn("No current player found during score submission.");
+    return;
+  }
 
-  // Shanghai check (unchanged)
+  // Shanghai prompt (unchanged)
   if (hits === 6) {
-    const isShanghai = confirm(`Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? Cancel to score -2 and return to game. OK to accept humiliating defeat`);
+    const isShanghai = confirm(
+      `Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? ` +
+      `Cancel to score -2 and return to game. OK to accept humiliating defeat`
+    );
     if (isShanghai) {
       showShanghaiWin(player.name);
       return;
     }
   }
 
-  let score;
+  // Hazards only matter on hazard holes in advanced mode
   let hazards = 0;
-
   if (advancedMode && hazardHoles.includes(currentHole)) {
     const hazardSelect = document.querySelector(".hazardSelect");
-    hazards = hazardSelect ? parseInt(hazardSelect.value) || 0 : 0;
+    hazards = hazardSelect ? (parseInt(hazardSelect.value, 10) || 0) : 0;
   }
 
-  // --- Scoring logic (unchanged, just organized) ---
-  if (hits === 0) {
-    // Miss + hazards => 5..8
-    score = 5 + hazards;
-  } else if (hits === 1 && hazards === 1) {
-    // Bogey
-    score = 4;
-  } else if (hits === 1 && hazards === 0) {
-    // Par
-    score = 3;
-  } else if (hits >= 2 && hits <= 9) {
-    // 2..9 => 4 - hits  (2→2, 3→1, 4→0, 5→-1, 6→-2, 7→-3, 8→-4, 9→-5)
-    score = 4 - hits;
-  } else if (hits === 1 && hazards > 1) {
-    // Defensive fallback; treat as bogey + extra hazards
-    score = 4 + (hazards - 1);
-  } else {
-    score = 3; // fallback to Par
-  }
+  // Base score from hits
+  // miss => 5 ; hits 1..9 => 4 - hits
+  const base = (hits === 0) ? 5 : (4 - hits);
 
-  // BDP counts only when it's truly a Par (no hazards and 1 hit)
+  // Final score: ALWAYS add hazards
+  const score = base + hazards;
+
+  // BDP only when user chose it AND it's truly a Par (hits=1 & hazards=0)
   const wasBDP = isBDPSelected && hits === 1 && hazards === 0;
 
-  if (player) {
-    const allPlayer = allPlayers.find(p => p.name === player.name);
+  // Persist to both active and allPlayers mirrors
+  const mirror = allPlayers.find(p => p.name === player.name);
 
-    // push score
-    player.scores.push(score);
-    if (allPlayer) allPlayer.scores.push(score);
+  player.scores.push(score);
+  if (mirror) mirror.scores.push(score);
 
-    // track hazards (existing behavior)
-    player.hazards = (player.hazards || 0) + hazards;
-    if (allPlayer) allPlayer.hazards = (allPlayer.hazards || 0) + hazards;
+  // Track hazards sum
+  player.hazards = (player.hazards || 0) + hazards;
+  if (mirror) mirror.hazards = (mirror.hazards || 0) + hazards;
 
-    // track BDP per-hole + total
-    player.bdpFlags = player.bdpFlags || [];
-    player.bdpFlags.push(!!wasBDP);
-    player.bdpCount = (player.bdpCount || 0) + (wasBDP ? 1 : 0);
+  // Track BDP flags/count
+  player.bdpFlags = player.bdpFlags || [];
+  player.bdpFlags.push(!!wasBDP);
+  if (wasBDP) player.bdpCount = (player.bdpCount || 0) + 1;
 
-    if (allPlayer) {
-      allPlayer.bdpFlags = allPlayer.bdpFlags || [];
-      allPlayer.bdpFlags.push(!!wasBDP);
-      allPlayer.bdpCount = (allPlayer.bdpCount || 0) + (wasBDP ? 1 : 0);
-    }
-
-    // action history (extend with BDP info so undo can work consistently if you use it)
-    actionHistory.push({
-      playerIndex: currentPlayerIndex,
-      playerName: player.name,
-      hole: currentHole,
-      score,
-      hazardAdded: hazards > 0,
-      hazards,
-      bdp: wasBDP
-    });
-  } else {
-    console.warn("No current player found during score submission.");
-    return;
+  if (mirror) {
+    mirror.bdpFlags = mirror.bdpFlags || [];
+    mirror.bdpFlags.push(!!wasBDP);
+    if (wasBDP) mirror.bdpCount = (mirror.bdpCount || 0) + 1;
   }
+
+  // For undo
+  actionHistory.push({
+    playerIndex: currentPlayerIndex,
+    playerName: player.name,
+    hole: currentHole,
+    score,
+    hazardAdded: hazards > 0,
+    hazards,
+    bdp: wasBDP
+  });
 
   saveGameState();
 
   const { label, color } = getScoreLabelAndColor(score);
 
-  // End-game & sudden death logic unchanged
+  // --- existing end-game & sudden death logic (unchanged) ---
   if (!suddenDeath && currentHole === 18 && currentPlayerIndex === players.length - 1) {
     const totals = players.map(p => p.scores.reduce((a, b) => a + b, 0));
     const lowest = Math.min(...totals);
