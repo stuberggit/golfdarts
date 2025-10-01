@@ -822,3 +822,5 @@ body.shanghai-bg.modal-open::after {
   color: #fff;
 }
 .hof-select option { color: #000; } /* options render on light system UI */
+
+.tab-btn.is-active { filter: brightness(1.1); box-shadow: 0 0 0 2px rgba(255,255,255,0.15) inset; }
