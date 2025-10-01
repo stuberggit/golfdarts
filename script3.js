@@ -1733,11 +1733,6 @@ function openHof() {
   if ($player) $player.addEventListener('input', () => renderHof({ tab: 'player' }));
 })();
 
-function openHof() {
-  renderHof({ tab: 'global' }); // make sure it's fresh
-  showModal('hofModal');
-}
-
 // === HOF integration: finder/diagnostic ===
 (function hofFinder() {
   const suspects = [
