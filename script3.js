@@ -1717,21 +1717,56 @@ function openHof() {
 
 // Wire the small control bar
 (function wireHofControls(){
-  const $c = document.getElementById('hofControls');
-  if (!$c) return;
+  const $controls = document.getElementById('hofControls');
+  if (!$controls) return;
 
-  $c.addEventListener('click', (e) => {
-    const tab = e.target?.getAttribute?.('data-hof-tab');
-    if (!tab) return;
+  const $modeSel   = document.getElementById('hofModeFilter');
+  const $playerSel = document.getElementById('hofPlayerFilter');
+
+  // helper: set active tab UI + show/hide filters + render
+  function setTab(tab) {
+    window.__hofTab = tab;
+
+    // tab button active state
+    const btns = $controls.querySelectorAll('.tab-btn');
+    btns.forEach(b => b.classList.toggle('is-active', b.getAttribute('data-hof-tab') === tab));
+
+    // filter visibility
+    if ($modeSel)   $modeSel.style.display   = (tab === 'mode')   ? '' : 'none';
+    if ($playerSel) $playerSel.style.display = (tab === 'player') ? '' : 'none';
+
+    // when switching to Player tab, refresh player list (keeps it fresh)
+    if (tab === 'player' && typeof populateHofPlayerDropdown === 'function') {
+      populateHofPlayerDropdown();
+    }
+
     renderHof({ tab });
+  }
+
+  // click handler for tabs (works even if inner spans/icons are clicked)
+  $controls.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-hof-tab]');
+    if (!btn || !$controls.contains(btn)) return;
+    e.preventDefault();
+    const tab = btn.getAttribute('data-hof-tab');
+    if (!tab) return;
+    setTab(tab);
   });
 
-  const $mode = document.getElementById('hofModeFilter');
-  if ($mode) $mode.addEventListener('change', () => renderHof({ tab: 'mode' }));
+  // mode filter -> re-render Mode tab
+  if ($modeSel) {
+    $modeSel.addEventListener('change', () => setTab('mode'));
+  }
 
-  const $player = document.getElementById('hofPlayerFilter');
-  if ($player) $player.addEventListener('input', () => renderHof({ tab: 'player' }));
+  // player filter (dropdown) -> re-render Player tab
+  if ($playerSel) {
+    $playerSel.addEventListener('change', () => setTab('player'));
+  }
+
+  // initialize default tab if none set
+  if (!window.__hofTab) setTab('global');
 })();
+
 
 // === HOF integration: finder/diagnostic ===
 (function hofFinder() {
@@ -1839,6 +1874,32 @@ function wrapClickToFinalize(btn) {
   obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
 })();
 
+function getAllPlayersFromGames() {
+  const games = gdLoad(GD_KEYS.games, []);
+  const set = new Set();
+  games.forEach(g => (g.players || []).forEach(p => set.add((p.name || '').trim())));
+  // Drop empties and sort
+  return Array.from(set).filter(Boolean).sort((a,b) => a.localeCompare(b));
+}
+
+function populateHofPlayerDropdown() {
+  const sel = document.getElementById('hofPlayerFilter');
+  if (!sel) return;
+  const current = sel.value;
+  // Reset
+  sel.innerHTML = '<option value="">All Players</option>';
+  const players = getAllPlayersFromGames();
+  players.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  // Try to preserve selection
+  if ([...sel.options].some(o => o.value === current)) sel.value = current;
+}
+
+
 // Expose globally
 window.showHistory = showHistory;
 window.startGame = startGame;
@@ -1849,10 +1910,15 @@ window.submitPlayerScore = submitPlayerScore;
 window.undoHole = undoHole;
 window.showHole = showHole;
 window.openHof = function openHof() {
-  try { renderHof({ tab: 'global' }); }
-  catch (e) { console.warn('[HOF] render on open failed', e); }
+  try {
+    populateHofPlayerDropdown();         // NEW: keep the list fresh
+    renderHof({ tab: 'global' });        // default tab
+  } catch (e) {
+    console.warn('[HOF] render on open failed', e);
+  }
   showModal('hofModal');
 };
+
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
