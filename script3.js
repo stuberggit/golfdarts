@@ -1875,19 +1875,95 @@ function wrapClickToFinalize(btn) {
 })();
 
 function getAllPlayersFromGames() {
-  const games = gdLoad(GD_KEYS.games, []);
-  const set = new Set();
-  games.forEach(g => (g.players || []).forEach(p => set.add((p.name || '').trim())));
-  // Drop empties and sort
-  return Array.from(set).filter(Boolean).sort((a,b) => a.localeCompare(b));
+  const names = new Set();
+
+  // 0) In-memory (useful before any save happens)
+  const gs = window.gameState || {};
+  if (Array.isArray(gs.players)) {
+    if (typeof gs.players[0] === 'string') {
+      gs.players.forEach(n => n && names.add(String(n).trim()));
+    } else if (gs.players[0]?.name) {
+      gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+    }
+  }
+
+  // Helper: safe parse
+  const parse = (raw) => { try { return JSON.parse(raw); } catch { return null; } };
+
+  // Helper: pull names from games v2 array
+  const pullFromGamesV2 = (arr) => {
+    (arr || []).forEach(g => (g.players || []).forEach(p => {
+      const n = (p?.name || '').trim();
+      if (n) names.add(n);
+    }));
+  };
+
+  // 1) Current ENV (ADE/PROD) games v2
+  try {
+    const v2 = gdLoad(GD_KEYS.games, []);
+    pullFromGamesV2(v2);
+  } catch {}
+
+  // 2) Other ENV (ADE ↔ PROD), in case you have data there
+  try {
+    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    const otherKey = `golfdarts_games_v2_${otherEnv}`;
+    const otherArr = gdLoad(otherKey, []);
+    pullFromGamesV2(otherArr);
+  } catch {}
+
+  // 3) Legacy keys (history/games older formats)
+  const legacyKeys = [
+    'golfdarts_history', 'golfdarts_history_ADE', 'golfdarts_history_PROD',
+    'golfdarts_games',   'golfdarts_games_ADE',   'golfdarts_games_PROD'
+  ];
+  legacyKeys.forEach(k => {
+    const raw = localStorage.getItem(k);
+    if (!raw) return;
+    const parsed = parse(raw);
+    if (!parsed) return;
+
+    // Pattern A: { records:[ { players:["A","B"] } ] } or players:[{name:"A"}]
+    if (Array.isArray(parsed?.records)) {
+      parsed.records.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') {
+            r.players.forEach(n => n && names.add(String(n).trim()));
+          } else if (typeof r.players[0] === 'object') {
+            r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+          }
+        }
+      });
+    }
+
+    // Pattern B: flat array of rounds with players
+    if (Array.isArray(parsed)) {
+      parsed.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') {
+            r.players.forEach(n => n && names.add(String(n).trim()));
+          } else if (typeof r.players[0] === 'object') {
+            r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+          }
+        }
+      });
+    }
+  });
+
+  // Return sorted list (case-insensitive, stable)
+  return Array
+    .from(names)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 }
 
 function populateHofPlayerDropdown() {
   const sel = document.getElementById('hofPlayerFilter');
   if (!sel) return;
+
   const current = sel.value;
-  // Reset
   sel.innerHTML = '<option value="">All Players</option>';
+
   const players = getAllPlayersFromGames();
   players.forEach(name => {
     const opt = document.createElement('option');
@@ -1895,10 +1971,12 @@ function populateHofPlayerDropdown() {
     opt.textContent = name;
     sel.appendChild(opt);
   });
-  // Try to preserve selection
-  if ([...sel.options].some(o => o.value === current)) sel.value = current;
-}
 
+  // preserve selection if still present
+  if ([...sel.options].some(o => o.value === current)) {
+    sel.value = current;
+  }
+}
 
 // Expose globally
 window.showHistory = showHistory;
