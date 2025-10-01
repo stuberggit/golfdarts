@@ -106,23 +106,30 @@
 <div id="hofModal" class="modal-overlay hidden">
   <div class="modal-content">
     <h2>🏆 Hall of Fame</h2>
-<div id="hofControls" style="margin-bottom: 12px;">
-  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center;">
-    <button class="btn" data-hof-tab="global">Global</button>
-    <button class="btn" data-hof-tab="mode">Mode</button>
-    <button class="btn" data-hof-tab="player">Player</button>
-    
-    <select id="hofModeFilter" style="display:none;">
-      <option value="all">All Modes</option>
-      <option value="standard">Standard</option>
-      <option value="random">Random</option>
-      <option value="advanced">Advanced</option>
-    </select>
-
-    <input id="hofPlayerFilter" style="display:none;" type="text" placeholder="Player name…">
+<!-- Replace the existing #hofControls block with this -->
+<div id="hofControls" class="hof-controls">
+  <div class="hof-tabs">
+    <button class="btn tab-btn btn-global" data-hof-tab="global">Global</button>
+    <button class="btn tab-btn btn-mode"   data-hof-tab="mode">Mode</button>
+    <button class="btn tab-btn btn-player" data-hof-tab="player">Player</button>
   </div>
+
+  <!-- Mode filter (only visible on Mode tab) -->
+  <select id="hofModeFilter" class="hof-select" style="display:none;">
+    <option value="all">All Modes</option>
+    <option value="standard">Standard</option>
+    <option value="random">Random</option>
+    <option value="advanced">Advanced</option>
+  </select>
+
+  <!-- Player filter (only visible on Player tab) -->
+  <select id="hofPlayerFilter" class="hof-select" style="display:none;">
+    <option value="">All Players</option>
+  </select>
 </div>
+
 <div id="hofContent"></div>
+
     <div id="hofList"></div>
   </div>
 </div>
