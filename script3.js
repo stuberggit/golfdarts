@@ -32,6 +32,61 @@ if (isPreProd) {
 console.log("script.js loaded");
 console.log("Parsed History:", history);
 
+// ===== HOF CONFIG =====
+
+// Env detection: treat *2/*3 builds as ADE
+const GD_ENV = (function () {
+  const path = (window.location.pathname || '').toLowerCase();
+  if (
+    path.includes('index2') || path.includes('script2') || path.includes('history2') || path.includes('style2') ||
+    path.includes('index3') || path.includes('script3') || path.includes('history3') || path.includes('style3')
+  ) return 'ADE';
+  return 'PROD';
+})();
+
+// LocalStorage keys (kept separate per ENV)
+const GD_KEYS = {
+  games: `golfdarts_games_v2_${GD_ENV}`,
+  hof:   `golfdarts_hof_v1_${GD_ENV}`,
+};
+
+// Normalized mode names
+const GD_MODES = {
+  STANDARD: 'standard',
+  RANDOM: 'random',
+  ADVANCED: 'advanced',
+};
+
+// HOF category identifiers
+const HOF_CATEGORIES = {
+  BEST_18: 'best18',
+  BEST_FRONT9: 'bestFront9',
+  BEST_BACK9: 'bestBack9',
+  BEST_SUDDEN_DEATH: 'bestSuddenDeath',
+  MOST_X: 'mostX',
+  SHANGHAIS: 'shanghais',
+};
+
+// Metrics considered for “Most X” lists
+const MOST_X_KEYS = [
+  'hazardsTotal', 'busters',
+  'quadBogeys', 'tripleBogeys', 'doubleBogeys', 'bogeys',
+  'pars', 'bdp', 'birdies', 'aces',
+  'gooseEgg', 'icicle', 'polarBear', 'frostbite', 'snowman', 'avalanche'
+];
+
+// Display limits
+const HOF_DISPLAY_LIMITS = {
+  global: 10,   // show Top 10 in Global tab
+  filtered: 25, // show up to 25 in Mode/Player tabs
+};
+
+// Tie/de-dupe rules (documented here for clarity)
+// - Sorting: for Best* and Best SD = ascending by score; for Most X/Shanghais = descending by count
+// - Self PB ties: if same player hits the same metric again, keep the LATEST (by timestamp)
+// - Multi-player ties: rank as 1,1,1,4 (golf-style)
+
+
 // ========== GAME SETUP ==========
 
 function toggleHamburgerMenu() {
@@ -1709,6 +1764,12 @@ function renderHof(options = {}) {
   }).join('');
 }
 
+// Place this after renderHof() is defined (or near other modal helpers)
+function openHof() {
+  try { renderHof({ tab: 'global' }); } catch (e) { console.warn('[HOF] render on open failed', e); }
+  showModal('hofModal');
+}
+
 // Wire the small control bar
 (function wireHofControls(){
   const $c = document.getElementById('hofControls');
@@ -1796,6 +1857,48 @@ function wrapClickToFinalize(btn) {
   }, { once: true }); // persist once per game
   btn.__hofWrapped = true;
 }
+
+// Put this near your other observers/listeners
+(function persistHofWhenStatsOpen() {
+  const modal = document.getElementById('gameStatsModal');
+  if (!modal) {
+    console.warn('[HOF] #gameStatsModal not found; skipping modal observer');
+    return;
+  }
+
+  let persistedForThisOpen = false;
+
+  const tryPersist = () => {
+    if (persistedForThisOpen) return;
+    try {
+      const payload = buildFinalGamePayloadFromState(window.gameState || {});
+      finalizeGameAndUpdateHof(payload);
+      console.log('[HOF] finalize called when Game Stats opened');
+      persistedForThisOpen = true;
+    } catch (e) {
+      console.warn('[HOF] finalize failed when Game Stats opened', e);
+    }
+  };
+
+  // If your show/hide toggles the "hidden" class on the overlay, watch that.
+  const obs = new MutationObserver((muts) => {
+    for (const m of muts) {
+      if (m.type === 'attributes' && m.attributeName === 'class') {
+        const isHidden = modal.classList.contains('hidden');
+        if (!isHidden) {
+          // Modal just opened
+          tryPersist();
+        } else {
+          // Modal just closed; allow next open to persist again
+          persistedForThisOpen = false;
+        }
+      }
+    }
+  });
+
+  obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
+})();
+
 
 
 // Expose globally
