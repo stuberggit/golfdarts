@@ -1839,8 +1839,6 @@ function wrapClickToFinalize(btn) {
   obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
 })();
 
-
-
 // Expose globally
 window.showHistory = showHistory;
 window.startGame = startGame;
@@ -1850,7 +1848,11 @@ window.showHistory = showHistory;
 window.submitPlayerScore = submitPlayerScore;
 window.undoHole = undoHole;
 window.showHole = showHole;
-
+window.openHof = function openHof() {
+  try { renderHof({ tab: 'global' }); }
+  catch (e) { console.warn('[HOF] render on open failed', e); }
+  showModal('hofModal');
+};
 
 // ========== EVENT LISTENERS ==========
 document.addEventListener("DOMContentLoaded", () => {
