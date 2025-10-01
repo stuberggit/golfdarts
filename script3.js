@@ -1368,22 +1368,6 @@ function showHistory() {
 
 // ===== HOF CONFIG & HELPERS =====
 
-// Detect environment for storage segregation (treat *2/*3 builds as ADE)
-const GD_ENV = (function () {
-  if (typeof window.GD_ENV === 'string') return window.GD_ENV; // honor existing
-  const path = (window.location.pathname || '').toLowerCase();
-  const isADE = /index2|script2|history2|style2|index3|script3|history3|style3/.test(path);
-  return isADE ? 'ADE' : 'PROD';
-})();
-
-const GD_KEYS = (function () {
-  if (window.GD_KEYS && window.GD_KEYS.games && window.GD_KEYS.hof) return window.GD_KEYS; // honor existing
-  return {
-    games: `golfdarts_games_v2_${GD_ENV}`,
-    hof:   `golfdarts_hof_v1_${GD_ENV}`,
-  };
-})();
-
 // Modes normalized
 const GD_MODES = {
   STANDARD: 'standard',
@@ -1432,6 +1416,9 @@ const clone = (o) => JSON.parse(JSON.stringify(o || {}));
 /* ===========================================================
    PERSIST GAME & REFRESH HOF
    =========================================================== */
+/* ===========================================================
+   PERSIST GAME & REFRESH HOF
+   =========================================================== */
 
 function finalizeGameAndUpdateHof(finalGamePayload) {
   // 1) Save the game
@@ -1460,8 +1447,8 @@ function entryBase(p, game) {
   return {
     player: p.name,
     date: mmddyy(game.timestamp),
-    ts: game.timestamp,                 // for latest-wins when equal
-    mode: game.mode,                    // filter
+    ts: game.timestamp,    // for latest-wins when equal
+    mode: game.mode,       // filter
     gameId: game.id
   };
 }
@@ -1497,9 +1484,9 @@ function buildPlayerCandidates(p, game) {
   const front9 = (p.perHoleTotals || []).slice(0,9).reduce((a,b)=>a+(b||0),0);
   const back9  = (p.perHoleTotals || []).slice(9,18).reduce((a,b)=>a+(b||0),0);
 
-  c.push({ ...base, category: HOF_CATEGORIES.BEST_18,         metric: p.total,      label: 'Best 18' });
-  c.push({ ...base, category: HOF_CATEGORIES.BEST_FRONT9,     metric: front9,       label: 'Best Front 9' });
-  c.push({ ...base, category: HOF_CATEGORIES.BEST_BACK9,      metric: back9,        label: 'Best Back 9' });
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_18,     metric: p.total, label: 'Best 18' });
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_FRONT9, metric: front9,  label: 'Best Front 9' });
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_BACK9,  metric: back9,   label: 'Best Back 9' });
 
   // Best Sudden Death (only if won)
   if (p.suddenDeath?.won) {
@@ -1520,7 +1507,7 @@ function buildPlayerCandidates(p, game) {
       c.push({
         ...base,
         category: HOF_CATEGORIES.MOST_X,
-        subtype: k,           // which X (e.g., birdies)
+        subtype: k,
         metric: count,
         label: `Most ${prettyX(k)}`
       });
@@ -1542,7 +1529,7 @@ function buildPlayerCandidates(p, game) {
   return c;
 }
 
-// Translate stat keys to friendly labels
+// Friendly labels for “Most X”
 function prettyX(k) {
   const map = {
     hazardsTotal: 'Hazards', busters: 'Busters', quadBogeys: 'Quad Bogeys',
@@ -1555,7 +1542,6 @@ function prettyX(k) {
 }
 
 function updateHofWithGame(hof, game) {
-  // Ensure category buckets
   const catBest18   = ensureCat(hof, HOF_CATEGORIES.BEST_18);
   const catFront9   = ensureCat(hof, HOF_CATEGORIES.BEST_FRONT9);
   const catBack9    = ensureCat(hof, HOF_CATEGORIES.BEST_BACK9);
@@ -1563,7 +1549,6 @@ function updateHofWithGame(hof, game) {
   const catMostX    = ensureCat(hof, HOF_CATEGORIES.MOST_X);
   const catShanghai = ensureCat(hof, HOF_CATEGORIES.SHANGHAIS);
 
-  // Build per-player candidates and merge
   (game.players || []).forEach(p => {
     const pcs = buildPlayerCandidates(p, game);
 
@@ -1614,7 +1599,7 @@ function computeRanksWithTies(sortedEntries /* already sorted */) {
   return out;
 }
 
-// Filter helpers
+// Filters
 function filterByMode(entries, mode /* 'all' | 'standard' | 'random' | 'advanced' */) {
   if (!mode || mode === 'all') return entries;
   return entries.filter(e => e.mode === mode);
@@ -1633,7 +1618,6 @@ function getHofData() {
 function pickList(catKey) {
   const hof = getHofData();
   const cat = hof.categories?.[catKey]?.entries || [];
-  // Entries are already sorted in storage; defensively sort again by their metricType
   const entries = cat.slice().sort((a,b) => {
     return a.metricType === 'asc'
       ? ascByMetricLatestWins(a,b)
@@ -1670,7 +1654,7 @@ function renderHof(options = {}) {
   const container = document.getElementById('hofContent');
   if (!container) return;
 
-  container.innerHTML = blocks.map(({key, title, dir, limitGlobal}) => {
+  container.innerHTML = blocks.map(({key, title, limitGlobal}) => {
     let entries = pickList(key);
     if (tab === 'mode')   entries = filterByMode(entries, modeFilter);
     if (tab === 'player') entries = filterByPlayer(entries, playerFilter);
@@ -1682,7 +1666,7 @@ function renderHof(options = {}) {
 
     const rows = ranked.map(({rank, entry}) => {
       const name = entry.player;
-      const score = entry.metric;           // total for Best*, count for MostX/Shanghais
+      const score = entry.metric;
       const date = entry.date;
       const modeTxt = entry.mode === 'standard' ? '' : ` • ${entry.mode[0].toUpperCase()}${entry.mode.slice(1)}`;
 
@@ -1720,7 +1704,6 @@ function renderHof(options = {}) {
    PLAYER DROPDOWN (GLOBAL HELPERS)
    =========================================================== */
 
-// Global helpers so inline/other modules can access
 window.getAllPlayersFromGames = function getAllPlayersFromGames() {
   const names = new Set();
 
@@ -1805,7 +1788,6 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
     sel.appendChild(opt);
   });
 
-  // preserve selection if still present
   if ([...sel.options].some(o => o.value === current)) {
     sel.value = current;
   }
@@ -1861,21 +1843,6 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
    INTEGRATION HOOKS
    =========================================================== */
 
-// Optional: finder (logs likely end-of-game functions)
-(function hofFinder() {
-  const suspects = [
-    'finalizeGame', 'finaliseGame', 'completeGame', 'endGame',
-    'onGameComplete', 'showGameStats', 'renderGameStats', 'openGameStats'
-  ];
-  const found = suspects.filter(name => typeof window[name] === 'function');
-  const clues = {
-    gameStatsBtn: !!document.querySelector('#gameStatsBtn, .game-stats-btn, button[data-role="game-stats"]'),
-    gameStatsModal: !!document.getElementById('gameStatsModal'),
-    submitScoreBtn: !!document.getElementById('submitScoreBtn'),
-  };
-  console.log('[HOF] Finder:', { foundFunctions: found, clues });
-})();
-
 // Persist when Game Stats modal opens (works with your .hidden toggling)
 (function persistHofWhenStatsOpen() {
   const modal = document.getElementById('gameStatsModal');
@@ -1893,7 +1860,6 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
         const payload = buildFinalGamePayloadFromState(window.gameState || {});
         finalizeGameAndUpdateHof(payload);
       } else {
-        // Soft fallback: if adapter not present, do nothing (avoid breaking flow)
         console.warn('[HOF] buildFinalGamePayloadFromState not found; skipping persist');
       }
       console.log('[HOF] finalize called when Game Stats opened');
@@ -1931,4 +1897,5 @@ window.openHof = function openHof() {
   }
   showModal('hofModal');
 };
+
 
