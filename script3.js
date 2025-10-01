@@ -1715,6 +1715,97 @@ function openHof() {
   showModal('hofModal');
 }
 
+// ==== HOF: Global player helpers ====
+// Attach to window so inline onclick / other modules can call them.
+window.getAllPlayersFromGames = function getAllPlayersFromGames() {
+  const names = new Set();
+
+  // In-memory (before any save)
+  const gs = window.gameState || {};
+  if (Array.isArray(gs.players)) {
+    if (typeof gs.players[0] === 'string') {
+      gs.players.forEach(n => n && names.add(String(n).trim()));
+    } else if (gs.players[0]?.name) {
+      gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+    }
+  }
+
+  // Safe loader
+  const safeLoad = (key, fallback=[]) => {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch { return fallback; }
+  };
+
+  // New games v2 — current ENV
+  try {
+    const v2 = gdLoad(GD_KEYS.games, []); // your existing loader
+    (v2 || []).forEach(g => (g.players || []).forEach(p => {
+      const n = (p?.name || '').trim(); if (n) names.add(n);
+    }));
+  } catch {}
+
+  // New games v2 — other ENV (ADE ↔ PROD)
+  try {
+    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    const otherKey = `golfdarts_games_v2_${otherEnv}`;
+    const otherArr = safeLoad(otherKey, []);
+    (otherArr || []).forEach(g => (g.players || []).forEach(p => {
+      const n = (p?.name || '').trim(); if (n) names.add(n);
+    }));
+  } catch {}
+
+  // Legacy keys (history/games prior formats)
+  ['golfdarts_history','golfdarts_history_ADE','golfdarts_history_PROD',
+   'golfdarts_games','golfdarts_games_ADE','golfdarts_games_PROD'
+  ].forEach(k => {
+    const arrOrObj = safeLoad(k, null);
+    if (!arrOrObj) return;
+
+    // {records:[{players:[...]}]}
+    if (Array.isArray(arrOrObj?.records)) {
+      arrOrObj.records.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
+          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+        }
+      });
+    }
+
+    // Or flat array of rounds with players
+    if (Array.isArray(arrOrObj)) {
+      arrOrObj.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
+          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+        }
+      });
+    }
+  });
+
+  return Array.from(names).filter(Boolean)
+    .sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+};
+
+window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
+  const sel = document.getElementById('hofPlayerFilter');
+  if (!sel) return;
+
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Players</option>';
+
+  const players = window.getAllPlayersFromGames();
+  players.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+
+  if ([...sel.options].some(o => o.value === current)) {
+    sel.value = current;
+  }
+};
+
 // Wire the small control bar
 (function wireHofControls(){
   const $controls = document.getElementById('hofControls');
@@ -1977,6 +2068,98 @@ function populateHofPlayerDropdown() {
     sel.value = current;
   }
 }
+
+// ==== HOF: Global player helpers ====
+// Attach to window so inline onclick / other modules can call them.
+window.getAllPlayersFromGames = function getAllPlayersFromGames() {
+  const names = new Set();
+
+  // In-memory (before any save)
+  const gs = window.gameState || {};
+  if (Array.isArray(gs.players)) {
+    if (typeof gs.players[0] === 'string') {
+      gs.players.forEach(n => n && names.add(String(n).trim()));
+    } else if (gs.players[0]?.name) {
+      gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+    }
+  }
+
+  // Safe loader
+  const safeLoad = (key, fallback=[]) => {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch { return fallback; }
+  };
+
+  // New games v2 — current ENV
+  try {
+    const v2 = gdLoad(GD_KEYS.games, []); // your existing loader
+    (v2 || []).forEach(g => (g.players || []).forEach(p => {
+      const n = (p?.name || '').trim(); if (n) names.add(n);
+    }));
+  } catch {}
+
+  // New games v2 — other ENV (ADE ↔ PROD)
+  try {
+    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    const otherKey = `golfdarts_games_v2_${otherEnv}`;
+    const otherArr = safeLoad(otherKey, []);
+    (otherArr || []).forEach(g => (g.players || []).forEach(p => {
+      const n = (p?.name || '').trim(); if (n) names.add(n);
+    }));
+  } catch {}
+
+  // Legacy keys (history/games prior formats)
+  ['golfdarts_history','golfdarts_history_ADE','golfdarts_history_PROD',
+   'golfdarts_games','golfdarts_games_ADE','golfdarts_games_PROD'
+  ].forEach(k => {
+    const arrOrObj = safeLoad(k, null);
+    if (!arrOrObj) return;
+
+    // {records:[{players:[...]}]}
+    if (Array.isArray(arrOrObj?.records)) {
+      arrOrObj.records.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
+          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+        }
+      });
+    }
+
+    // Or flat array of rounds with players
+    if (Array.isArray(arrOrObj)) {
+      arrOrObj.forEach(r => {
+        if (Array.isArray(r?.players)) {
+          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
+          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+        }
+      });
+    }
+  });
+
+  return Array.from(names).filter(Boolean)
+    .sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+};
+
+window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
+  const sel = document.getElementById('hofPlayerFilter');
+  if (!sel) return;
+
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Players</option>';
+
+  const players = window.getAllPlayersFromGames();
+  players.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+
+  if ([...sel.options].some(o => o.value === current)) {
+    sel.value = current;
+  }
+};
+
 
 // Expose globally
 window.showHistory = showHistory;
