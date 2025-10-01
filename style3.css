@@ -782,3 +782,43 @@ body.shanghai-bg.modal-open::after {
   max-height: 80vh;
   overflow-y: auto;
 }
+
+/* HOF controls layout */
+.hof-controls { margin-bottom: 12px; }
+
+.hof-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+/* Make each tab take ~1/3 width on one line, smaller text/padding */
+.tab-btn {
+  flex: 1 1 0;           /* three equal columns */
+  max-width: 33.33%;
+  padding: 6px 8px;      /* smaller than your default .btn */
+  font-size: 0.9rem;     /* ~1/3 “smaller” feel */
+  line-height: 1.1;
+  border: 2px solid transparent; /* we’ll color the border per-tab below */
+}
+
+/* Different border colors per tab */
+.btn-global { border-color: #2e7d32; }   /* green */
+.btn-mode   { border-color: #1976d2; }   /* blue */
+.btn-player { border-color: #8e24aa; }   /* purple */
+
+/* Dropdowns */
+.hof-select {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto 6px auto;
+  display: block;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.15);
+  color: #fff;
+}
+.hof-select option { color: #000; } /* options render on light system UI */
