@@ -1342,6 +1342,462 @@ function showHistory() {
   }
 }
 
+// ===== HOF CONFIG & HELPERS =====
+
+// Detect environment for storage segregation
+const GD_ENV = (function () {
+  // Tweak this if you prefer a different ADE detection
+  const path = (window.location.pathname || '').toLowerCase();
+  if (path.includes('index2') || path.includes('script2') || path.includes('history2') || path.includes('style2')) return 'ADE';
+  return 'PROD';
+})();
+
+const GD_KEYS = {
+  games: `golfdarts_games_v2_${GD_ENV}`,
+  hof:   `golfdarts_hof_v1_${GD_ENV}`,
+};
+
+// Modes normalized
+const GD_MODES = {
+  STANDARD: 'standard',
+  RANDOM: 'random',
+  ADVANCED: 'advanced',
+};
+
+// Categories we support in HOF
+const HOF_CATEGORIES = {
+  BEST_18: 'best18',
+  BEST_FRONT9: 'bestFront9',
+  BEST_BACK9: 'bestBack9',
+  BEST_SUDDEN_DEATH: 'bestSuddenDeath',
+  MOST_X: 'mostX',
+  SHANGHAIS: 'shanghais',
+};
+
+// “X” metrics we’ll consider for “Most X”
+const MOST_X_KEYS = [
+  'hazardsTotal','busters','quadBogeys','tripleBogeys','doubleBogeys','bogeys',
+  'pars','bdp','birdies','aces',
+  'gooseEgg','icicle','polarBear','frostbite','snowman','avalanche'
+];
+
+// Load/save utilities
+function gdLoad(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch { return fallback; }
+}
+function gdSave(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+// Safe date stamp MM/DD/YY
+function mmddyy(ts) {
+  const d = new Date(ts);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${mm}/${dd}/${yy}`;
+}
+
+// Deep clone small objects
+const clone = (o) => JSON.parse(JSON.stringify(o || {}));
+
+// ===== PERSIST GAME & REFRESH HOF =====
+
+function finalizeGameAndUpdateHof(finalGamePayload) {
+  // 1) Save the game
+  const games = gdLoad(GD_KEYS.games, []);
+  games.push(finalGamePayload);
+  gdSave(GD_KEYS.games, games);
+
+  // 2) Update HOF deterministically from this single game
+  const hof = gdLoad(GD_KEYS.hof, { version: 1, updated: Date.now(), categories: {} });
+  updateHofWithGame(hof, finalGamePayload);
+  hof.updated = Date.now();
+  gdSave(GD_KEYS.hof, hof);
+
+  // 3) If HOF modal is open, re-render (optional)
+  if (!document.getElementById('hofModal')?.classList.contains('hidden')) {
+    renderHof(); // default Global view
+  }
+}
+
+function ensureCat(hof, key) {
+  if (!hof.categories[key]) hof.categories[key] = { entries: [] };
+  return hof.categories[key];
+}
+
+function entryBase(p, game) {
+  return {
+    player: p.name,
+    date: mmddyy(game.timestamp),
+    ts: game.timestamp,                 // for latest-wins when equal
+    mode: game.mode,                    // filter
+    gameId: game.id
+  };
+}
+
+// Insert into a ranked list with max length (25), de-dupe self PB ties (latest wins)
+function insertRanked(list, candidate, compareFn, maxLen = 25) {
+  // If same player & same rank metric, keep latest (remove older)
+  const sameKey = (e) =>
+    e.player === candidate.player &&
+    e.metric === candidate.metric &&
+    (e.subtype ? e.subtype === candidate.subtype : true);
+
+  const existing = list.findIndex(sameKey);
+  if (existing >= 0) {
+    // Keep latest by timestamp
+    if (candidate.ts >= list[existing].ts) list.splice(existing, 1);
+    else return; // older, skip
+  }
+
+  list.push(candidate);
+  list.sort(compareFn);
+  if (list.length > maxLen) list.length = maxLen;
+}
+
+// Category comparators
+const ascByMetricLatestWins = (a,b) => (a.metric - b.metric) || (b.ts - a.ts);
+const descByMetricLatestWins = (a,b) => (b.metric - a.metric) || (b.ts - a.ts);
+
+// Build candidates for a single player/game
+function buildPlayerCandidates(p, game) {
+  const c = [];
+  const base = entryBase(p, game);
+
+  // Totals
+  const front9 = (p.perHoleTotals || []).slice(0,9).reduce((a,b)=>a+(b||0),0);
+  const back9  = (p.perHoleTotals || []).slice(9,18).reduce((a,b)=>a+(b||0),0);
+
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_18,         metric: p.total,      label: 'Best 18' });
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_FRONT9,     metric: front9,       label: 'Best Front 9' });
+  c.push({ ...base, category: HOF_CATEGORIES.BEST_BACK9,      metric: back9,        label: 'Best Back 9' });
+
+  // Best Sudden Death (only if won)
+  if (p.suddenDeath?.won) {
+    const sdMetric = p.total; // Ranking by final total; include extra holes as display only
+    c.push({
+      ...base,
+      category: HOF_CATEGORIES.BEST_SUDDEN_DEATH,
+      metric: sdMetric,
+      label: 'Best Sudden Death',
+      extra: { extraHoles: p.suddenDeath.extraHoles || 0 }
+    });
+  }
+
+  // Most X per round (downstream sorts DESC by metric)
+  const s = p.stats || {};
+  MOST_X_KEYS.forEach(k => {
+    const count = Number(s[k] || 0);
+    if (count > 0) {
+      c.push({
+        ...base,
+        category: HOF_CATEGORIES.MOST_X,
+        subtype: k,           // which X (e.g., birdies)
+        metric: count,
+        label: `Most ${prettyX(k)}`
+      });
+    }
+  });
+
+  // Shanghais
+  const sh = s.shanghais && Number(s.shanghais.count || 0) > 0 ? s.shanghais : null;
+  if (sh) {
+    c.push({
+      ...base,
+      category: HOF_CATEGORIES.SHANGHAIS,
+      metric: sh.count,
+      label: 'Shanghais',
+      extra: { holes: Array.isArray(sh.holes) ? sh.holes.slice(0) : [] }
+    });
+  }
+
+  return c;
+}
+
+// Translate stat keys to friendly labels
+function prettyX(k) {
+  const map = {
+    hazardsTotal: 'Hazards', busters: 'Busters', quadBogeys: 'Quad Bogeys',
+    tripleBogeys: 'Triple Bogeys', doubleBogeys: 'Double Bogeys', bogeys: 'Bogeys',
+    pars: 'Pars', bdp: 'BDP', birdies: 'Birdies', aces: 'Aces',
+    gooseEgg: 'Goose Egg', icicle: 'Icicle', polarBear: 'Polar Bear',
+    frostbite: 'Frostbite', snowman: 'Snowman', avalanche: 'Avalanche'
+  };
+  return map[k] || k;
+}
+
+function updateHofWithGame(hof, game) {
+  // Ensure category buckets
+  const catBest18   = ensureCat(hof, HOF_CATEGORIES.BEST_18);
+  const catFront9   = ensureCat(hof, HOF_CATEGORIES.BEST_FRONT9);
+  const catBack9    = ensureCat(hof, HOF_CATEGORIES.BEST_BACK9);
+  const catBestSD   = ensureCat(hof, HOF_CATEGORIES.BEST_SUDDEN_DEATH);
+  const catMostX    = ensureCat(hof, HOF_CATEGORIES.MOST_X);
+  const catShanghai = ensureCat(hof, HOF_CATEGORIES.SHANGHAIS);
+
+  // Build per-player candidates and merge
+  (game.players || []).forEach(p => {
+    const pcs = buildPlayerCandidates(p, game);
+
+    pcs.forEach(c => {
+      // Normalize display fields
+      c.mode = game.mode;             // for filters
+      c.metricLabel = c.label;        // display header
+      // For sorting within category:
+      if (c.category === HOF_CATEGORIES.BEST_18) {
+        c.metricType = 'asc';
+        c.metricName = 'total';
+        c.metric = Number(c.metric);
+        c.subtype = '18';
+        c.valueText = `${c.metric}`;  // e.g., "40"
+        insertRanked(catBest18.entries, c, ascByMetricLatestWins, 25);
+
+      } else if (c.category === HOF_CATEGORIES.BEST_FRONT9) {
+        c.metricType = 'asc'; c.subtype = 'front9';
+        c.valueText = `${c.metric}`;
+        insertRanked(catFront9.entries, c, ascByMetricLatestWins, 25);
+
+      } else if (c.category === HOF_CATEGORIES.BEST_BACK9) {
+        c.metricType = 'asc'; c.subtype = 'back9';
+        c.valueText = `${c.metric}`;
+        insertRanked(catBack9.entries, c, ascByMetricLatestWins, 25);
+
+      } else if (c.category === HOF_CATEGORIES.BEST_SUDDEN_DEATH) {
+        c.metricType = 'asc'; c.subtype = 'suddenDeath';
+        c.valueText = `${c.metric}`; // total
+        insertRanked(catBestSD.entries, c, ascByMetricLatestWins, 25);
+
+      } else if (c.category === HOF_CATEGORIES.MOST_X) {
+        c.metricType = 'desc'; // higher is better
+        c.valueText = `${c.metric}`; // count
+        insertRanked(catMostX.entries, c, descByMetricLatestWins, 25);
+
+      } else if (c.category === HOF_CATEGORIES.SHANGHAIS) {
+        c.metricType = 'desc'; // more Shanghais ranks higher
+        c.valueText = `${c.metric}`;
+        insertRanked(catShanghai.entries, c, descByMetricLatestWins, 25);
+      }
+    });
+  });
+}
+
+function computeRanksWithTies(sortedEntries, direction /* 'asc' | 'desc' */) {
+  const out = [];
+  let rank = 0;
+  let seen = 0;
+  let prevMetric = null;
+
+  sortedEntries.forEach(e => {
+    seen += 1;
+    if (prevMetric === null || e.metric !== prevMetric) {
+      rank = seen;            // new rank starts at current index
+      prevMetric = e.metric;
+    }
+    out.push({ rank, entry: e });
+  });
+  return out;
+}
+
+// Filter helpers
+function filterByMode(entries, mode /* 'all' | 'standard' | 'random' | 'advanced' */) {
+  if (!mode || mode === 'all') return entries;
+  return entries.filter(e => e.mode === mode);
+}
+function filterByPlayer(entries, name) {
+  if (!name) return entries;
+  const q = String(name).trim().toLowerCase();
+  if (!q) return entries;
+  return entries.filter(e => e.player.toLowerCase().includes(q));
+}
+
+function getHofData() {
+  return gdLoad(GD_KEYS.hof, { version: 1, updated: 0, categories: {} });
+}
+
+function pickList(catKey) {
+  const hof = getHofData();
+  const cat = hof.categories?.[catKey]?.entries || [];
+  // Entries are already sorted in storage; defensively sort again by their metricType
+  const entries = cat.slice().sort((a,b) => {
+    return a.metricType === 'asc'
+      ? ascByMetricLatestWins(a,b)
+      : descByMetricLatestWins(a,b);
+  });
+  return entries;
+}
+
+function renderHof(options = {}) {
+  const tab = options.tab || (window.__hofTab || 'global'); // 'global' | 'mode' | 'player'
+  window.__hofTab = tab;
+
+  const modeFilter = options.mode || (document.getElementById('hofModeFilter')?.value || 'all');
+  const playerFilter = options.player || (document.getElementById('hofPlayerFilter')?.value || '');
+
+  // Toggle filter UI
+  const $mode = document.getElementById('hofModeFilter');
+  const $player = document.getElementById('hofPlayerFilter');
+  if ($mode) $mode.style.display = (tab === 'mode') ? '' : 'none';
+  if ($player) $player.style.display = (tab === 'player') ? '' : 'none';
+
+  // Categories to display blocks for, in order
+  const blocks = [
+    { key: HOF_CATEGORIES.BEST_18,         title: 'Best 18',          dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_FRONT9,     title: 'Best Front 9',     dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_BACK9,      title: 'Best Back 9',      dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_SUDDEN_DEATH,title: 'Best Sudden Death',dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.MOST_X,          title: 'Most X (per round)',dir:'desc', limitGlobal: 10 },
+    { key: HOF_CATEGORIES.SHANGHAIS,       title: 'Shanghais',        dir: 'desc', limitGlobal: 10 },
+  ];
+
+  const container = document.getElementById('hofContent');
+  if (!container) return;
+
+  container.innerHTML = blocks.map(({key, title, dir, limitGlobal}) => {
+    let entries = pickList(key);
+
+    // Apply filters based on tab
+    if (tab === 'mode') entries = filterByMode(entries, modeFilter);
+    if (tab === 'player') entries = filterByPlayer(entries, playerFilter);
+
+    // Apply display limits: Global=10, else up to 25
+    const limit = (tab === 'global') ? limitGlobal : 25;
+    entries = entries.slice(0, limit);
+
+    // Rank with ties
+    const ranked = computeRanksWithTies(entries, dir);
+
+    // Build rows
+    const rows = ranked.map(({rank, entry}) => {
+      const name = entry.player;
+      const score = entry.metric;           // total for Best*, count for MostX/Shanghais
+      const date = entry.date;
+      const mode = entry.mode === 'standard' ? '' : ` • ${entry.mode[0].toUpperCase()}${entry.mode.slice(1)}`;
+
+      // Extra annotations
+      let note = '';
+      if (entry.category === HOF_CATEGORIES.BEST_SUDDEN_DEATH) {
+        const xh = entry?.extra?.extraHoles || 0;
+        note = ` • SD +${xh}`;
+      } else if (entry.category === HOF_CATEGORIES.MOST_X) {
+        note = ` • ${prettyX(entry.subtype)}`;
+      } else if (entry.category === HOF_CATEGORIES.SHANGHAIS) {
+        const holes = entry?.extra?.holes?.length ? ` on ${entry.extra.holes.join(',')}` : '';
+        note = ` • ${entry.metric}×${holes}`;
+      }
+
+      return `
+        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; padding:6px 10px; border-bottom:1px solid rgba(255,255,255,0.2);">
+          <div style="min-width:28px; font-weight:700;">${rank}</div>
+          <div style="flex:1 1 auto;"><strong>${name}</strong></div>
+          <div style="min-width:60px; text-align:right;">${score}</div>
+          <div style="min-width:120px; text-align:right; opacity:0.9;">${date}${mode}${note}</div>
+        </div>
+      `;
+    }).join('') || `<div style="opacity:0.8; padding:6px 10px;">No results yet.</div>`;
+
+    return `
+      <div style="margin-bottom:14px; border:1px solid rgba(255,255,255,0.25); border-radius:12px; overflow:hidden;">
+        <div style="background:rgba(0,0,0,0.25); padding:8px 10px; font-weight:700;">${title}</div>
+        <div>${rows}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Wire the small control bar
+(function wireHofControls(){
+  const $c = document.getElementById('hofControls');
+  if (!$c) return;
+
+  $c.addEventListener('click', (e) => {
+    const tab = e.target?.getAttribute?.('data-hof-tab');
+    if (!tab) return;
+    renderHof({ tab });
+  });
+
+  const $mode = document.getElementById('hofModeFilter');
+  if ($mode) $mode.addEventListener('change', () => renderHof({ tab: 'mode' }));
+
+  const $player = document.getElementById('hofPlayerFilter');
+  if ($player) $player.addEventListener('input', () => renderHof({ tab: 'player' }));
+})();
+
+function openHof() {
+  renderHof({ tab: 'global' }); // make sure it's fresh
+  showModal('hofModal');
+}
+
+// === HOF integration: finder/diagnostic ===
+(function hofFinder() {
+  const suspects = [
+    'finalizeGame', 'finaliseGame', 'completeGame', 'endGame',
+    'onGameComplete', 'showGameStats', 'renderGameStats', 'openGameStats'
+  ];
+
+  const found = [];
+  suspects.forEach(name => {
+    const fn = (window[name] || null);
+    if (typeof fn === 'function') found.push(name);
+  });
+
+  // DOM clues
+  const clues = {
+    gameStatsBtn: document.querySelector('#gameStatsBtn, .game-stats-btn, button[data-role="game-stats"]'),
+    gameStatsModal: document.getElementById('gameStatsModal'),
+    submitScoreBtn: document.getElementById('submitScoreBtn'),
+  };
+
+  console.log('[HOF] Finder:',
+    { foundFunctions: found, clues: Object.fromEntries(Object.entries(clues).map(([k,v]) => [k, !!v])) }
+  );
+
+  // Uncomment to auto-wrap any found function(s) with HOF finalize call:
+  // found.forEach(name => wrapWithHofFinalize(name));
+
+  // If none found, try wrapping native click that opens stats:
+  // if (clues.gameStatsBtn) wrapClickToFinalize(clues.gameStatsBtn);
+})();
+
+// Wrap a named global function so that after it runs, we persist HOF
+function wrapWithHofFinalize(fnName) {
+  const orig = window[fnName];
+  if (typeof orig !== 'function') return;
+  if (orig.__hofWrapped) return;
+  window[fnName] = function(...args) {
+    const ret = orig.apply(this, args);
+    try {
+      const payload = buildFinalGamePayloadFromState(window.gameState || {});
+      finalizeGameAndUpdateHof(payload);
+      console.log(`[HOF] finalize called after ${fnName}`);
+    } catch (e) {
+      console.warn(`[HOF] finalize failed after ${fnName}`, e);
+    }
+    return ret;
+  };
+  window[fnName].__hofWrapped = true;
+}
+
+// As a fallback, wrap the click that opens the Game Stats modal/button
+function wrapClickToFinalize(btn) {
+  if (!btn || btn.__hofWrapped) return;
+  btn.addEventListener('click', () => {
+    try {
+      const payload = buildFinalGamePayloadFromState(window.gameState || {});
+      finalizeGameAndUpdateHof(payload);
+      console.log('[HOF] finalize called from gameStatsBtn click');
+    } catch (e) {
+      console.warn('[HOF] finalize failed from gameStatsBtn click', e);
+    }
+  }, { once: true }); // persist once per game
+  btn.__hofWrapped = true;
+}
+
+
 // Expose globally
 window.showHistory = showHistory;
 window.startGame = startGame;
