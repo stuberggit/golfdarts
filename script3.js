@@ -34,6 +34,30 @@ console.log("Parsed History:", history);
 
 // ========== GAME SETUP ==========
 
+// ===== HOF CONFIG (define first) =====
+(function () {
+  const path = (location.pathname || '').toLowerCase();
+  // Treat *2/*3 builds as ADE
+  const isADE = /index2|script2|history2|style2|index3|script3|history3|style3/.test(path);
+
+  // Expose globally so inline handlers & other modules can see them
+  window.GD_ENV = isADE ? 'ADE' : 'PROD';
+  window.GD_KEYS = {
+    games: `golfdarts_games_v2_${window.GD_ENV}`,
+    hof:   `golfdarts_hof_v1_${window.GD_ENV}`,
+  };
+
+  // Safe load/save (only define if not already defined)
+  window.gdLoad ??= function gdLoad(key, fallback) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch { return fallback; }
+  };
+  window.gdSave ??= function gdSave(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  };
+})();
+
+
 function toggleHamburgerMenu() {
   const menu = document.getElementById("hamburgerMenu");
   menu.classList.toggle("hidden");
@@ -1344,18 +1368,21 @@ function showHistory() {
 
 // ===== HOF CONFIG & HELPERS =====
 
-// Detect environment for storage segregation
+// Detect environment for storage segregation (treat *2/*3 builds as ADE)
 const GD_ENV = (function () {
-  // Tweak this if you prefer a different ADE detection
+  if (typeof window.GD_ENV === 'string') return window.GD_ENV; // honor existing
   const path = (window.location.pathname || '').toLowerCase();
-  if (path.includes('index2') || path.includes('script2') || path.includes('history2') || path.includes('style2')) return 'ADE';
-  return 'PROD';
+  const isADE = /index2|script2|history2|style2|index3|script3|history3|style3/.test(path);
+  return isADE ? 'ADE' : 'PROD';
 })();
 
-const GD_KEYS = {
-  games: `golfdarts_games_v2_${GD_ENV}`,
-  hof:   `golfdarts_hof_v1_${GD_ENV}`,
-};
+const GD_KEYS = (function () {
+  if (window.GD_KEYS && window.GD_KEYS.games && window.GD_KEYS.hof) return window.GD_KEYS; // honor existing
+  return {
+    games: `golfdarts_games_v2_${GD_ENV}`,
+    hof:   `golfdarts_hof_v1_${GD_ENV}`,
+  };
+})();
 
 // Modes normalized
 const GD_MODES = {
@@ -1374,20 +1401,17 @@ const HOF_CATEGORIES = {
   SHANGHAIS: 'shanghais',
 };
 
-// “X” metrics we’ll consider for “Most X”
+// “X” metrics for “Most X”
 const MOST_X_KEYS = [
   'hazardsTotal','busters','quadBogeys','tripleBogeys','doubleBogeys','bogeys',
   'pars','bdp','birdies','aces',
   'gooseEgg','icicle','polarBear','frostbite','snowman','avalanche'
 ];
 
-// Load/save utilities
+// Load/save utilities (idempotent)
 function gdLoad(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
-  } catch { return fallback; }
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch { return fallback; }
 }
 function gdSave(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
@@ -1405,7 +1429,9 @@ function mmddyy(ts) {
 // Deep clone small objects
 const clone = (o) => JSON.parse(JSON.stringify(o || {}));
 
-// ===== PERSIST GAME & REFRESH HOF =====
+/* ===========================================================
+   PERSIST GAME & REFRESH HOF
+   =========================================================== */
 
 function finalizeGameAndUpdateHof(finalGamePayload) {
   // 1) Save the game
@@ -1421,7 +1447,7 @@ function finalizeGameAndUpdateHof(finalGamePayload) {
 
   // 3) If HOF modal is open, re-render (optional)
   if (!document.getElementById('hofModal')?.classList.contains('hidden')) {
-    renderHof(); // default Global view
+    renderHof({ tab: window.__hofTab || 'global' });
   }
 }
 
@@ -1442,7 +1468,6 @@ function entryBase(p, game) {
 
 // Insert into a ranked list with max length (25), de-dupe self PB ties (latest wins)
 function insertRanked(list, candidate, compareFn, maxLen = 25) {
-  // If same player & same rank metric, keep latest (remove older)
   const sameKey = (e) =>
     e.player === candidate.player &&
     e.metric === candidate.metric &&
@@ -1450,7 +1475,6 @@ function insertRanked(list, candidate, compareFn, maxLen = 25) {
 
   const existing = list.findIndex(sameKey);
   if (existing >= 0) {
-    // Keep latest by timestamp
     if (candidate.ts >= list[existing].ts) list.splice(existing, 1);
     else return; // older, skip
   }
@@ -1461,7 +1485,7 @@ function insertRanked(list, candidate, compareFn, maxLen = 25) {
 }
 
 // Category comparators
-const ascByMetricLatestWins = (a,b) => (a.metric - b.metric) || (b.ts - a.ts);
+const ascByMetricLatestWins  = (a,b) => (a.metric - b.metric) || (b.ts - a.ts);
 const descByMetricLatestWins = (a,b) => (b.metric - a.metric) || (b.ts - a.ts);
 
 // Build candidates for a single player/game
@@ -1479,17 +1503,16 @@ function buildPlayerCandidates(p, game) {
 
   // Best Sudden Death (only if won)
   if (p.suddenDeath?.won) {
-    const sdMetric = p.total; // Ranking by final total; include extra holes as display only
     c.push({
       ...base,
       category: HOF_CATEGORIES.BEST_SUDDEN_DEATH,
-      metric: sdMetric,
+      metric: p.total, // rank by final total; display extra holes
       label: 'Best Sudden Death',
       extra: { extraHoles: p.suddenDeath.extraHoles || 0 }
     });
   }
 
-  // Most X per round (downstream sorts DESC by metric)
+  // Most X per round (sort DESC by metric)
   const s = p.stats || {};
   MOST_X_KEYS.forEach(k => {
     const count = Number(s[k] || 0);
@@ -1545,57 +1568,45 @@ function updateHofWithGame(hof, game) {
     const pcs = buildPlayerCandidates(p, game);
 
     pcs.forEach(c => {
-      // Normalize display fields
-      c.mode = game.mode;             // for filters
-      c.metricLabel = c.label;        // display header
-      // For sorting within category:
+      c.mode = game.mode;
+      c.metricLabel = c.label;
+
       if (c.category === HOF_CATEGORIES.BEST_18) {
-        c.metricType = 'asc';
-        c.metricName = 'total';
-        c.metric = Number(c.metric);
-        c.subtype = '18';
-        c.valueText = `${c.metric}`;  // e.g., "40"
+        c.metricType = 'asc'; c.metricName = 'total'; c.subtype = '18';
+        c.metric = Number(c.metric); c.valueText = `${c.metric}`;
         insertRanked(catBest18.entries, c, ascByMetricLatestWins, 25);
 
       } else if (c.category === HOF_CATEGORIES.BEST_FRONT9) {
-        c.metricType = 'asc'; c.subtype = 'front9';
-        c.valueText = `${c.metric}`;
+        c.metricType = 'asc'; c.subtype = 'front9'; c.valueText = `${c.metric}`;
         insertRanked(catFront9.entries, c, ascByMetricLatestWins, 25);
 
       } else if (c.category === HOF_CATEGORIES.BEST_BACK9) {
-        c.metricType = 'asc'; c.subtype = 'back9';
-        c.valueText = `${c.metric}`;
+        c.metricType = 'asc'; c.subtype = 'back9'; c.valueText = `${c.metric}`;
         insertRanked(catBack9.entries, c, ascByMetricLatestWins, 25);
 
       } else if (c.category === HOF_CATEGORIES.BEST_SUDDEN_DEATH) {
-        c.metricType = 'asc'; c.subtype = 'suddenDeath';
-        c.valueText = `${c.metric}`; // total
+        c.metricType = 'asc'; c.subtype = 'suddenDeath'; c.valueText = `${c.metric}`;
         insertRanked(catBestSD.entries, c, ascByMetricLatestWins, 25);
 
       } else if (c.category === HOF_CATEGORIES.MOST_X) {
-        c.metricType = 'desc'; // higher is better
-        c.valueText = `${c.metric}`; // count
+        c.metricType = 'desc'; c.valueText = `${c.metric}`;
         insertRanked(catMostX.entries, c, descByMetricLatestWins, 25);
 
       } else if (c.category === HOF_CATEGORIES.SHANGHAIS) {
-        c.metricType = 'desc'; // more Shanghais ranks higher
-        c.valueText = `${c.metric}`;
+        c.metricType = 'desc'; c.valueText = `${c.metric}`;
         insertRanked(catShanghai.entries, c, descByMetricLatestWins, 25);
       }
     });
   });
 }
 
-function computeRanksWithTies(sortedEntries, direction /* 'asc' | 'desc' */) {
+function computeRanksWithTies(sortedEntries /* already sorted */) {
   const out = [];
-  let rank = 0;
-  let seen = 0;
-  let prevMetric = null;
-
+  let rank = 0, seen = 0, prevMetric = null;
   sortedEntries.forEach(e => {
     seen += 1;
     if (prevMetric === null || e.metric !== prevMetric) {
-      rank = seen;            // new rank starts at current index
+      rank = seen;
       prevMetric = e.metric;
     }
     out.push({ rank, entry: e });
@@ -1631,27 +1642,29 @@ function pickList(catKey) {
   return entries;
 }
 
+/* ===========================================================
+   RENDERERS
+   =========================================================== */
+
 function renderHof(options = {}) {
-  const tab = options.tab || (window.__hofTab || 'global'); // 'global' | 'mode' | 'player'
+  const tab = options.tab || (window.__hofTab || 'global');
   window.__hofTab = tab;
 
-  const modeFilter = options.mode || (document.getElementById('hofModeFilter')?.value || 'all');
+  // Ensure the player list exists before reading its value (only when on Player tab)
+  if (tab === 'player' && typeof populateHofPlayerDropdown === 'function') {
+    populateHofPlayerDropdown();
+  }
+
+  const modeFilter   = options.mode   || (document.getElementById('hofModeFilter')?.value   || 'all');
   const playerFilter = options.player || (document.getElementById('hofPlayerFilter')?.value || '');
 
-  // Toggle filter UI
-  const $mode = document.getElementById('hofModeFilter');
-  const $player = document.getElementById('hofPlayerFilter');
-  if ($mode) $mode.style.display = (tab === 'mode') ? '' : 'none';
-  if ($player) $player.style.display = (tab === 'player') ? '' : 'none';
-
-  // Categories to display blocks for, in order
   const blocks = [
-    { key: HOF_CATEGORIES.BEST_18,         title: 'Best 18',          dir: 'asc',  limitGlobal: 10 },
-    { key: HOF_CATEGORIES.BEST_FRONT9,     title: 'Best Front 9',     dir: 'asc',  limitGlobal: 10 },
-    { key: HOF_CATEGORIES.BEST_BACK9,      title: 'Best Back 9',      dir: 'asc',  limitGlobal: 10 },
-    { key: HOF_CATEGORIES.BEST_SUDDEN_DEATH,title: 'Best Sudden Death',dir: 'asc',  limitGlobal: 10 },
-    { key: HOF_CATEGORIES.MOST_X,          title: 'Most X (per round)',dir:'desc', limitGlobal: 10 },
-    { key: HOF_CATEGORIES.SHANGHAIS,       title: 'Shanghais',        dir: 'desc', limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_18,          title: 'Best 18',           dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_FRONT9,      title: 'Best Front 9',      dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_BACK9,       title: 'Best Back 9',       dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.BEST_SUDDEN_DEATH,title: 'Best Sudden Death', dir: 'asc',  limitGlobal: 10 },
+    { key: HOF_CATEGORIES.MOST_X,           title: 'Most X (per round)',dir: 'desc', limitGlobal: 10 },
+    { key: HOF_CATEGORIES.SHANGHAIS,        title: 'Shanghais',         dir: 'desc', limitGlobal: 10 },
   ];
 
   const container = document.getElementById('hofContent');
@@ -1659,26 +1672,20 @@ function renderHof(options = {}) {
 
   container.innerHTML = blocks.map(({key, title, dir, limitGlobal}) => {
     let entries = pickList(key);
-
-    // Apply filters based on tab
-    if (tab === 'mode') entries = filterByMode(entries, modeFilter);
+    if (tab === 'mode')   entries = filterByMode(entries, modeFilter);
     if (tab === 'player') entries = filterByPlayer(entries, playerFilter);
 
-    // Apply display limits: Global=10, else up to 25
     const limit = (tab === 'global') ? limitGlobal : 25;
     entries = entries.slice(0, limit);
 
-    // Rank with ties
-    const ranked = computeRanksWithTies(entries, dir);
+    const ranked = computeRanksWithTies(entries);
 
-    // Build rows
     const rows = ranked.map(({rank, entry}) => {
       const name = entry.player;
       const score = entry.metric;           // total for Best*, count for MostX/Shanghais
       const date = entry.date;
-      const mode = entry.mode === 'standard' ? '' : ` • ${entry.mode[0].toUpperCase()}${entry.mode.slice(1)}`;
+      const modeTxt = entry.mode === 'standard' ? '' : ` • ${entry.mode[0].toUpperCase()}${entry.mode.slice(1)}`;
 
-      // Extra annotations
       let note = '';
       if (entry.category === HOF_CATEGORIES.BEST_SUDDEN_DEATH) {
         const xh = entry?.extra?.extraHoles || 0;
@@ -1695,7 +1702,7 @@ function renderHof(options = {}) {
           <div style="min-width:28px; font-weight:700;">${rank}</div>
           <div style="flex:1 1 auto;"><strong>${name}</strong></div>
           <div style="min-width:60px; text-align:right;">${score}</div>
-          <div style="min-width:120px; text-align:right; opacity:0.9;">${date}${mode}${note}</div>
+          <div style="min-width:160px; text-align:right; opacity:0.9;">${date}${modeTxt}${note}</div>
         </div>
       `;
     }).join('') || `<div style="opacity:0.8; padding:6px 10px;">No results yet.</div>`;
@@ -1709,14 +1716,11 @@ function renderHof(options = {}) {
   }).join('');
 }
 
-// Place this after renderHof() is defined (or near other modal helpers)
-function openHof() {
-  try { renderHof({ tab: 'global' }); } catch (e) { console.warn('[HOF] render on open failed', e); }
-  showModal('hofModal');
-}
+/* ===========================================================
+   PLAYER DROPDOWN (GLOBAL HELPERS)
+   =========================================================== */
 
-// ==== HOF: Global player helpers ====
-// Attach to window so inline onclick / other modules can call them.
+// Global helpers so inline/other modules can access
 window.getAllPlayersFromGames = function getAllPlayersFromGames() {
   const names = new Set();
 
@@ -1738,7 +1742,7 @@ window.getAllPlayersFromGames = function getAllPlayersFromGames() {
 
   // New games v2 — current ENV
   try {
-    const v2 = gdLoad(GD_KEYS.games, []); // your existing loader
+    const v2 = gdLoad(GD_KEYS.games, []);
     (v2 || []).forEach(g => (g.players || []).forEach(p => {
       const n = (p?.name || '').trim(); if (n) names.add(n);
     }));
@@ -1746,7 +1750,7 @@ window.getAllPlayersFromGames = function getAllPlayersFromGames() {
 
   // New games v2 — other ENV (ADE ↔ PROD)
   try {
-    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    const otherEnv = (GD_ENV === 'ADE') ? 'PROD' : 'ADE';
     const otherKey = `golfdarts_games_v2_${otherEnv}`;
     const otherArr = safeLoad(otherKey, []);
     (otherArr || []).forEach(g => (g.players || []).forEach(p => {
@@ -1801,12 +1805,16 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
     sel.appendChild(opt);
   });
 
+  // preserve selection if still present
   if ([...sel.options].some(o => o.value === current)) {
     sel.value = current;
   }
 };
 
-// Wire the small control bar
+/* ===========================================================
+   CONTROLS WIRING
+   =========================================================== */
+
 (function wireHofControls(){
   const $controls = document.getElementById('hofControls');
   if (!$controls) return;
@@ -1814,7 +1822,6 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
   const $modeSel   = document.getElementById('hofModeFilter');
   const $playerSel = document.getElementById('hofPlayerFilter');
 
-  // helper: set active tab UI + show/hide filters + render
   function setTab(tab) {
     window.__hofTab = tab;
 
@@ -1826,7 +1833,6 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
     if ($modeSel)   $modeSel.style.display   = (tab === 'mode')   ? '' : 'none';
     if ($playerSel) $playerSel.style.display = (tab === 'player') ? '' : 'none';
 
-    // when switching to Player tab, refresh player list (keeps it fresh)
     if (tab === 'player' && typeof populateHofPlayerDropdown === 'function') {
       populateHofPlayerDropdown();
     }
@@ -1834,7 +1840,7 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
     renderHof({ tab });
   }
 
-  // click handler for tabs (works even if inner spans/icons are clicked)
+  // click handler for tabs (handles nested elements)
   $controls.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-hof-tab]');
     if (!btn || !$controls.contains(btn)) return;
@@ -1844,87 +1850,33 @@ window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
     setTab(tab);
   });
 
-  // mode filter -> re-render Mode tab
-  if ($modeSel) {
-    $modeSel.addEventListener('change', () => setTab('mode'));
-  }
+  if ($modeSel)   $modeSel.addEventListener('change', () => setTab('mode'));
+  if ($playerSel) $playerSel.addEventListener('change', () => setTab('player'));
 
-  // player filter (dropdown) -> re-render Player tab
-  if ($playerSel) {
-    $playerSel.addEventListener('change', () => setTab('player'));
-  }
-
-  // initialize default tab if none set
+  // initialize default tab
   if (!window.__hofTab) setTab('global');
 })();
 
+/* ===========================================================
+   INTEGRATION HOOKS
+   =========================================================== */
 
-// === HOF integration: finder/diagnostic ===
+// Optional: finder (logs likely end-of-game functions)
 (function hofFinder() {
   const suspects = [
     'finalizeGame', 'finaliseGame', 'completeGame', 'endGame',
     'onGameComplete', 'showGameStats', 'renderGameStats', 'openGameStats'
   ];
-
-  const found = [];
-  suspects.forEach(name => {
-    const fn = (window[name] || null);
-    if (typeof fn === 'function') found.push(name);
-  });
-
-  // DOM clues
+  const found = suspects.filter(name => typeof window[name] === 'function');
   const clues = {
-    gameStatsBtn: document.querySelector('#gameStatsBtn, .game-stats-btn, button[data-role="game-stats"]'),
-    gameStatsModal: document.getElementById('gameStatsModal'),
-    submitScoreBtn: document.getElementById('submitScoreBtn'),
+    gameStatsBtn: !!document.querySelector('#gameStatsBtn, .game-stats-btn, button[data-role="game-stats"]'),
+    gameStatsModal: !!document.getElementById('gameStatsModal'),
+    submitScoreBtn: !!document.getElementById('submitScoreBtn'),
   };
-
-  console.log('[HOF] Finder:',
-    { foundFunctions: found, clues: Object.fromEntries(Object.entries(clues).map(([k,v]) => [k, !!v])) }
-  );
-
-  // Uncomment to auto-wrap any found function(s) with HOF finalize call:
-  // found.forEach(name => wrapWithHofFinalize(name));
-
-  // If none found, try wrapping native click that opens stats:
-  // if (clues.gameStatsBtn) wrapClickToFinalize(clues.gameStatsBtn);
+  console.log('[HOF] Finder:', { foundFunctions: found, clues });
 })();
 
-// Wrap a named global function so that after it runs, we persist HOF
-function wrapWithHofFinalize(fnName) {
-  const orig = window[fnName];
-  if (typeof orig !== 'function') return;
-  if (orig.__hofWrapped) return;
-  window[fnName] = function(...args) {
-    const ret = orig.apply(this, args);
-    try {
-      const payload = buildFinalGamePayloadFromState(window.gameState || {});
-      finalizeGameAndUpdateHof(payload);
-      console.log(`[HOF] finalize called after ${fnName}`);
-    } catch (e) {
-      console.warn(`[HOF] finalize failed after ${fnName}`, e);
-    }
-    return ret;
-  };
-  window[fnName].__hofWrapped = true;
-}
-
-// As a fallback, wrap the click that opens the Game Stats modal/button
-function wrapClickToFinalize(btn) {
-  if (!btn || btn.__hofWrapped) return;
-  btn.addEventListener('click', () => {
-    try {
-      const payload = buildFinalGamePayloadFromState(window.gameState || {});
-      finalizeGameAndUpdateHof(payload);
-      console.log('[HOF] finalize called from gameStatsBtn click');
-    } catch (e) {
-      console.warn('[HOF] finalize failed from gameStatsBtn click', e);
-    }
-  }, { once: true }); // persist once per game
-  btn.__hofWrapped = true;
-}
-
-// Put this near your other observers/listeners
+// Persist when Game Stats modal opens (works with your .hidden toggling)
 (function persistHofWhenStatsOpen() {
   const modal = document.getElementById('gameStatsModal');
   if (!modal) {
@@ -1937,8 +1889,13 @@ function wrapClickToFinalize(btn) {
   const tryPersist = () => {
     if (persistedForThisOpen) return;
     try {
-      const payload = buildFinalGamePayloadFromState(window.gameState || {});
-      finalizeGameAndUpdateHof(payload);
+      if (typeof buildFinalGamePayloadFromState === 'function') {
+        const payload = buildFinalGamePayloadFromState(window.gameState || {});
+        finalizeGameAndUpdateHof(payload);
+      } else {
+        // Soft fallback: if adapter not present, do nothing (avoid breaking flow)
+        console.warn('[HOF] buildFinalGamePayloadFromState not found; skipping persist');
+      }
       console.log('[HOF] finalize called when Game Stats opened');
       persistedForThisOpen = true;
     } catch (e) {
@@ -1946,17 +1903,14 @@ function wrapClickToFinalize(btn) {
     }
   };
 
-  // If your show/hide toggles the "hidden" class on the overlay, watch that.
   const obs = new MutationObserver((muts) => {
     for (const m of muts) {
       if (m.type === 'attributes' && m.attributeName === 'class') {
         const isHidden = modal.classList.contains('hidden');
         if (!isHidden) {
-          // Modal just opened
           tryPersist();
         } else {
-          // Modal just closed; allow next open to persist again
-          persistedForThisOpen = false;
+          persistedForThisOpen = false; // reset when closed
         }
       }
     }
@@ -1965,276 +1919,16 @@ function wrapClickToFinalize(btn) {
   obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
 })();
 
-function getAllPlayersFromGames() {
-  const names = new Set();
+/* ===========================================================
+   OPEN HOF (GLOBAL)
+   =========================================================== */
 
-  // 0) In-memory (useful before any save happens)
-  const gs = window.gameState || {};
-  if (Array.isArray(gs.players)) {
-    if (typeof gs.players[0] === 'string') {
-      gs.players.forEach(n => n && names.add(String(n).trim()));
-    } else if (gs.players[0]?.name) {
-      gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-    }
-  }
-
-  // Helper: safe parse
-  const parse = (raw) => { try { return JSON.parse(raw); } catch { return null; } };
-
-  // Helper: pull names from games v2 array
-  const pullFromGamesV2 = (arr) => {
-    (arr || []).forEach(g => (g.players || []).forEach(p => {
-      const n = (p?.name || '').trim();
-      if (n) names.add(n);
-    }));
-  };
-
-  // 1) Current ENV (ADE/PROD) games v2
-  try {
-    const v2 = gdLoad(GD_KEYS.games, []);
-    pullFromGamesV2(v2);
-  } catch {}
-
-  // 2) Other ENV (ADE ↔ PROD), in case you have data there
-  try {
-    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
-    const otherKey = `golfdarts_games_v2_${otherEnv}`;
-    const otherArr = gdLoad(otherKey, []);
-    pullFromGamesV2(otherArr);
-  } catch {}
-
-  // 3) Legacy keys (history/games older formats)
-  const legacyKeys = [
-    'golfdarts_history', 'golfdarts_history_ADE', 'golfdarts_history_PROD',
-    'golfdarts_games',   'golfdarts_games_ADE',   'golfdarts_games_PROD'
-  ];
-  legacyKeys.forEach(k => {
-    const raw = localStorage.getItem(k);
-    if (!raw) return;
-    const parsed = parse(raw);
-    if (!parsed) return;
-
-    // Pattern A: { records:[ { players:["A","B"] } ] } or players:[{name:"A"}]
-    if (Array.isArray(parsed?.records)) {
-      parsed.records.forEach(r => {
-        if (Array.isArray(r?.players)) {
-          if (typeof r.players[0] === 'string') {
-            r.players.forEach(n => n && names.add(String(n).trim()));
-          } else if (typeof r.players[0] === 'object') {
-            r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-          }
-        }
-      });
-    }
-
-    // Pattern B: flat array of rounds with players
-    if (Array.isArray(parsed)) {
-      parsed.forEach(r => {
-        if (Array.isArray(r?.players)) {
-          if (typeof r.players[0] === 'string') {
-            r.players.forEach(n => n && names.add(String(n).trim()));
-          } else if (typeof r.players[0] === 'object') {
-            r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-          }
-        }
-      });
-    }
-  });
-
-  // Return sorted list (case-insensitive, stable)
-  return Array
-    .from(names)
-    .filter(Boolean)
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-}
-
-function populateHofPlayerDropdown() {
-  const sel = document.getElementById('hofPlayerFilter');
-  if (!sel) return;
-
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All Players</option>';
-
-  const players = getAllPlayersFromGames();
-  players.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    sel.appendChild(opt);
-  });
-
-  // preserve selection if still present
-  if ([...sel.options].some(o => o.value === current)) {
-    sel.value = current;
-  }
-}
-
-// ==== HOF: Global player helpers ====
-// Attach to window so inline onclick / other modules can call them.
-window.getAllPlayersFromGames = function getAllPlayersFromGames() {
-  const names = new Set();
-
-  // In-memory (before any save)
-  const gs = window.gameState || {};
-  if (Array.isArray(gs.players)) {
-    if (typeof gs.players[0] === 'string') {
-      gs.players.forEach(n => n && names.add(String(n).trim()));
-    } else if (gs.players[0]?.name) {
-      gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-    }
-  }
-
-  // Safe loader
-  const safeLoad = (key, fallback=[]) => {
-    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-    catch { return fallback; }
-  };
-
-  // New games v2 — current ENV
-  try {
-    const v2 = gdLoad(GD_KEYS.games, []); // your existing loader
-    (v2 || []).forEach(g => (g.players || []).forEach(p => {
-      const n = (p?.name || '').trim(); if (n) names.add(n);
-    }));
-  } catch {}
-
-  // New games v2 — other ENV (ADE ↔ PROD)
-  try {
-    const otherEnv = (typeof GD_ENV !== 'undefined' && GD_ENV === 'ADE') ? 'PROD' : 'ADE';
-    const otherKey = `golfdarts_games_v2_${otherEnv}`;
-    const otherArr = safeLoad(otherKey, []);
-    (otherArr || []).forEach(g => (g.players || []).forEach(p => {
-      const n = (p?.name || '').trim(); if (n) names.add(n);
-    }));
-  } catch {}
-
-  // Legacy keys (history/games prior formats)
-  ['golfdarts_history','golfdarts_history_ADE','golfdarts_history_PROD',
-   'golfdarts_games','golfdarts_games_ADE','golfdarts_games_PROD'
-  ].forEach(k => {
-    const arrOrObj = safeLoad(k, null);
-    if (!arrOrObj) return;
-
-    // {records:[{players:[...]}]}
-    if (Array.isArray(arrOrObj?.records)) {
-      arrOrObj.records.forEach(r => {
-        if (Array.isArray(r?.players)) {
-          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
-          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-        }
-      });
-    }
-
-    // Or flat array of rounds with players
-    if (Array.isArray(arrOrObj)) {
-      arrOrObj.forEach(r => {
-        if (Array.isArray(r?.players)) {
-          if (typeof r.players[0] === 'string') r.players.forEach(n => n && names.add(String(n).trim()));
-          else if (r.players[0]?.name) r.players.forEach(p => p?.name && names.add(String(p.name).trim()));
-        }
-      });
-    }
-  });
-
-  return Array.from(names).filter(Boolean)
-    .sort((a,b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
-};
-
-window.populateHofPlayerDropdown = function populateHofPlayerDropdown() {
-  const sel = document.getElementById('hofPlayerFilter');
-  if (!sel) return;
-
-  const current = sel.value;
-  sel.innerHTML = '<option value="">All Players</option>';
-
-  const players = window.getAllPlayersFromGames();
-  players.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    sel.appendChild(opt);
-  });
-
-  if ([...sel.options].some(o => o.value === current)) {
-    sel.value = current;
-  }
-};
-
-
-// Expose globally
-window.showHistory = showHistory;
-window.startGame = startGame;
-window.showModal = showModal;
-window.closeModal = closeModal;
-window.showHistory = showHistory;
-window.submitPlayerScore = submitPlayerScore;
-window.undoHole = undoHole;
-window.showHole = showHole;
 window.openHof = function openHof() {
   try {
-    populateHofPlayerDropdown();         // NEW: keep the list fresh
-    renderHof({ tab: 'global' });        // default tab
+    renderHof({ tab: 'global' });
   } catch (e) {
     console.warn('[HOF] render on open failed', e);
   }
   showModal('hofModal');
 };
 
-
-// ========== EVENT LISTENERS ==========
-document.addEventListener("DOMContentLoaded", () => {
-  // History page init
-  if (document.getElementById("playerFilter")) {
-    initHistoryPage();
-  }
-
-  const select = document.getElementById("playerCount");
-  if (!select) return;
-
-  for (let i = 1; i <= 20; i++) {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = `${i} Player${i > 1 ? "s" : ""}`;
-    select.appendChild(option);
-  }
-
-  document.getElementById("audioToggle")?.addEventListener("change", (e) => {
-    audioEnabled = e.target.checked;
-  });
-  document.getElementById("randomToggle")?.addEventListener("change", (e) => {
-    randomMode = e.target.checked;
-  });
-  document.getElementById("advancedToggle")?.addEventListener("change", (e) => {
-    advancedMode = e.target.checked;
-  });
-
-  select.addEventListener("change", createPlayerInputs);
-
-  document.getElementById("viewHistoryLink")?.addEventListener("click", (e) => {
-  e.preventDefault();
-  showHistory();
-});
-
- const viewHistoryLink = document.getElementById("viewHistoryLink");
-  if (viewHistoryLink) {
-    console.log("🧷 View History listener attached"); // <== should log on page load
-    viewHistoryLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      console.log("🖱️ View History clicked"); // <== should log when clicked
-      showHistory(); // <== should trigger your function
-    });
-  }
-
-  requestAnimationFrame(() => {
-    loadGameState?.();
-  });
-});
-
-// Warn if game in progress on tab close
-window.addEventListener("beforeunload", function (e) {
-  const saved = localStorage.getItem("golfdartsState");
-  if (saved) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
