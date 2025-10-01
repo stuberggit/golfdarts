@@ -29,6 +29,11 @@ if (isPreProd) {
   historyKey = "golfdartsHistory_prod";
 }
 
+typeof getAllPlayersFromGames;      // "function"
+typeof populateHofPlayerDropdown;   // "function"
+getAllPlayersFromGames();           // should return an array (possibly empty if no data yet)
+
+
 console.log("script.js loaded");
 console.log("Parsed History:", history);
 
