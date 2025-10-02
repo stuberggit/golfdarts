@@ -1723,6 +1723,76 @@ function renderHof(options = {}) {
   }).join('');
 }
 
+// HOF helpers (global)
+window.getAllPlayersFromGames = window.getAllPlayersFromGames || function () {
+  const names = new Set();
+
+  const gs = window.gameState || {};
+  if (Array.isArray(gs.players)) {
+    if (typeof gs.players[0] === 'string') gs.players.forEach(n => n && names.add(String(n).trim()));
+    else if (gs.players[0]?.name)          gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+  }
+
+  const safeParse = (raw) => { try { return JSON.parse(raw); } catch { return null; } };
+  const pullV2 = (arr) => (arr || []).forEach(g => (g.players || []).forEach(p => {
+    const n = (p?.name || '').trim(); if (n) names.add(n);
+  }));
+
+  try { pullV2(gdLoad(GD_KEYS.games, [])); } catch {}
+
+  try {
+    const otherEnv = (window.GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    pullV2(gdLoad(`golfdarts_games_v2_${otherEnv}`, []));
+  } catch {}
+
+  [
+    'golfdarts_history','golfdarts_history_ADE','golfdarts_history_PROD',
+    'golfdarts_games','golfdarts_games_ADE','golfdarts_games_PROD'
+  ].forEach(k => {
+    const parsed = safeParse(localStorage.getItem(k));
+    if (!parsed) return;
+
+    const pull = (arr) => {
+      if (!Array.isArray(arr)) return;
+      if (typeof arr[0] === 'string') arr.forEach(n => n && names.add(String(n).trim()));
+      else if (arr[0]?.name)          arr.forEach(p => p?.name && names.add(String(p.name).trim()));
+    };
+
+    if (Array.isArray(parsed?.records)) parsed.records.forEach(r => pull(r?.players));
+    if (Array.isArray(parsed))          parsed.forEach(r => pull(r?.players));
+    if (Array.isArray(parsed?.players)) pull(parsed.players);
+  });
+
+  return Array.from(names).filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+};
+
+window.populateHofPlayerDropdown = window.populateHofPlayerDropdown || function () {
+  const sel = document.getElementById('hofPlayerFilter');
+  if (!sel) return;
+
+  const current = sel.value;
+  const players = window.getAllPlayersFromGames();
+
+  const frag = document.createDocumentFragment();
+  const first = document.createElement('option');
+  first.value = '';
+  first.textContent = 'All Players';
+  frag.appendChild(first);
+
+  for (let i = 0; i < players.length; i++) {
+    const opt = document.createElement('option');
+    opt.value = players[i];
+    opt.textContent = players[i];
+    frag.appendChild(opt);
+  }
+
+  sel.innerHTML = '';
+  sel.appendChild(frag);
+
+  if ([...sel.options].some(o => o.value === current)) sel.value = current;
+};
+
 // define after renderHof() and populateHofPlayerDropdown()
 function openHof() {
   try {
@@ -1850,17 +1920,21 @@ function wrapClickToFinalize(btn) {
 
   let persistedForThisOpen = false;
 
-  function tryPersist() {
-    if (persistedForThisOpen) return;
-    try {
+ function tryPersist() {
+  if (persistedForThisOpen) return;
+  try {
+    if (typeof buildFinalGamePayloadFromState === 'function') {
       const payload = buildFinalGamePayloadFromState(window.gameState || {});
       finalizeGameAndUpdateHof(payload);
       console.log('[HOF] finalize called when Game Stats opened');
-      persistedForThisOpen = true;
-    } catch (e) {
-      console.warn('[HOF] finalize failed when Game Stats opened', e);
+    } else {
+      console.warn('[HOF] buildFinalGamePayloadFromState not found; skipping persist');
     }
+    persistedForThisOpen = true;
+  } catch (e) {
+    console.warn('[HOF] finalize failed when Game Stats opened', e);
   }
+}
 
   const obs = new MutationObserver((muts) => {
     for (const m of muts) {
