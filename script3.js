@@ -1736,24 +1736,22 @@ function openHof() {
 // ensure global access for inline onclick
 window.openHof = openHof;
 
-// Wire the small control bar
-(function wireHofControls() {
-  const $controls = document.getElementById('hofControls');
-  if (!$controls) return;
+// HOF controls wiring (single source of truth)
+(function () {
+  const controls  = document.getElementById('hofControls');
+  if (!controls) return;
 
-  const $modeSel   = document.getElementById('hofModeFilter');
-  const $playerSel = document.getElementById('hofPlayerFilter');
+  const modeSel   = document.getElementById('hofModeFilter');
+  const playerSel = document.getElementById('hofPlayerFilter');
 
   function setTab(tab) {
     window.__hofTab = tab;
 
-    // active tab state
-    const btns = $controls.querySelectorAll('.tab-btn');
-    btns.forEach(b => b.classList.toggle('is-active', b.getAttribute('data-hof-tab') === tab));
+    controls.querySelectorAll('.tab-btn')
+      .forEach(b => b.classList.toggle('is-active', b.getAttribute('data-hof-tab') === tab));
 
-    // filter visibility
-    if ($modeSel)   $modeSel.style.display   = (tab === 'mode')   ? '' : 'none';
-    if ($playerSel) $playerSel.style.display = (tab === 'player') ? '' : 'none';
+    if (modeSel)   modeSel.style.display   = (tab === 'mode')   ? '' : 'none';
+    if (playerSel) playerSel.style.display = (tab === 'player') ? '' : 'none';
 
     if (tab === 'player' && typeof populateHofPlayerDropdown === 'function') {
       try { populateHofPlayerDropdown(); } catch {}
@@ -1762,55 +1760,19 @@ window.openHof = openHof;
     renderHof({ tab });
   }
 
-  // tab clicks (delegated)
-  $controls.addEventListener('click', (e) => {
+  controls.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-hof-tab]');
-    if (!btn || !$controls.contains(btn)) return;
+    if (!btn || !controls.contains(btn)) return;
     e.preventDefault();
     const tab = btn.getAttribute('data-hof-tab');
     if (tab) setTab(tab);
   });
 
-  // filter changes
-  if ($modeSel)   $modeSel.addEventListener('change', () => setTab('mode'));
-  if ($playerSel) $playerSel.addEventListener('change', () => setTab('player'));
+  if (modeSel)   modeSel.addEventListener('change', () => setTab('mode'));
+  if (playerSel) playerSel.addEventListener('change', () => setTab('player'));
 
-  // initial state
   if (!window.__hofTab) setTab('global');
 })();
-
-  // helper: set active tab UI + show/hide filters + render
-function setTab(tab) {
-  window.__hofTab = tab;
-
-  const btns = $controls.querySelectorAll('.tab-btn');
-  btns.forEach(b => b.classList.toggle('is-active', b.getAttribute('data-hof-tab') === tab));
-
-  if ($modeSel)   $modeSel.style.display   = (tab === 'mode')   ? '' : 'none';
-  if ($playerSel) $playerSel.style.display = (tab === 'player') ? '' : 'none';
-
-  if (tab === 'player' && typeof populateHofPlayerDropdown === 'function') {
-    try { populateHofPlayerDropdown(); } catch {}
-  }
-
-  renderHof({ tab });
-}
-
-// tab clicks (delegated)
-$controls.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-hof-tab]');
-  if (!btn || !$controls.contains(btn)) return;
-  e.preventDefault();
-  const tab = btn.getAttribute('data-hof-tab');
-  if (tab) setTab(tab);
-});
-
-// filter changes
-if ($modeSel)   $modeSel.addEventListener('change', () => setTab('mode'));
-if ($playerSel) $playerSel.addEventListener('change', () => setTab('player'));
-
-// initial state
-if (!window.__hofTab) setTab('global');
 
 // === HOF integration: finder/diagnostic ===
 (function hofFinder() {
