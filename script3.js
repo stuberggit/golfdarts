@@ -1955,58 +1955,70 @@ function getAllPlayersFromGames() {
   // in-memory
   const gs = window.gameState || {};
   if (Array.isArray(gs.players)) {
-    if (typeof gs.players[0] === 'string') gs.players.forEach(n => n && names.add(String(n).trim()));
-    else if (gs.players[0]?.name)          gs.players.forEach(p => p?.name && names.add(String(p.name).trim()));
+    const a = gs.players;
+    if (typeof a[0] === 'string') {
+      a.forEach(n => n && names.add(String(n).trim()));
+    } else if (a[0]) {
+      a.forEach(p => {
+        const n = (p && (p.name || p.player || p.playerName)) ? String(p.name || p.player || p.playerName).trim() : '';
+        if (n) names.add(n);
+      });
+    }
   }
 
+  // helpers
   const safeParse = (raw) => { try { return JSON.parse(raw); } catch { return null; } };
   const pullV2 = (arr) => {
     (arr || []).forEach(g => (g.players || []).forEach(p => {
-      const n = (p?.name || '').trim();
+      const n = (p && (p.name || p.player || p.playerName)) ? String(p.name || p.player || p.playerName).trim() : '';
       if (n) names.add(n);
     }));
   };
+  const pullArr = (arr) => {
+    if (!Array.isArray(arr)) return;
+    if (!arr.length) return;
+    if (typeof arr[0] === 'string') arr.forEach(n => n && names.add(String(n).trim()));
+    else arr.forEach(p => {
+      const n = (p && (p.name || p.player || p.playerName)) ? String(p.name || p.player || p.playerName).trim() : '';
+      if (n) names.add(n);
+    });
+  };
 
   // current env games v2
-  try { pullV2(gdLoad(GD_KEYS.games, [])); } catch {}
+  pullV2(gdLoad(GD_KEYS.games, []));
 
   // other env games v2
   try {
-    const otherEnv = (GD_ENV === 'ADE') ? 'PROD' : 'ADE';
+    const otherEnv = (window.GD_ENV === 'ADE') ? 'PROD' : 'ADE';
     pullV2(gdLoad(`golfdarts_games_v2_${otherEnv}`, []));
   } catch {}
 
   // legacy keys
   [
-    'golfdarts_history', 'golfdarts_history_ADE', 'golfdarts_history_PROD',
-    'golfdarts_games',   'golfdarts_games_ADE',   'golfdarts_games_PROD'
+    'golfdarts_history','golfdarts_history_ADE','golfdarts_history_PROD',
+    'golfdarts_games','golfdarts_games_ADE','golfdarts_games_PROD'
   ].forEach(k => {
     const parsed = safeParse(localStorage.getItem(k));
     if (!parsed) return;
-
-    if (Array.isArray(parsed?.records)) {
-      parsed.records.forEach(r => {
-        const arr = r?.players;
-        if (!Array.isArray(arr)) return;
-        if (typeof arr[0] === 'string') arr.forEach(n => n && names.add(String(n).trim()));
-        else if (arr[0]?.name)          arr.forEach(p => p?.name && names.add(String(p.name).trim()));
-      });
-    }
-
-    if (Array.isArray(parsed)) {
-      parsed.forEach(r => {
-        const arr = r?.players;
-        if (!Array.isArray(arr)) return;
-        if (typeof arr[0] === 'string') arr.forEach(n => n && names.add(String(n).trim()));
-        else if (arr[0]?.name)          arr.forEach(p => p?.name && names.add(String(p.name).trim()));
-      });
-    }
+    if (Array.isArray(parsed?.records)) parsed.records.forEach(r => pullArr(r?.players));
+    if (Array.isArray(parsed))          parsed.forEach(r => pullArr(r?.players));
+    if (Array.isArray(parsed?.players)) pullArr(parsed.players);
   });
+
+  // last resort: scan common player-name inputs if present
+  try {
+    document.querySelectorAll('input.player-name, .player-name input, input[name^="player"], #player1, #player2, #player3, #player4')
+      .forEach(n => {
+        const v = String(n.value || n.textContent || '').trim();
+        if (v) names.add(v);
+      });
+  } catch {}
 
   return Array.from(names)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 }
+
 
 function populateHofPlayerDropdown() {
   const sel = document.getElementById('hofPlayerFilter');
