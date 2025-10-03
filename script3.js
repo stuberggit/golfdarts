@@ -1458,6 +1458,8 @@ function finalizeGameAndUpdateHof(finalGamePayload) {
   }
 }
 
+window.finalizeGameAndUpdateHof = finalizeGameAndUpdateHof;
+
 function ensureCat(hof, key) {
   if (!hof.categories[key]) hof.categories[key] = { entries: [] };
   return hof.categories[key];
