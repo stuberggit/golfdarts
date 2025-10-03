@@ -53,6 +53,24 @@ function toggleHamburgerMenu() {
   menu.classList.toggle("hidden");
 }
 
+if (typeof window.buildFinalGamePayloadFromState !== 'function') {
+  window.buildFinalGamePayloadFromState = function (gs) {
+    const now = Date.now();
+    const mode = (window.advancedMode ? 'advanced' : (window.randomMode ? 'random' : 'standard'));
+    const players = Array.isArray(gs?.players) ? gs.players.map(p => {
+      if (typeof p === 'string') return { name: p, total: 0, perHoleTotals: [], stats: {} };
+      return {
+        name: String(p?.name || '').trim(),
+        total: Number(p?.total) || 0,
+        perHoleTotals: Array.isArray(p?.perHoleTotals) ? p.perHoleTotals.slice(0,18).map(n => Number(n)||0) : [],
+        stats: p?.stats || {},
+        suddenDeath: p?.suddenDeath || null
+      };
+    }) : [];
+    return { id: `g${now}`, timestamp: now, mode, players };
+  };
+}
+
 // ===== createPlayerInputs Function (Core: DO NOT OVERWRITE without discussion) =====
 function createPlayerInputs() {
   const count = parseInt(document.getElementById("playerCount").value);
