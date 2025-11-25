@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title> 🤢 Ahman Green – GolfDarts 🤢</title>
+  <title>Ahman Green – GolfDarts</title>
   <style>
     :root {
       --bg: #0b1722;
@@ -314,3 +314,585 @@
       align-items: center;
       justify-content: center;
       font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--purple-x);
+      text-shadow: 0 0 10px rgba(179, 107, 255, 0.9);
+      opacity: 0;
+      transform: scale(0.8) rotate(-8deg);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      mix-blend-mode: screen;
+    }
+
+    .x-overlay.visible {
+      opacity: 1;
+      transform: scale(1) rotate(-8deg);
+    }
+
+    .players-table-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) repeat(4, 54px);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .players-table-header span {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .players-table-header span:first-child {
+      justify-content: flex-start;
+    }
+
+    /* Win modal */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.97));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(145deg, #08121d, #0d1926);
+      border-radius: 22px;
+      border: 1px solid rgba(63, 211, 123, 0.65);
+      padding: 18px 20px 20px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .winner-name {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .ahman-photo {
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      border: 3px solid var(--accent);
+      overflow: hidden;
+      margin: 0 auto 10px;
+      background: radial-gradient(circle at 30% 20%, #497d44, #0a2510);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .ahman-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ahman-photo-label {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .modal-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 600px) {
+      .player-row,
+      .players-table-header {
+        grid-template-columns: minmax(0, 1.4fr) repeat(4, 46px);
+      }
+      .color-chip {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div>
+        <h1>
+          <span class="logo">🏌️‍♂️</span> Ahman Green
+        </h1>
+        <small>Black → White → Green → Red · First there wins</small>
+      </div>
+      <div>
+        <!-- Hook this to your existing hamburger if you want -->
+        <button class="btn btn-ghost" onclick="window.location.href='index.html'">
+          ⬅ Back to GolfDarts
+        </button>
+      </div>
+    </header>
+
+    <!-- Setup Card -->
+    <section class="card" id="setup-card">
+      <div class="section-title">Players</div>
+      <div class="setup-row">
+        <input
+          type="text"
+          id="player-name-input"
+          placeholder="Player name (e.g., Chris)"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" id="add-player-btn">＋ Add Player</button>
+      </div>
+      <div class="hint" id="players-count-hint">No players yet.</div>
+      <div class="setup-footer">
+        <button class="btn btn-ghost" id="clear-players-btn">Clear Players</button>
+        <button class="btn btn-primary" id="start-game-btn" disabled>
+          Start Ahman Green ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- Game Card -->
+    <section class="card game-card" id="game-card" style="display:none;">
+      <div class="game-header">
+        <div class="current-player">
+          <span>Current player</span>
+          <strong id="current-player-name">–</strong>
+          <span class="need">
+            Needs:
+            <span class="need-pill" id="need-pill">
+              <span class="need-color-dot" id="need-color-dot"></span>
+              <span id="need-color-label">Black</span>
+            </span>
+          </span>
+        </div>
+        <div class="controls">
+          <button class="btn btn-ghost" id="miss-btn">
+            ➖ Miss
+          </button>
+          <button class="btn btn-danger" id="reset-btn">
+            🔄 Reset
+          </button>
+          <button class="btn btn-party" id="party-btn">
+            🎉 Party
+          </button>
+        </div>
+      </div>
+
+      <div class="hint" id="darts-status">
+        Darts this turn: ●●●
+      </div>
+
+      <div class="hint" style="margin-top:6px;">
+        Click the color next to the <strong>current player</strong> for each dart.
+        Out-of-order colors don’t count, but still use a dart.
+        <br />
+        Miss the board completely → <strong>Reset</strong>. Tiny rim shot → <strong>Party</strong>.
+      </div>
+
+      <div class="players-table" id="players-table" style="margin-top:10px;">
+        <div class="players-table-header">
+          <span>Player</span>
+          <span>Black</span>
+          <span>White</span>
+          <span>Green</span>
+          <span>Red</span>
+        </div>
+        <div id="players-rows"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="modal-backdrop" id="win-backdrop">
+    <div class="modal">
+      <button class="modal-close" id="win-close-btn" aria-label="Close">✕</button>
+      <div class="modal-title">
+        <span class="winner-name" id="winner-name"></span> wins Ahman Green!
+      </div>
+      <div class="modal-subtitle">
+        Black, white, green, and red – you’re officially
+        <strong>“I’m on Green”</strong>… Ahman Green. 🏈
+      </div>
+      <div class="ahman-photo">
+        <!-- Replace src with your own Ahman Green image path -->
+        <img src="images/ahman-green.jpg" alt="Ahman Green" onerror="this.style.display='none';" />
+        <div class="ahman-photo-label">Ahman Green</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="new-game-btn">
+          New Ahman Green Game
+        </button>
+        <button class="btn btn-ghost" id="continue-view-btn">
+          Just Keep Bragging 😎
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const COLORS = ["black", "white", "green", "red"];
+
+      // Each player: { id, name, progressIndex }
+      // progressIndex: 0 = needs Black, 1 = needs White, 2 = needs Green, 3 = needs Red, 4 = done
+      let players = [];
+      let currentPlayerIndex = 0;
+      let gameOver = false;
+      let dartsLeft = 3;
+
+      const setupCard = document.getElementById("setup-card");
+      const gameCard = document.getElementById("game-card");
+      const playerNameInput = document.getElementById("player-name-input");
+      const addPlayerBtn = document.getElementById("add-player-btn");
+      const startGameBtn = document.getElementById("start-game-btn");
+      const clearPlayersBtn = document.getElementById("clear-players-btn");
+      const playersCountHint = document.getElementById("players-count-hint");
+
+      const currentPlayerNameEl = document.getElementById("current-player-name");
+      const needColorLabelEl = document.getElementById("need-color-label");
+      const needColorDotEl = document.getElementById("need-color-dot");
+      const dartsStatusEl = document.getElementById("darts-status");
+
+      const missBtn = document.getElementById("miss-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const partyBtn = document.getElementById("party-btn");
+
+      const playersRowsEl = document.getElementById("players-rows");
+
+      const winBackdrop = document.getElementById("win-backdrop");
+      const winnerNameEl = document.getElementById("winner-name");
+      const winCloseBtn = document.getElementById("win-close-btn");
+      const newGameBtn = document.getElementById("new-game-btn");
+      const continueViewBtn = document.getElementById("continue-view-btn");
+
+      function updatePlayersHint() {
+        if (!players.length) {
+          playersCountHint.textContent = "No players yet.";
+        } else if (players.length === 1) {
+          playersCountHint.textContent = "1 player added.";
+        } else {
+          playersCountHint.textContent = players.length + " players added.";
+        }
+        startGameBtn.disabled = players.length < 2;
+        clearPlayersBtn.disabled = players.length === 0;
+      }
+
+      function addPlayer(name) {
+        const clean = name.trim();
+        if (!clean) return;
+        players.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          name: clean,
+          progressIndex: 0
+        });
+        playerNameInput.value = "";
+        updatePlayersHint();
+      }
+
+      function startGame() {
+        if (players.length < 2) return;
+        gameOver = false;
+        currentPlayerIndex = 0;
+        dartsLeft = 3;
+        setupCard.style.display = "none";
+        gameCard.style.display = "block";
+        renderBoard();
+      }
+
+      function getCurrentPlayer() {
+        if (!players.length) return null;
+        return players[currentPlayerIndex];
+      }
+
+      function cycleToNextPlayer() {
+        if (!players.length) return;
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      }
+
+      function getColorName(idx) {
+        const c = COLORS[idx];
+        if (!c) return "";
+        return c.charAt(0).toUpperCase() + c.slice(1);
+      }
+
+      function getColorStyle(color) {
+        switch (color) {
+          case "black":
+            return "background:#000;border-color:#444;";
+          case "white":
+            return "background:#fff;border-color:#bbb;";
+          case "green":
+            return "background:#008c3c;border-color:#00451e;";
+          case "red":
+            return "background:#b00000;border-color:#660000;";
+          default:
+            return "";
+        }
+      }
+
+      function updateDartsStatus() {
+        const filled = "●".repeat(dartsLeft);
+        const empty = "○".repeat(3 - dartsLeft);
+        dartsStatusEl.textContent = "Darts this turn: " + filled + empty;
+      }
+
+      function renderBoard() {
+        const rowsFragment = document.createDocumentFragment();
+
+        players.forEach((player, index) => {
+          const row = document.createElement("div");
+          row.className = "player-row" + (index === currentPlayerIndex ? " current" : "");
+
+          const nameCell = document.createElement("div");
+          nameCell.className = "player-name-cell";
+          nameCell.textContent = player.name;
+          row.appendChild(nameCell);
+
+          COLORS.forEach((color, colorIndex) => {
+            const cell = document.createElement("div");
+            cell.className = "color-cell";
+
+            const chip = document.createElement("div");
+            chip.className = "color-chip " + color;
+
+            const xOverlay = document.createElement("div");
+            xOverlay.className = "x-overlay";
+            xOverlay.textContent = "✕";
+
+            if (player.progressIndex > colorIndex) {
+              chip.classList.add("done");
+              xOverlay.classList.add("visible");
+            } else if (
+              player.progressIndex === colorIndex &&
+              player.progressIndex < COLORS.length
+            ) {
+              chip.classList.add("current-step");
+            }
+
+            // Make the current player's cells clickable (for recording hits)
+            if (!gameOver && index === currentPlayerIndex && player.progressIndex < COLORS.length) {
+              cell.classList.add("clickable");
+              cell.addEventListener("click", () => {
+                handleColorClick(colorIndex);
+              });
+            }
+
+            cell.appendChild(chip);
+            cell.appendChild(xOverlay);
+            row.appendChild(cell);
+          });
+
+          rowsFragment.appendChild(row);
+        });
+
+        playersRowsEl.innerHTML = "";
+        playersRowsEl.appendChild(rowsFragment);
+
+        const currentPlayer = getCurrentPlayer();
+        if (!currentPlayer) {
+          currentPlayerNameEl.textContent = "–";
+          needColorLabelEl.textContent = "—";
+          needColorDotEl.style.background = "transparent";
+          needColorDotEl.style.borderColor = "transparent";
+          dartsStatusEl.textContent = "Darts this turn: –";
+          return;
+        }
+
+        currentPlayerNameEl.textContent = currentPlayer.name;
+
+        if (currentPlayer.progressIndex >= COLORS.length) {
+          needColorLabelEl.textContent = "Done!";
+          needColorDotEl.style.background = "transparent";
+          needColorDotEl.style.borderColor = "transparent";
+        } else {
+          const neededColor = COLORS[currentPlayer.progressIndex];
+          needColorLabelEl.textContent = getColorName(currentPlayer.progressIndex);
+          needColorDotEl.style = getColorStyle(neededColor);
+        }
+
+        missBtn.disabled = gameOver;
+        resetBtn.disabled = gameOver;
+        partyBtn.disabled = gameOver;
+
+        updateDartsStatus();
+      }
+
+      function consumeDart() {
+        if (gameOver) return;
+        dartsLeft--;
+        if (dartsLeft <= 0) {
+          cycleToNextPlayer();
+          dartsLeft = 3;
+        }
+        renderBoard();
+      }
+
+      function handleColorClick(colorIndex) {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+
+        if (player.progressIndex >= COLORS.length) {
+          // Already won; ignore input.
+          return;
+        }
+
+        const neededIndex = player.progressIndex;
+
+        // Only advance if this is the next required color.
+        if (colorIndex === neededIndex) {
+          player.progressIndex++;
+
+          if (player.progressIndex >= COLORS.length) {
+            // They just hit Red after doing B/W/G in order -> win immediately.
+            showWin(player);
+            renderBoard();
+            return;
+          }
+        }
+
+        // Regardless of whether it progressed or not, this dart is used.
+        consumeDart();
+      }
+
+      function handleMiss() {
+        if (gameOver) return;
+        // Just consume a dart, no progress.
+        consumeDart();
+      }
+
+      function handleReset() {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+        // Missed the board entirely -> back to Black.
+        player.progressIndex = 0;
+        consumeDart();
+      }
+
+      function handleParty() {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+
+        // Tiny rim magic: jump to "needing Red" (index 3) if not already there or beyond.
+        if (player.progressIndex < COLORS.length - 1) {
+          player.progressIndex = COLORS.length - 1;
+        }
+        consumeDart();
+      }
+
+      function showWin(player) {
+        gameOver = true;
+        winnerNameEl.textContent = player.name;
+        winBackdrop.classList.add("visible");
+      }
+
+      function closeWinModal() {
+        winBackdrop.classList.remove("visible");
+      }
+
+      function resetAll() {
+        players = [];
+        currentPlayerIndex = 0;
+        gameOver = false;
+        dartsLeft = 3;
+        setupCard.style.display = "block";
+        gameCard.style.display = "none";
+        updatePlayersHint();
+        playersRowsEl.innerHTML = "";
+        currentPlayerNameEl.textContent = "–";
+        needColorLabelEl.textContent = "Black";
+        needColorDotEl.style = getColorStyle("black");
+        dartsStatusEl.textContent = "Darts this turn: ●●●";
+        closeWinModal();
+      }
+
+      // Event listeners
+      addPlayerBtn.addEventListener("click", () => {
+        addPlayer(playerNameInput.value);
+      });
+
+      playerNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addPlayer(playerNameInput.value);
+        }
+      });
+
+      startGameBtn.addEventListener("click", startGame);
+      clearPlayersBtn.addEventListener("click", () => {
+        players = [];
+        updatePlayersHint();
+      });
+
+      missBtn.addEventListener("click", handleMiss);
+      resetBtn.addEventListener("click", handleReset);
+      partyBtn.addEventListener("click", handleParty);
+
+      winCloseBtn.addEventListener("click", closeWinModal);
+      continueViewBtn.addEventListener("click", closeWinModal);
+      newGameBtn.addEventListener("click", resetAll);
+
+      winBackdrop.addEventListener("click", (e) => {
+        if (e.target === winBackdrop) {
+          closeWinModal();
+        }
+      });
+
+      // Init
+      updatePlayersHint();
+      needColorDotEl.style = getColorStyle("black");
+      updateDartsStatus();
+    })();
+  </script>
+</body>
+</html>
