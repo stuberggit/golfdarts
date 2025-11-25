@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ahman Green – GolfDarts</title>
+  <style>
+    :root {
+      --bg: #0b1722;
+      --card: #111e2c;
+      --accent: #3fd37b;
+      --accent-soft: #193c2a;
+      --text: #f5f7fb;
+      --muted: #9ba7bd;
+      --purple-x: #b36bff;
+      --border: #1f3448;
+      --danger: #ff4b6a;
+      --party: #ffd447;
+      --radius-lg: 18px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #152940 0, #050812 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      font-size: 1.7rem;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    header h1 span.logo {
+      font-size: 1.9rem;
+    }
+
+    header small {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .card {
+      background: linear-gradient(145deg, #0d1a26, #101b2a);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 16px 18px 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .setup-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .setup-row input {
+      flex: 1 1 180px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #070f17;
+      color: var(--text);
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #05130a;
+      box-shadow: 0 8px 24px rgba(63, 211, 123, 0.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(63, 211, 123, 0.55);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #1a0206;
+    }
+    .btn-party {
+      background: var(--party);
+      color: #2b1500;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .setup-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Game area */
+
+    .game-card {
+      margin-top: 14px;
+    }
+
+    .game-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .current-player {
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .current-player strong {
+      font-size: 1.1rem;
+    }
+    .current-player span.need {
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    .need-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(63, 211, 123, 0.5);
+      font-size: 0.8rem;
+    }
+
+    .need-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.5);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .players-table {
+      margin-top: 4px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top left, #182637, #060b11);
+      overflow: hidden;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) repeat(4, 54px);
+      align-items: stretch;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      position: relative;
+    }
+
+    .player-row:last-child {
+      border-bottom: none;
+    }
+
+    .player-name-cell {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .player-row.current {
+      background: linear-gradient(90deg, rgba(63, 211, 123, 0.08), transparent);
+    }
+
+    .player-row.current::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background: var(--accent);
+    }
+
+    .color-cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-left: 1px solid rgba(0, 0, 0, 0.8);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .color-chip {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 2px solid rgba(0, 0, 0, 0.6);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+      opacity: 0.25;
+      transform: scale(0.9);
+      transition: opacity 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .color-chip.black {
+      background: radial-gradient(circle at 30% 20%, #444, #000);
+    }
+    .color-chip.white {
+      background: radial-gradient(circle at 30% 20%, #fff, #d8d8d8);
+    }
+    .color-chip.green {
+      background: radial-gradient(circle at 30% 20%, #5df28f, #007a36);
+    }
+    .color-chip.red {
+      background: radial-gradient(circle at 30% 20%, #ff9090, #b30000);
+    }
+
+    .color-chip.done {
+      opacity: 1;
+      transform: scale(1);
+      box-shadow: 0 0 12px rgba(179, 107, 255, 0.55);
+    }
+
+    .color-chip.current-step {
+      opacity: 0.9;
+      transform: scale(1);
+      box-shadow: 0 0 10px rgba(63, 211, 123, 0.9);
+    }
+
+    .x-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--purple-x);
+      text-shadow: 0 0 10px rgba(179, 107, 255, 0.9);
+      opacity: 0;
+      transform: scale(0.8) rotate(-8deg);
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      mix-blend-mode: screen;
+    }
+
+    .x-overlay.visible {
+      opacity: 1;
+      transform: scale(1) rotate(-8deg);
+    }
+
+    .players-table-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) repeat(4, 54px);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .players-table-header span {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .players-table-header span:first-child {
+      justify-content: flex-start;
+    }
+
+    /* Win modal */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.97));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(145deg, #08121d, #0d1926);
+      border-radius: 22px;
+      border: 1px solid rgba(63, 211, 123, 0.65);
+      padding: 18px 20px 20px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .modal-subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .winner-name {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .ahman-photo {
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      border: 3px solid var(--accent);
+      overflow: hidden;
+      margin: 0 auto 10px;
+      background: radial-gradient(circle at 30% 20%, #497d44, #0a2510);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .ahman-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ahman-photo-label {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .modal-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 600px) {
+      .player-row,
+      .players-table-header {
+        grid-template-columns: minmax(0, 1.4fr) repeat(4, 46px);
+      }
+      .color-chip {
+        width: 26px;
+        height: 26px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div>
+        <h1>
+          <span class="logo">🏌️‍♂️</span> Ahman Green
+        </h1>
+        <small>Black → White → Green → Red · First there wins</small>
+      </div>
+      <div>
+        <!-- Hook this to your existing hamburger if you want -->
+        <button class="btn btn-ghost" onclick="window.location.href='index.html'">
+          ⬅ Back to GolfDarts
+        </button>
+      </div>
+    </header>
+
+    <!-- Setup Card -->
+    <section class="card" id="setup-card">
+      <div class="section-title">Players</div>
+      <div class="setup-row">
+        <input
+          type="text"
+          id="player-name-input"
+          placeholder="Player name (e.g., Chris)"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" id="add-player-btn">＋ Add Player</button>
+      </div>
+      <div class="hint" id="players-count-hint">No players yet.</div>
+      <div class="setup-footer">
+        <button class="btn btn-ghost" id="clear-players-btn">Clear Players</button>
+        <button class="btn btn-primary" id="start-game-btn" disabled>
+          Start Ahman Green ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- Game Card -->
+    <section class="card game-card" id="game-card" style="display:none;">
+      <div class="game-header">
+        <div class="current-player">
+          <span>Current player</span>
+          <strong id="current-player-name">–</strong>
+          <span class="need">
+            Needs:
+            <span class="need-pill" id="need-pill">
+              <span class="need-color-dot" id="need-color-dot"></span>
+              <span id="need-color-label">Black</span>
+            </span>
+          </span>
+        </div>
+        <div class="controls">
+          <button class="btn btn-primary" id="hit-btn">
+            🎯 Hit Color
+          </button>
+          <button class="btn btn-danger" id="reset-btn">
+            🔄 Reset
+          </button>
+          <button class="btn btn-party" id="party-btn">
+            🎉 Party
+          </button>
+        </div>
+      </div>
+
+      <div class="hint">
+        Miss the board completely → use <strong>Reset</strong> (back to black).<br />
+        Hit that tiny outer rim → use <strong>Party</strong> (jump to needing red).
+      </div>
+
+      <div class="players-table" id="players-table" style="margin-top:10px;">
+        <div class="players-table-header">
+          <span>Player</span>
+          <span>Black</span>
+          <span>White</span>
+          <span>Green</span>
+          <span>Red</span>
+        </div>
+        <div id="players-rows"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="modal-backdrop" id="win-backdrop">
+    <div class="modal">
+      <button class="modal-close" id="win-close-btn" aria-label="Close">✕</button>
+      <div class="modal-title">
+        <span class="winner-name" id="winner-name"></span> wins Ahman Green!
+      </div>
+      <div class="modal-subtitle">
+        Black, white, green, and red – you’re officially
+        <strong>“I’m on Green”</strong>… Ahman Green. 🏈
+      </div>
+      <div class="ahman-photo">
+        <!-- Replace src with your own Ahman Green image path -->
+        <img src="images/ahman-green.jpg" alt="Ahman Green" onerror="this.style.display='none';" />
+        <div class="ahman-photo-label">Ahman Green</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="new-game-btn">
+          New Ahman Green Game
+        </button>
+        <button class="btn btn-ghost" id="continue-view-btn">
+          Just Keep Bragging 😎
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const COLORS = ["black", "white", "green", "red"];
+
+      let players = []; // { id, name, progressIndex }
+      let currentPlayerIndex = 0;
+      let gameStarted = false;
+      let gameOver = false;
+
+      const setupCard = document.getElementById("setup-card");
+      const gameCard = document.getElementById("game-card");
+      const playerNameInput = document.getElementById("player-name-input");
+      const addPlayerBtn = document.getElementById("add-player-btn");
+      const startGameBtn = document.getElementById("start-game-btn");
+      const clearPlayersBtn = document.getElementById("clear-players-btn");
+      const playersCountHint = document.getElementById("players-count-hint");
+
+      const currentPlayerNameEl = document.getElementById("current-player-name");
+      const needColorLabelEl = document.getElementById("need-color-label");
+      const needColorDotEl = document.getElementById("need-color-dot");
+
+      const hitBtn = document.getElementById("hit-btn");
+      const resetBtn = document.getElementById("reset-btn");
+      const partyBtn = document.getElementById("party-btn");
+
+      const playersRowsEl = document.getElementById("players-rows");
+
+      const winBackdrop = document.getElementById("win-backdrop");
+      const winnerNameEl = document.getElementById("winner-name");
+      const winCloseBtn = document.getElementById("win-close-btn");
+      const newGameBtn = document.getElementById("new-game-btn");
+      const continueViewBtn = document.getElementById("continue-view-btn");
+
+      function updatePlayersHint() {
+        if (!players.length) {
+          playersCountHint.textContent = "No players yet.";
+        } else if (players.length === 1) {
+          playersCountHint.textContent = "1 player added.";
+        } else {
+          playersCountHint.textContent = players.length + " players added.";
+        }
+        startGameBtn.disabled = players.length < 2;
+        clearPlayersBtn.disabled = players.length === 0;
+      }
+
+      function addPlayer(name) {
+        const clean = name.trim();
+        if (!clean) return;
+        players.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+          name: clean,
+          progressIndex: 0 // 0 = needs black, 1 = needs white, 2 = needs green, 3 = needs red, 4 = done
+        });
+        playerNameInput.value = "";
+        updatePlayersHint();
+      }
+
+      function startGame() {
+        if (players.length < 2) return;
+        gameStarted = true;
+        gameOver = false;
+        currentPlayerIndex = 0;
+        setupCard.style.display = "none";
+        gameCard.style.display = "block";
+        renderBoard();
+      }
+
+      function getCurrentPlayer() {
+        if (!players.length) return null;
+        return players[currentPlayerIndex];
+      }
+
+      function cycleToNextPlayer() {
+        if (!players.length) return;
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+      }
+
+      function getColorName(idx) {
+        const c = COLORS[idx];
+        if (!c) return "";
+        return c.charAt(0).toUpperCase() + c.slice(1);
+      }
+
+      function getColorStyle(color) {
+        switch (color) {
+          case "black":
+            return "background:#000;border-color:#444;";
+          case "white":
+            return "background:#fff;border-color:#bbb;";
+          case "green":
+            return "background:#008c3c;border-color:#00451e;";
+          case "red":
+            return "background:#b00000;border-color:#660000;";
+          default:
+            return "";
+        }
+      }
+
+      function renderBoard() {
+        const rowsFragment = document.createDocumentFragment();
+
+        players.forEach((player, index) => {
+          const row = document.createElement("div");
+          row.className = "player-row" + (index === currentPlayerIndex ? " current" : "");
+
+          const nameCell = document.createElement("div");
+          nameCell.className = "player-name-cell";
+          nameCell.textContent = player.name;
+          row.appendChild(nameCell);
+
+          COLORS.forEach((color, colorIndex) => {
+            const cell = document.createElement("div");
+            cell.className = "color-cell";
+
+            const chip = document.createElement("div");
+            chip.className = "color-chip " + color;
+
+            const xOverlay = document.createElement("div");
+            xOverlay.className = "x-overlay";
+            xOverlay.textContent = "✕";
+
+            if (player.progressIndex > colorIndex) {
+              chip.classList.add("done");
+              xOverlay.classList.add("visible");
+            } else if (player.progressIndex === colorIndex && player.progressIndex < COLORS.length) {
+              chip.classList.add("current-step");
+            }
+
+            cell.appendChild(chip);
+            cell.appendChild(xOverlay);
+            row.appendChild(cell);
+          });
+
+          rowsFragment.appendChild(row);
+        });
+
+        playersRowsEl.innerHTML = "";
+        playersRowsEl.appendChild(rowsFragment);
+
+        const currentPlayer = getCurrentPlayer();
+        if (!currentPlayer) {
+          currentPlayerNameEl.textContent = "–";
+          needColorLabelEl.textContent = "—";
+          needColorDotEl.style.background = "transparent";
+          return;
+        }
+
+        currentPlayerNameEl.textContent = currentPlayer.name;
+
+        if (currentPlayer.progressIndex >= COLORS.length) {
+          needColorLabelEl.textContent = "Done!";
+          needColorDotEl.style.background = "transparent";
+          needColorDotEl.style.borderColor = "transparent";
+        } else {
+          const neededColor = COLORS[currentPlayer.progressIndex];
+          needColorLabelEl.textContent = getColorName(currentPlayer.progressIndex);
+          needColorDotEl.style = getColorStyle(neededColor);
+        }
+
+        hitBtn.disabled = gameOver;
+        resetBtn.disabled = gameOver;
+        partyBtn.disabled = gameOver;
+      }
+
+      function handleHit() {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+        if (player.progressIndex >= COLORS.length) {
+          cycleToNextPlayer();
+          renderBoard();
+          return;
+        }
+        player.progressIndex += 1;
+
+        if (player.progressIndex >= COLORS.length) {
+          // WIN!
+          showWin(player);
+        } else {
+          cycleToNextPlayer();
+        }
+        renderBoard();
+      }
+
+      function handleReset() {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+        player.progressIndex = 0;
+        cycleToNextPlayer();
+        renderBoard();
+      }
+
+      function handleParty() {
+        if (gameOver) return;
+        const player = getCurrentPlayer();
+        if (!player) return;
+
+        // Jump them straight to "needing red" (index 3).
+        // If they're already at / beyond red, do nothing special.
+        if (player.progressIndex < COLORS.length - 1) {
+          player.progressIndex = COLORS.length - 1; // 3
+        }
+        cycleToNextPlayer();
+        renderBoard();
+      }
+
+      function showWin(player) {
+        gameOver = true;
+        winnerNameEl.textContent = player.name;
+        winBackdrop.classList.add("visible");
+      }
+
+      function closeWinModal() {
+        winBackdrop.classList.remove("visible");
+      }
+
+      function resetAll() {
+        players = [];
+        currentPlayerIndex = 0;
+        gameStarted = false;
+        gameOver = false;
+        setupCard.style.display = "block";
+        gameCard.style.display = "none";
+        updatePlayersHint();
+        playersRowsEl.innerHTML = "";
+        currentPlayerNameEl.textContent = "–";
+        needColorLabelEl.textContent = "Black";
+        needColorDotEl.style = getColorStyle("black");
+        closeWinModal();
+      }
+
+      // Event listeners
+      addPlayerBtn.addEventListener("click", () => {
+        addPlayer(playerNameInput.value);
+      });
+
+      playerNameInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addPlayer(playerNameInput.value);
+        }
+      });
+
+      startGameBtn.addEventListener("click", startGame);
+      clearPlayersBtn.addEventListener("click", () => {
+        players = [];
+        updatePlayersHint();
+      });
+
+      hitBtn.addEventListener("click", handleHit);
+      resetBtn.addEventListener("click", handleReset);
+      partyBtn.addEventListener("click", handleParty);
+
+      winCloseBtn.addEventListener("click", closeWinModal);
+      continueViewBtn.addEventListener("click", closeWinModal);
+      newGameBtn.addEventListener("click", resetAll);
+
+      winBackdrop.addEventListener("click", (e) => {
+        if (e.target === winBackdrop) {
+          closeWinModal();
+        }
+      });
+
+      // Init
+      updatePlayersHint();
+      needColorDotEl.style = getColorStyle("black");
+    })();
+  </script>
+</body>
+</html>
