@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ahman Green – GolfDarts</title>
+  <!-- Your ADE / GolfDarts styles -->
   <link rel="stylesheet" href="style3.css">
   
   <style>
     :root {
-      --bg: #3a5f0b;
       --card: #111e2c;
       --accent: #3fd37b;
       --accent-soft: #193c2a;
@@ -77,8 +77,7 @@
       margin-bottom: 8px;
     }
 
-    .setup-row input,
-    .setup-row select {
+    .setup-row input {
       flex: 1 1 180px;
       padding: 8px 10px;
       border-radius: var(--radius-sm);
@@ -471,24 +470,15 @@
       <div class="section-title">Players</div>
       
       <div class="setup-row">
-        <select id="player-name-select">
-          <option value="">Select player…</option>
-          <!-- options will be added by JS -->
-        </select>
-
         <input
           type="text"
           id="player-name-input"
-          placeholder="Or enter custom name"
+          placeholder="Player name (e.g., Chris)"
           autocomplete="off"
         />
-
-        <button class="btn btn-primary gd-btn-primary" id="add-player-btn">
+        <button class="btn btn-primary" id="add-player-btn">
           ＋ Add Player
         </button>
-      </div>
-      <div class="hint">
-        Choose from your GolfDarts players, or type a custom name.
       </div>
 
       <div class="hint" id="players-count-hint">No players yet.</div>
@@ -570,7 +560,6 @@
         <strong>“I’m on Green”</strong>… Ahman Green. 🏈
       </div>
       <div class="ahman-photo">
-        <!-- Replace src with your own Ahman Green image path -->
         <img src="images/ahman-green.jpg" alt="Ahman Green" onerror="this.style.display='none';" />
         <div class="ahman-photo-label">Ahman Green</div>
       </div>
@@ -599,7 +588,6 @@
 
       const setupCard = document.getElementById("setup-card");
       const gameCard = document.getElementById("game-card");
-      const playerNameSelect = document.getElementById("player-name-select");
       const playerNameInput = document.getElementById("player-name-input");
       const addPlayerBtn = document.getElementById("add-player-btn");
       const startGameBtn = document.getElementById("start-game-btn");
@@ -645,76 +633,12 @@
           name: clean,
           progressIndex: 0
         });
+        playerNameInput.value = "";
         updatePlayersHint();
       }
 
-      function initPlayerDropdown() {
-        const keysToTry = [
-          "golfdartsPlayers",
-          "golfDartsPlayers",
-          "players",
-          "playersList",
-          "playerList",
-          "playerNames"
-        ];
-
-        const namesSet = new Set();
-
-        keysToTry.forEach((key) => {
-          try {
-            const raw = localStorage.getItem(key);
-            if (!raw) return;
-
-            let parsed;
-            try {
-              parsed = JSON.parse(raw);
-            } catch (e) {
-              // maybe CSV string
-              parsed = raw.split(",").map(s => s.trim()).filter(Boolean);
-            }
-
-            if (Array.isArray(parsed)) {
-              parsed.forEach((entry) => {
-                if (!entry) return;
-                if (typeof entry === "string") {
-                  namesSet.add(entry);
-                } else if (typeof entry === "object" && entry.name) {
-                  namesSet.add(String(entry.name));
-                }
-              });
-            }
-          } catch (e) {
-            // ignore this key
-          }
-        });
-
-        if (namesSet.size === 0) {
-          return;
-        }
-
-        [...namesSet]
-          .sort((a, b) => a.localeCompare(b))
-          .forEach((name) => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            playerNameSelect.appendChild(opt);
-          });
-      }
-
       function addPlayerFromUI() {
-        const dropdownValue = playerNameSelect.value.trim();
-        const customValue   = playerNameInput.value.trim();
-
-        const name = dropdownValue || customValue;
-        if (!name) return;
-
-        addPlayer(name);
-
-        // If they used a dropdown name, clear the custom input
-        if (dropdownValue) {
-          playerNameInput.value = "";
-        }
+        addPlayer(playerNameInput.value);
       }
 
       function startGame() {
@@ -856,9 +780,8 @@
       }
 
       function pushHistory() {
-        // Save a snapshot before each change
         const snapshot = {
-          players: players.map(p => ({ ...p })), // shallow copy each player
+          players: players.map(p => ({ ...p })),
           currentPlayerIndex,
           dartsLeft,
           gameOver
@@ -876,7 +799,6 @@
         gameOver = snapshot.gameOver;
 
         if (!gameOver) {
-          // In case we’re undoing a win, ensure modal is closed
           closeWinModal();
         }
 
@@ -889,28 +811,23 @@
         if (!player) return;
 
         if (player.progressIndex >= COLORS.length) {
-          // Already done; ignore
           return;
         }
 
-        // Save state BEFORE this dart
         pushHistory();
 
         const neededIndex = player.progressIndex;
 
-        // Only advance if this is the next required color.
         if (colorIndex === neededIndex) {
           player.progressIndex++;
 
           if (player.progressIndex >= COLORS.length) {
-            // They just hit Red after doing B/W/G in order -> win immediately.
             showWin(player);
             renderBoard();
             return;
           }
         }
 
-        // Dart is used either way.
         consumeDart();
       }
 
@@ -925,7 +842,6 @@
         const player = getCurrentPlayer();
         if (!player) return;
         pushHistory();
-        // Missed the board entirely -> back to Black.
         player.progressIndex = 0;
         consumeDart();
       }
@@ -937,7 +853,6 @@
 
         pushHistory();
 
-        // Tiny rim magic: jump to "needing Red" (index 3) if not already there or beyond.
         if (player.progressIndex < COLORS.length - 1) {
           player.progressIndex = COLORS.length - 1;
         }
@@ -948,11 +863,10 @@
         if (gameOver) return;
         if (!players.length) return;
 
-        // Save state BEFORE skipping
         pushHistory();
 
         cycleToNextPlayer();
-        dartsLeft = 3; // fresh turn
+        dartsLeft = 3;
         renderBoard();
       }
 
@@ -984,9 +898,7 @@
       }
 
       // Event listeners
-      addPlayerBtn.addEventListener("click", () => {
-        addPlayerFromUI();
-      });
+      addPlayerBtn.addEventListener("click", addPlayerFromUI);
 
       playerNameInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -1022,7 +934,6 @@
       updatePlayersHint();
       needColorDotEl.style.cssText = getColorStyle("black");
       updateDartsStatus();
-      initPlayerDropdown();
     })();
   </script>
 </body>
