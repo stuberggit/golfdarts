@@ -61,11 +61,13 @@
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
     }
 
-    #setup-card {
+        #setup-card,
+    #game-card {
       border: 2px solid white;
     }
 
-        .ahman-nav {
+
+          .ahman-nav {
       position: relative;
     }
 
@@ -97,7 +99,6 @@
       right: 0;
       margin-top: 8px;
       background: #0d1a26;
-      border: 2px solid white;
       border-radius: 12px;
       padding: 8px 0;
       min-width: 180px;
@@ -485,7 +486,7 @@
     </h1>
     <small>Black → White → Green → Red · First there wins</small>
   </div>
-  <div class="ahman-nav">
+    <div class="ahman-nav">
     <button
       class="hamburger-button"
       id="ahman-menu-button"
@@ -501,10 +502,12 @@
       id="ahman-menu-panel"
       aria-hidden="true"
     >
+      <a href="#" id="ahman-rules-link">📜 Rules</a>
       <a href="index.html">🏌️‍♂️ GolfDarts Home</a>
       <a href="ahman-green.html" class="active">🟩 Ahman Green</a>
     </nav>
   </div>
+
 </header>
 
 
@@ -567,18 +570,12 @@
         </div>        
       </div>
 
-      <div class="hint" id="darts-status">
+            <div class="hint" id="darts-status">
         Darts this turn: ●●●
       </div>
 
-      <div class="hint" style="margin-top:6px;">
-        Click the color next to the <strong>current player</strong> for each dart.
-        Out-of-order colors don’t count, but still use a dart.
-        <br />
-        Miss the board completely → <strong>Reset</strong>. Tiny rim shot → <strong>Party</strong>.
-      </div>
-
       <div class="players-table" id="players-table" style="margin-top:10px;">
+
         <div class="players-table-header">
           <span>Player</span>
           <span>Black</span>
@@ -590,6 +587,49 @@
       </div>
     </section>
   </div>
+
+    <!-- Rules Modal -->
+  <div class="modal-backdrop" id="rules-backdrop">
+    <div class="modal">
+      <button class="modal-close" id="rules-close-btn" aria-label="Close">✕</button>
+      <div class="modal-title">
+        Ahman Green Rules
+      </div>
+      <div class="modal-subtitle">
+        Quick rundown of how to play.
+      </div>
+      <div style="text-align:left; font-size:0.9rem; color: var(--text); line-height:1.4;">
+        <p><strong>Objective</strong></p>
+        <ul style="margin-left:1.1rem; margin-bottom:0.6rem;">
+          <li>First player to hit <strong>Black → White → Green → Red</strong> (in that order) wins.</li>
+        </ul>
+
+        <p><strong>Turns &amp; darts</strong></p>
+        <ul style="margin-left:1.1rem; margin-bottom:0.6rem;">
+          <li>Each player gets <strong>3 darts</strong> per turn.</li>
+          <li>For each dart, tap the color you hit for the <strong>current player</strong>.</li>
+          <li>Out-of-order colors don’t advance progress, but still use a dart.</li>
+        </ul>
+
+        <p><strong>Special cases</strong></p>
+        <ul style="margin-left:1.1rem; margin-bottom:0.6rem;">
+          <li><strong>Reset</strong>: Miss the board completely → send the player back to needing <strong>Black</strong>.</li>
+          <li><strong>Party</strong>: Tiny rim hit (inside the outer ring but not a scoring segment) → jump the player straight to needing <strong>Red</strong>.</li>
+        </ul>
+
+        <p><strong>Winning</strong></p>
+        <ul style="margin-left:1.1rem;">
+          <li>As soon as a player completes <strong>Red</strong> after doing Black, White, and Green in order, they immediately win the game.</li>
+        </ul>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="rules-ok-btn">
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Win Modal -->
   <div class="modal-backdrop" id="win-backdrop">
@@ -640,19 +680,28 @@
       const needColorLabelEl = document.getElementById("need-color-label");
       const needColorDotEl = document.getElementById("need-color-dot");
       const dartsStatusEl = document.getElementById("darts-status");
+      
       const missBtn = document.getElementById("miss-btn");
       const resetBtn = document.getElementById("reset-btn");
       const partyBtn = document.getElementById("party-btn");
       const undoBtn = document.getElementById("undo-btn");
       const nextPlayerBtn = document.getElementById("next-player-btn");
+
       const playersRowsEl = document.getElementById("players-rows");
+
       const winBackdrop = document.getElementById("win-backdrop");
-      const menuButton = document.getElementById("ahman-menu-button");
-      const menuPanel = document.getElementById("ahman-menu-panel");      
       const winnerNameEl = document.getElementById("winner-name");
       const winCloseBtn = document.getElementById("win-close-btn");
       const newGameBtn = document.getElementById("new-game-btn");
       const continueViewBtn = document.getElementById("continue-view-btn");
+
+      const menuButton = document.getElementById("ahman-menu-button");
+      const menuPanel = document.getElementById("ahman-menu-panel");
+      const rulesBackdrop = document.getElementById("rules-backdrop");
+      const rulesCloseBtn = document.getElementById("rules-close-btn");
+      const rulesOkBtn = document.getElementById("rules-ok-btn");
+      const rulesLink = document.getElementById("ahman-rules-link");
+
 
       function updatePlayersHint() {
         if (!players.length) {
@@ -994,6 +1043,69 @@
           }
         });
       }
+
+            // Hamburger menu + rules
+      if (menuButton && menuPanel) {
+        menuButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isOpen = menuPanel.classList.toggle("open");
+          menuPanel.setAttribute("aria-hidden", String(!isOpen));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!menuPanel.classList.contains("open")) return;
+          if (!menuPanel.contains(e.target) && e.target !== menuButton) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && menuPanel.classList.contains("open")) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+      }
+
+      function openRules() {
+        if (!rulesBackdrop) return;
+        rulesBackdrop.classList.add("visible");
+      }
+
+      function closeRules() {
+        if (!rulesBackdrop) return;
+        rulesBackdrop.classList.remove("visible");
+      }
+
+      if (rulesLink) {
+        rulesLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          // Close menu when opening rules
+          if (menuPanel) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+          openRules();
+        });
+      }
+
+      if (rulesCloseBtn) {
+        rulesCloseBtn.addEventListener("click", closeRules);
+      }
+
+      if (rulesOkBtn) {
+        rulesOkBtn.addEventListener("click", closeRules);
+      }
+
+      if (rulesBackdrop) {
+        rulesBackdrop.addEventListener("click", (e) => {
+          if (e.target === rulesBackdrop) {
+            closeRules();
+          }
+        });
+      }
+
       
       // Init
       updatePlayersHint();
