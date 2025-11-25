@@ -65,6 +65,68 @@
       border: 2px solid white;
     }
 
+        .ahman-nav {
+      position: relative;
+    }
+
+    .hamburger-button {
+      background-color: #206a1e; /* same as GolfDarts buttons */
+      border: 2px solid white;
+      color: white;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 0;
+      width: auto;
+      max-width: none;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .hamburger-line {
+      width: 20px;
+      height: 2px;
+      background-color: white;
+    }
+
+    .hamburger-menu-panel {
+      position: absolute;
+      right: 0;
+      margin-top: 8px;
+      background: #0d1a26;
+      border: 2px solid white;
+      border-radius: 12px;
+      padding: 8px 0;
+      min-width: 180px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+      display: none;
+      z-index: 50;
+    }
+
+    .hamburger-menu-panel.open {
+      display: block;
+    }
+
+    .hamburger-menu-panel a {
+      display: block;
+      padding: 8px 14px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .hamburger-menu-panel a:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hamburger-menu-panel a.active {
+      font-weight: 600;
+      background: rgba(32, 106, 30, 0.5);
+    }
+
     .section-title {
       font-size: 0.95rem;
       text-transform: uppercase;
@@ -417,18 +479,34 @@
 <body>
   <div class="app-shell">
     <header>
-      <div>
-        <h1>
-          <span class="logo">🏌️‍♂️</span> Ahman Green
-        </h1>
-        <small>Black → White → Green → Red · First there wins</small>
-      </div>
-      <div>
-        <button class="btn btn-ghost" onclick="window.location.href='index.html'">
-          ⬅ Back to GolfDarts
-        </button>
-      </div>
-    </header>
+  <div>
+    <h1>
+      <span class="logo">🏌️‍♂️</span> Ahman Green
+    </h1>
+    <small>Black → White → Green → Red · First there wins</small>
+  </div>
+  <div class="ahman-nav">
+    <button
+      class="hamburger-button"
+      id="ahman-menu-button"
+      aria-label="Open menu"
+      type="button"
+    >
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    <nav
+      class="hamburger-menu-panel"
+      id="ahman-menu-panel"
+      aria-hidden="true"
+    >
+      <a href="index.html">🏌️‍♂️ GolfDarts Home</a>
+      <a href="ahman-green.html" class="active">🟩 Ahman Green</a>
+    </nav>
+  </div>
+</header>
+
 
     <!-- Setup Card -->
     <section class="card" id="setup-card">
@@ -558,21 +636,19 @@
       const startGameBtn = document.getElementById("start-game-btn");
       const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
-
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
       const needColorDotEl = document.getElementById("need-color-dot");
       const dartsStatusEl = document.getElementById("darts-status");
-
       const missBtn = document.getElementById("miss-btn");
       const resetBtn = document.getElementById("reset-btn");
       const partyBtn = document.getElementById("party-btn");
       const undoBtn = document.getElementById("undo-btn");
       const nextPlayerBtn = document.getElementById("next-player-btn");
-
       const playersRowsEl = document.getElementById("players-rows");
-
       const winBackdrop = document.getElementById("win-backdrop");
+      const menuButton = document.getElementById("ahman-menu-button");
+      const menuPanel = document.getElementById("ahman-menu-panel");      
       const winnerNameEl = document.getElementById("winner-name");
       const winCloseBtn = document.getElementById("win-close-btn");
       const newGameBtn = document.getElementById("new-game-btn");
@@ -895,6 +971,30 @@
         }
       });
 
+            // Hamburger menu
+      if (menuButton && menuPanel) {
+        menuButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isOpen = menuPanel.classList.toggle("open");
+          menuPanel.setAttribute("aria-hidden", String(!isOpen));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!menuPanel.classList.contains("open")) return;
+          if (!menuPanel.contains(e.target) && e.target !== menuButton) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && menuPanel.classList.contains("open")) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+      }
+      
       // Init
       updatePlayersHint();
       needColorDotEl.style.cssText = getColorStyle("black");
