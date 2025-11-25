@@ -308,21 +308,22 @@
     }
 
     .x-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--purple-x);
-      text-shadow: 0 0 10px rgba(179, 107, 255, 0.9);
-      opacity: 0;
-      transform: scale(0.8) rotate(-8deg);
-      pointer-events: none;
-      transition: opacity 0.16s ease, transform 0.16s ease;
-      mix-blend-mode: screen;
-    }
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--purple-x);
+  text-shadow: 0 0 12px rgba(179, 107, 255, 1), 0 0 20px rgba(179, 107, 255, 0.9);
+  opacity: 0;
+  transform: scale(0.8) rotate(-8deg);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  /* key change: remove blend that was washing it out */
+}
+
 
     .x-overlay.visible {
       opacity: 1;
@@ -513,17 +514,24 @@
             </span>
           </span>
         </div>
+        
         <div class="controls">
-          <button class="btn btn-ghost" id="miss-btn">
-            ➖ Miss
-          </button>
-          <button class="btn btn-danger" id="reset-btn">
-            🔄 Reset
-          </button>
-          <button class="btn btn-party" id="party-btn">
-            🎉 Party
-          </button>
-        </div>
+  <button class="btn btn-ghost" id="undo-btn">
+    ⏪ Undo
+  </button>
+  <button class="btn btn-ghost" id="miss-btn">
+    ➖ Miss
+  </button>
+  <button class="btn btn-danger" id="reset-btn">
+    🔄 Reset
+  </button>
+  <button class="btn btn-party" id="party-btn">
+    🎉 Party
+  </button>
+  <button class="btn btn-primary" id="next-player-btn">
+    ⏭ Next Player
+  </button>
+</div>        
       </div>
 
       <div class="hint" id="darts-status">
@@ -587,6 +595,7 @@
       let currentPlayerIndex = 0;
       let gameOver = false;
       let dartsLeft = 3;
+      let historyStack = []; // 🆕 for Undo
 
       const setupCard = document.getElementById("setup-card");
       const gameCard = document.getElementById("game-card");
@@ -602,8 +611,11 @@
       const dartsStatusEl = document.getElementById("darts-status");
 
       const missBtn = document.getElementById("miss-btn");
-      const resetBtn = document.getElementById("reset-btn");
-      const partyBtn = document.getElementById("party-btn");
+const resetBtn = document.getElementById("reset-btn");
+const partyBtn = document.getElementById("party-btn");
+const undoBtn = document.getElementById("undo-btn");           // 🆕
+const nextPlayerBtn = document.getElementById("next-player-btn"); // 🆕
+
 
       const playersRowsEl = document.getElementById("players-rows");
 
@@ -775,61 +787,106 @@
         renderBoard();
       }
 
+      function pushHistory() {
+  // Save a snapshot before each change
+  const snapshot = {
+    players: players.map(p => ({ ...p })), // shallow copy each player
+    currentPlayerIndex,
+    dartsLeft,
+    gameOver
+  };
+  historyStack.push(snapshot);
+}
+
+function undoLast() {
+  if (!historyStack.length) return;
+  const snapshot = historyStack.pop();
+
+  players = snapshot.players.map(p => ({ ...p }));
+  currentPlayerIndex = snapshot.currentPlayerIndex;
+  dartsLeft = snapshot.dartsLeft;
+  gameOver = snapshot.gameOver;
+
+  if (!gameOver) {
+    // In case we’re undoing a win, ensure modal is closed
+    closeWinModal();
+  }
+
+  renderBoard();
+}
+
       function handleColorClick(colorIndex) {
-        if (gameOver) return;
-        const player = getCurrentPlayer();
-        if (!player) return;
+  if (gameOver) return;
+  const player = getCurrentPlayer();
+  if (!player) return;
 
-        if (player.progressIndex >= COLORS.length) {
-          // Already won; ignore input.
-          return;
-        }
+  if (player.progressIndex >= COLORS.length) {
+    // Already done; ignore
+    return;
+  }
 
-        const neededIndex = player.progressIndex;
+  // Save state BEFORE this dart
+  pushHistory();
 
-        // Only advance if this is the next required color.
-        if (colorIndex === neededIndex) {
-          player.progressIndex++;
+  const neededIndex = player.progressIndex;
 
-          if (player.progressIndex >= COLORS.length) {
-            // They just hit Red after doing B/W/G in order -> win immediately.
-            showWin(player);
-            renderBoard();
-            return;
-          }
-        }
+  // Only advance if this is the next required color.
+  if (colorIndex === neededIndex) {
+    player.progressIndex++;
 
-        // Regardless of whether it progressed or not, this dart is used.
-        consumeDart();
-      }
+    if (player.progressIndex >= COLORS.length) {
+      // They just hit Red after doing B/W/G in order -> win immediately.
+      showWin(player);
+      renderBoard();
+      return;
+    }
+  }
+
+  // Dart is used either way.
+  consumeDart();
+}
 
       function handleMiss() {
-        if (gameOver) return;
-        // Just consume a dart, no progress.
-        consumeDart();
-      }
+  if (gameOver) return;
+  pushHistory();
+  consumeDart();
+}
 
       function handleReset() {
-        if (gameOver) return;
-        const player = getCurrentPlayer();
-        if (!player) return;
-        // Missed the board entirely -> back to Black.
-        player.progressIndex = 0;
-        consumeDart();
-      }
+  if (gameOver) return;
+  const player = getCurrentPlayer();
+  if (!player) return;
+  pushHistory();
+  // Missed the board entirely -> back to Black.
+  player.progressIndex = 0;
+  consumeDart();
+}
 
       function handleParty() {
-        if (gameOver) return;
-        const player = getCurrentPlayer();
-        if (!player) return;
+  if (gameOver) return;
+  const player = getCurrentPlayer();
+  if (!player) return;
 
-        // Tiny rim magic: jump to "needing Red" (index 3) if not already there or beyond.
-        if (player.progressIndex < COLORS.length - 1) {
-          player.progressIndex = COLORS.length - 1;
-        }
-        consumeDart();
-      }
+  pushHistory();
 
+  // Tiny rim magic: jump to "needing Red" (index 3) if not already there or beyond.
+  if (player.progressIndex < COLORS.length - 1) {
+    player.progressIndex = COLORS.length - 1;
+  }
+  consumeDart();
+}
+
+      function handleNextPlayer() {
+  if (gameOver) return;
+  if (!players.length) return;
+
+  // Save state BEFORE skipping
+  pushHistory();
+
+  cycleToNextPlayer();
+  dartsLeft = 3; // fresh turn
+  renderBoard();
+}
       function showWin(player) {
         gameOver = true;
         winnerNameEl.textContent = player.name;
@@ -853,6 +910,7 @@
         needColorLabelEl.textContent = "Black";
         needColorDotEl.style = getColorStyle("black");
         dartsStatusEl.textContent = "Darts this turn: ●●●";
+        historyStack = []; // 🆕 clear undo history
         closeWinModal();
       }
 
@@ -873,6 +931,10 @@
         players = [];
         updatePlayersHint();
       });
+
+      undoBtn.addEventListener("click", undoLast);
+nextPlayerBtn.addEventListener("click", handleNextPlayer);
+
 
       missBtn.addEventListener("click", handleMiss);
       resetBtn.addEventListener("click", handleReset);
