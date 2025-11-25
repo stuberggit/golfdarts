@@ -649,27 +649,57 @@
       }
 
       function initPlayerDropdown() {
-        // Try to pull saved players from localStorage (adjust key if needed)
-        let saved = [];
-        try {
-          const raw = localStorage.getItem("golfdartsPlayers");
-          if (raw) {
-            saved = JSON.parse(raw);
-          }
-        } catch (e) {
-          // ignore parse error, fallback to empty
-        }
+        const keysToTry = [
+          "golfdartsPlayers",
+          "golfDartsPlayers",
+          "players",
+          "playersList",
+          "playerList",
+          "playerNames"
+        ];
 
-        if (!Array.isArray(saved) || saved.length === 0) {
+        const namesSet = new Set();
+
+        keysToTry.forEach((key) => {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return;
+
+            let parsed;
+            try {
+              parsed = JSON.parse(raw);
+            } catch (e) {
+              // maybe CSV string
+              parsed = raw.split(",").map(s => s.trim()).filter(Boolean);
+            }
+
+            if (Array.isArray(parsed)) {
+              parsed.forEach((entry) => {
+                if (!entry) return;
+                if (typeof entry === "string") {
+                  namesSet.add(entry);
+                } else if (typeof entry === "object" && entry.name) {
+                  namesSet.add(String(entry.name));
+                }
+              });
+            }
+          } catch (e) {
+            // ignore this key
+          }
+        });
+
+        if (namesSet.size === 0) {
           return;
         }
 
-        saved.forEach(name => {
-          const opt = document.createElement("option");
-          opt.value = name;
-          opt.textContent = name;
-          playerNameSelect.appendChild(opt);
-        });
+        [...namesSet]
+          .sort((a, b) => a.localeCompare(b))
+          .forEach((name) => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            playerNameSelect.appendChild(opt);
+          });
       }
 
       function addPlayerFromUI() {
