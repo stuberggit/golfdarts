@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ahman Green – GolfDarts</title>
-  <!-- Your ADE / GolfDarts styles -->
+  <!-- GolfDarts ADE styles -->
   <link rel="stylesheet" href="style3.css">
   
   <style>
@@ -61,71 +61,10 @@
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
     }
 
-        #setup-card,
+    /* white border on both setup and game cards */
+    #setup-card,
     #game-card {
       border: 2px solid white;
-    }
-
-
-          .ahman-nav {
-      position: relative;
-    }
-
-    .hamburger-button {
-      background-color: #206a1e; /* same as GolfDarts buttons */
-      border: 2px solid white;
-      color: white;
-      border-radius: 8px;
-      padding: 8px 10px;
-      margin: 0;
-      width: auto;
-      max-width: none;
-      display: inline-flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 4px;
-      cursor: pointer;
-    }
-
-    .hamburger-line {
-      width: 20px;
-      height: 2px;
-      background-color: white;
-    }
-
-    .hamburger-menu-panel {
-      position: absolute;
-      right: 0;
-      margin-top: 8px;
-      background: #0d1a26;
-      border-radius: 12px;
-      padding: 8px 0;
-      min-width: 180px;
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
-      display: none;
-      z-index: 50;
-    }
-
-    .hamburger-menu-panel.open {
-      display: block;
-    }
-
-    .hamburger-menu-panel a {
-      display: block;
-      padding: 8px 14px;
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-
-    .hamburger-menu-panel a:hover {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .hamburger-menu-panel a.active {
-      font-weight: 600;
-      background: rgba(32, 106, 30, 0.5);
     }
 
     .section-title {
@@ -220,13 +159,14 @@
       justify-content: flex-end;
     }
 
+    /* shrink control buttons so they don't look like giant full-width CTAs */
     .controls button {
-  display: inline-block;
-  width: auto;
-  max-width: none;
-  margin: 4px;
-  padding: 6px 10px;
-  font-size: 0.9rem;
+      display: inline-block;
+      width: auto;
+      max-width: none;
+      margin: 4px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
     }
 
     .players-table {
@@ -366,8 +306,69 @@
       justify-content: flex-start;
     }
 
-    /* Win modal */
+    /* Hamburger */
 
+    .ahman-nav {
+      position: relative;
+    }
+
+    /* override global button styling: no border, no big margins, tiny icon */
+    .hamburger-button {
+      background: transparent;
+      border: none;
+      margin: 0;
+      padding: 4px;
+      width: auto;
+      max-width: none;
+      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .hamburger-line {
+      width: 20px;
+      height: 2px;
+      background-color: white;
+    }
+
+    .hamburger-menu-panel {
+      position: absolute;
+      right: 0;
+      margin-top: 8px;
+      background: #0d1a26;
+      border-radius: 12px;
+      padding: 8px 0;
+      min-width: 180px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+      display: none;
+      z-index: 50;
+    }
+
+    .hamburger-menu-panel.open {
+      display: block;
+    }
+
+    .hamburger-menu-panel a {
+      display: block;
+      padding: 8px 14px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .hamburger-menu-panel a:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hamburger-menu-panel a.active {
+      font-weight: 600;
+      background: rgba(32, 106, 30, 0.5);
+    }
+
+    /* Modal base (reuses win modal styles) */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -480,36 +481,34 @@
 <body>
   <div class="app-shell">
     <header>
-  <div>
-    <h1>
-      <span class="logo">🏌️‍♂️</span> Ahman Green
-    </h1>
-    <small>Black → White → Green → Red · First there wins</small>
-  </div>
-    <div class="ahman-nav">
-    <button
-      class="hamburger-button"
-      id="ahman-menu-button"
-      aria-label="Open menu"
-      type="button"
-    >
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-    </button>
-    <nav
-      class="hamburger-menu-panel"
-      id="ahman-menu-panel"
-      aria-hidden="true"
-    >
-      <a href="#" id="ahman-rules-link">📜 Rules</a>
-      <a href="index.html">🏌️‍♂️ GolfDarts Home</a>
-      <a href="ahman-green.html" class="active">🟩 Ahman Green</a>
-    </nav>
-  </div>
-
-</header>
-
+      <div>
+        <h1>
+          <span class="logo">🏌️‍♂️</span> Ahman Green
+        </h1>
+        <small>Black → White → Green → Red · First there wins</small>
+      </div>
+      <div class="ahman-nav">
+        <button
+          class="hamburger-button"
+          id="ahman-menu-button"
+          aria-label="Open menu"
+          type="button"
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+        <nav
+          class="hamburger-menu-panel"
+          id="ahman-menu-panel"
+          aria-hidden="true"
+        >
+          <a href="#" id="ahman-rules-link">📜 Rules</a>
+          <a href="index.html">🏌️‍♂️ GolfDarts Home</a>
+          <a href="ahman-green.html" class="active">🟩 Ahman Green</a>
+        </nav>
+      </div>
+    </header>
 
     <!-- Setup Card -->
     <section class="card" id="setup-card">
@@ -522,15 +521,15 @@
           placeholder="Player name (e.g., Chris)"
           autocomplete="off"
         />
-        <button class="btn btn-primary" id="add-player-btn">
+        <button id="add-player-btn">
           ＋ Add Player
         </button>
       </div>
 
       <div class="hint" id="players-count-hint">No players yet.</div>
       <div class="setup-footer">
-        <button class="btn btn-ghost" id="clear-players-btn">Clear Players</button>
-        <button class="btn btn-primary" id="start-game-btn" disabled>
+        <button id="clear-players-btn">Clear Players</button>
+        <button id="start-game-btn" disabled>
           Start Ahman Green ▶
         </button>
       </div>
@@ -552,30 +551,29 @@
         </div>
         
         <div class="controls">
-          <button class="btn btn-ghost" id="undo-btn">
+          <button id="undo-btn">
             ⏪ Undo
           </button>
-          <button class="btn btn-ghost" id="miss-btn">
+          <button id="miss-btn">
             ➖ Miss
           </button>
-          <button class="btn btn-danger" id="reset-btn">
+          <button id="reset-btn">
             🔄 Reset
           </button>
-          <button class="btn btn-party" id="party-btn">
+          <button id="party-btn">
             🎉 Party
           </button>
-          <button class="btn btn-primary" id="next-player-btn">
+          <button id="next-player-btn">
             ⏭ Next Player
           </button>
         </div>        
       </div>
 
-            <div class="hint" id="darts-status">
+      <div class="hint" id="darts-status">
         Darts this turn: ●●●
       </div>
 
       <div class="players-table" id="players-table" style="margin-top:10px;">
-
         <div class="players-table-header">
           <span>Player</span>
           <span>Black</span>
@@ -588,7 +586,7 @@
     </section>
   </div>
 
-    <!-- Rules Modal -->
+  <!-- Rules Modal -->
   <div class="modal-backdrop" id="rules-backdrop">
     <div class="modal">
       <button class="modal-close" id="rules-close-btn" aria-label="Close">✕</button>
@@ -623,13 +621,12 @@
         </ul>
       </div>
       <div class="modal-actions">
-        <button class="btn" id="rules-ok-btn">
+        <button id="rules-ok-btn">
           Got it
         </button>
       </div>
     </div>
   </div>
-
 
   <!-- Win Modal -->
   <div class="modal-backdrop" id="win-backdrop">
@@ -647,10 +644,10 @@
         <div class="ahman-photo-label">Ahman Green</div>
       </div>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="new-game-btn">
+        <button id="new-game-btn">
           New Ahman Green Game
         </button>
-        <button class="btn btn-ghost" id="continue-view-btn">
+        <button id="continue-view-btn">
           Just Keep Bragging 😎
         </button>
       </div>
@@ -676,11 +673,12 @@
       const startGameBtn = document.getElementById("start-game-btn");
       const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
+
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
       const needColorDotEl = document.getElementById("need-color-dot");
       const dartsStatusEl = document.getElementById("darts-status");
-      
+
       const missBtn = document.getElementById("miss-btn");
       const resetBtn = document.getElementById("reset-btn");
       const partyBtn = document.getElementById("party-btn");
@@ -701,7 +699,6 @@
       const rulesCloseBtn = document.getElementById("rules-close-btn");
       const rulesOkBtn = document.getElementById("rules-ok-btn");
       const rulesLink = document.getElementById("ahman-rules-link");
-
 
       function updatePlayersHint() {
         if (!players.length) {
@@ -811,7 +808,6 @@
               chip.classList.add("current-step");
             }
 
-            // Make the current player's cells clickable (for recording hits)
             if (!gameOver && index === currentPlayerIndex && player.progressIndex < COLORS.length) {
               cell.classList.add("clickable");
               cell.addEventListener("click", () => {
@@ -987,6 +983,67 @@
         closeWinModal();
       }
 
+      // Hamburger + Rules modal
+      if (menuButton && menuPanel) {
+        menuButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isOpen = menuPanel.classList.toggle("open");
+          menuPanel.setAttribute("aria-hidden", String(!isOpen));
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!menuPanel.classList.contains("open")) return;
+          if (!menuPanel.contains(e.target) && !menuButton.contains(e.target)) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && menuPanel.classList.contains("open")) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+        });
+      }
+
+      function openRules() {
+        if (!rulesBackdrop) return;
+        rulesBackdrop.classList.add("visible");
+      }
+
+      function closeRules() {
+        if (!rulesBackdrop) return;
+        rulesBackdrop.classList.remove("visible");
+      }
+
+      if (rulesLink) {
+        rulesLink.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (menuPanel) {
+            menuPanel.classList.remove("open");
+            menuPanel.setAttribute("aria-hidden", "true");
+          }
+          openRules();
+        });
+      }
+
+      if (rulesCloseBtn) {
+        rulesCloseBtn.addEventListener("click", closeRules);
+      }
+
+      if (rulesOkBtn) {
+        rulesOkBtn.addEventListener("click", closeRules);
+      }
+
+      if (rulesBackdrop) {
+        rulesBackdrop.addEventListener("click", (e) => {
+          if (e.target === rulesBackdrop) {
+            closeRules();
+          }
+        });
+      }
+
       // Event listeners
       addPlayerBtn.addEventListener("click", addPlayerFromUI);
 
@@ -1020,93 +1077,6 @@
         }
       });
 
-            // Hamburger menu
-      if (menuButton && menuPanel) {
-        menuButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const isOpen = menuPanel.classList.toggle("open");
-          menuPanel.setAttribute("aria-hidden", String(!isOpen));
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!menuPanel.classList.contains("open")) return;
-          if (!menuPanel.contains(e.target) && e.target !== menuButton) {
-            menuPanel.classList.remove("open");
-            menuPanel.setAttribute("aria-hidden", "true");
-          }
-        });
-
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && menuPanel.classList.contains("open")) {
-            menuPanel.classList.remove("open");
-            menuPanel.setAttribute("aria-hidden", "true");
-          }
-        });
-      }
-
-            // Hamburger menu + rules
-      if (menuButton && menuPanel) {
-        menuButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const isOpen = menuPanel.classList.toggle("open");
-          menuPanel.setAttribute("aria-hidden", String(!isOpen));
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!menuPanel.classList.contains("open")) return;
-          if (!menuPanel.contains(e.target) && e.target !== menuButton) {
-            menuPanel.classList.remove("open");
-            menuPanel.setAttribute("aria-hidden", "true");
-          }
-        });
-
-        document.addEventListener("keydown", (e) => {
-          if (e.key === "Escape" && menuPanel.classList.contains("open")) {
-            menuPanel.classList.remove("open");
-            menuPanel.setAttribute("aria-hidden", "true");
-          }
-        });
-      }
-
-      function openRules() {
-        if (!rulesBackdrop) return;
-        rulesBackdrop.classList.add("visible");
-      }
-
-      function closeRules() {
-        if (!rulesBackdrop) return;
-        rulesBackdrop.classList.remove("visible");
-      }
-
-      if (rulesLink) {
-        rulesLink.addEventListener("click", (e) => {
-          e.preventDefault();
-          // Close menu when opening rules
-          if (menuPanel) {
-            menuPanel.classList.remove("open");
-            menuPanel.setAttribute("aria-hidden", "true");
-          }
-          openRules();
-        });
-      }
-
-      if (rulesCloseBtn) {
-        rulesCloseBtn.addEventListener("click", closeRules);
-      }
-
-      if (rulesOkBtn) {
-        rulesOkBtn.addEventListener("click", closeRules);
-      }
-
-      if (rulesBackdrop) {
-        rulesBackdrop.addEventListener("click", (e) => {
-          if (e.target === rulesBackdrop) {
-            closeRules();
-          }
-        });
-      }
-
-      
       // Init
       updatePlayersHint();
       needColorDotEl.style.cssText = getColorStyle("black");
