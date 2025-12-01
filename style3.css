@@ -696,6 +696,36 @@ body.shanghai-bg.modal-open::after {
   margin-bottom: 12px;
 }
 
+/* Existing hazard styles (example – leave whatever you already have) */
+.hazard-col-header {
+  /* you probably already have something like this */
+  font-weight: 600;
+}
+
+.hazard-col {
+  /* hazard cell styling is already being set inline as #fff4f5 */
+}
+
+/* NEW: Hammer hole styling */
+.hammer-col-header {
+  font-weight: 700;
+}
+
+.hammer-col {
+  /* main cells on hammer holes */
+}
+
+/* Optional: if you want a subtle border cue */
+.hazard-col-header,
+.hazard-col {
+  border-bottom: 2px solid #b00020;
+}
+
+.hammer-col-header,
+.hammer-col {
+  border-bottom: 2px solid #004d99;
+}
+
 /* Match button widths below "Submit Score" */
 .player-select,
 .handicap-select {
