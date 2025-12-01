@@ -738,7 +738,7 @@ body.shanghai-bg.modal-open::after {
 
 /* Hammer hole layout */
 .hammer-group {
-  margin-top: 0.5rem;
+  margin-top: 0.25rem; /* closer to where the normal label sits */
   animation: hammerFadeIn 0.18s ease-out;
 }
 
