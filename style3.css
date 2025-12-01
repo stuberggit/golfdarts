@@ -273,6 +273,16 @@ body.shanghai-bg.modal-open::after {
   100% { transform: scale(1); }
 }
 
+@keyframes hammerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* === Scorecard Styles === */
 #scorecardWrapper {
