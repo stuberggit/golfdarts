@@ -726,6 +726,59 @@ body.shanghai-bg.modal-open::after {
   border-bottom: 2px solid #004d99;
 }
 
+/* Hammer hole layout */
+.hammer-group {
+  margin-top: 0.5rem;
+  animation: hammerFadeIn 0.18s ease-out;
+}
+
+.hammer-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+/* Row of 3 compact selects */
+.hammer-darts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Each dart “cell” */
+.hammer-dart {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.8rem;
+}
+
+.hammer-dart span {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+
+/* Smaller, less-jarring selects */
+.hammer-dart-select {
+  width: 100%;
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Extra hint text, kept small */
+.hammer-help {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.65;
+}
+
+
 /* Match button widths below "Submit Score" */
 .player-select,
 .handicap-select {
