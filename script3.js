@@ -1096,6 +1096,7 @@ function setupHazardHoles() {
 // For any legacy uses, keep this alias.
 // If something calls selectHazardHoles(), it will now use the same logic
 // (2 hazards + 1 hammer per side).
+
 function selectHazardHoles() {
   setupHazardHoles();
 }
@@ -1397,11 +1398,6 @@ const dartboardNeighbors = {
   19: [7, 3],
   20: [5, 1],
 };
-
-function selectHazardHoles() {
-  const allHoles = [...Array(18)].map((_, i) => i + 1);
-  hazardHoles = allHoles.sort(() => 0.5 - Math.random()).slice(0, 6);
-}
 
 const dartHits = [
   { number: 20, multiplier: 2 },
