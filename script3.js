@@ -9,6 +9,7 @@ let tiedPlayers = [];
 let audioEnabled = true;
 let advancedMode = false;
 let hazardHoles = [];
+let hammerHoles = [];
 let actionHistory = [];
 let randomMode = false;
 let history = [];
@@ -721,17 +722,40 @@ function updateScorecard() {
       <tr>
         <th>Player</th>
         <th>HCP</th>
-        ${[...Array(9)].map((_, i) => {
-          const holeIndex = i + start - 1;
-          const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
-          const isHaz = advancedMode && hazardHoles.includes(holeNumber);
-          const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
-          return `
-            <th class="${isHaz ? 'hazard-col-header' : ''}"${thStyle}
-                title="${isHaz ? `Hazard hole (${holeNumber})` : `Hole ${holeNumber}`}">
-              <span class="hole-number">${holeNumber}</span>
-            </th>`;
-        }).join('')}
+        ${
+          [...Array(9)].map((_, i) => {
+            const holeIndex = i + start - 1;
+            const holeNumber = randomMode ? holeSequence[holeIndex] : i + start;
+
+            const isHaz = advancedMode && hazardHoles.includes(holeNumber);
+            const isHammer = advancedMode && hammerHoles.includes(holeNumber);
+
+            const classes = [];
+            if (isHaz) classes.push("hazard-col-header");
+            if (isHammer) classes.push("hammer-col-header");
+
+            let thStyle = "";
+            if (isHaz) {
+              thStyle = ' style="background-color:#fff4f5;"'; // light red/pink for hazards
+            } else if (isHammer) {
+              thStyle = ' style="background-color:#e8f3ff;"'; // light blue for hammer holes
+            }
+
+            const titleText = isHaz
+              ? `Hazard hole (${holeNumber})`
+              : isHammer
+              ? `Hammer hole (${holeNumber})`
+              : `Hole ${holeNumber}`;
+
+            const classAttr = classes.length ? ` class="${classes.join(" ")}"` : "";
+
+            return `
+              <th${classAttr}${thStyle}
+                  title="${titleText}">
+                <span class="hole-number">${holeNumber}</span>
+              </th>`;
+          }).join("")
+        }
         <th>${label === "Front Nine" ? "Out" : "In"}</th>
       </tr>
     `;
@@ -761,17 +785,36 @@ function updateScorecard() {
           scores.map((s, i) => {
             const holeIndex = i + start - 1;
             const holeNumberForCell = randomMode ? holeSequence[holeIndex] : (i + start);
-            const isActive = holeNumberForCell === currentHole && p.name === players[currentPlayerIndex]?.name;
-            const isHazardCol = advancedMode && hazardHoles.includes(holeNumberForCell);
+
+            const isActive =
+              holeNumberForCell === currentHole &&
+              p.name === players[currentPlayerIndex]?.name;
+
+            const isHazardCol =
+              advancedMode && hazardHoles.includes(holeNumberForCell);
+
+            const isHammerCol =
+              advancedMode && hammerHoles.includes(holeNumberForCell);
 
             const display = (s === undefined || s === null)
               ? (isSudden && !isCompeting ? "-" : "&nbsp;")
               : s; // raw score only, no handicap
 
-            const baseStyle = 'border: 1px solid #ccc; text-align:center;';
-            const bg = isHazardCol ? ' background-color:#fff4f5;' : '';
+            const baseStyle = "border: 1px solid #ccc; text-align:center;";
+            let bg = "";
+            if (isHazardCol) {
+              bg = " background-color:#fff4f5;";
+            } else if (isHammerCol) {
+              bg = " background-color:#e8f3ff;";
+            }
+
+            const classList = [`hole-cell-${holeNumberForCell}`];
+            if (isActive) classList.push("active-cell");
+            if (isHazardCol) classList.push("hazard-col");
+            if (isHammerCol) classList.push("hammer-col");
+
             return `<td style="${baseStyle}${bg}"
-                       class="hole-cell-${holeNumberForCell}${isActive ? ' active-cell' : ''}${isHazardCol ? ' hazard-col' : ''}">${display}</td>`;
+                       class="${classList.join(" ")}">${display}</td>`;
           }).join("")
         }
         <td style="border: 1px solid #ccc; text-align:center;"><strong>${scores.length === 9 ? total : ""}</strong></td>
@@ -791,15 +834,44 @@ function updateScorecard() {
     table += `<tr>
       <th class="sudden-death-header">Player</th>
       <th class="sudden-death-header">HCP</th>
-      ${sdHoles.map(h => {
-        const isHaz = advancedMode && h >= 1 && h <= 18 && hazardHoles.includes(h);
-        const thStyle = isHaz ? ' style="background-color:#fff4f5;"' : '';
-        return `
-          <th class="sudden-death-header ${isHaz ? 'hazard-col-header' : ''}"${thStyle}
-              title="${isHaz ? `Hazard hole (${h})` : `Hole ${h}`}">
-            <span class="hole-number">${h}</span>
-          </th>`;
-      }).join("")}
+      ${
+        sdHoles.map(h => {
+          const isHaz =
+            advancedMode &&
+            h >= 1 &&
+            h <= 18 &&
+            hazardHoles.includes(h);
+
+          const isHammer =
+            advancedMode &&
+            h >= 1 &&
+            h <= 18 &&
+            hammerHoles.includes(h);
+
+          let thStyle = "";
+          if (isHaz) {
+            thStyle = ' style="background-color:#fff4f5;"';
+          } else if (isHammer) {
+            thStyle = ' style="background-color:#e8f3ff;"';
+          }
+
+          const classes = ["sudden-death-header"];
+          if (isHaz) classes.push("hazard-col-header");
+          if (isHammer) classes.push("hammer-col-header");
+
+          const titleText = isHaz
+            ? `Hazard hole (${h})`
+            : isHammer
+            ? `Hammer hole (${h})`
+            : `Hole ${h}`;
+
+          return `
+            <th class="${classes.join(" ")}"${thStyle}
+                title="${titleText}">
+              <span class="hole-number">${h}</span>
+            </th>`;
+        }).join("")
+      }
     </tr>`;
 
     const competingNames = players.map(p => p.name);
@@ -826,13 +898,38 @@ function updateScorecard() {
       for (let i = 0; i < sdHoles.length; i++) {
         const holeNum = i + 19;
         const label = holeNum <= 20 ? holeNum : (holeNum - 20);
-        const isActive = holeNum === currentHole && p.name === players[currentPlayerIndex]?.name;
-        const isHazCol = advancedMode && label >= 1 && label <= 18 && hazardHoles.includes(label);
-        const baseStyle = 'text-align:center;';
-        const bg = isHazCol ? ' background-color:#fff4f5;' : '';
+        const isActive =
+          holeNum === currentHole &&
+          p.name === players[currentPlayerIndex]?.name;
+
+        const isHazCol =
+          advancedMode &&
+          label >= 1 &&
+          label <= 18 &&
+          hazardHoles.includes(label);
+
+        const isHammerCol =
+          advancedMode &&
+          label >= 1 &&
+          label <= 18 &&
+          hammerHoles.includes(label);
+
+        const baseStyle = "text-align:center;";
+        let bg = "";
+        if (isHazCol) {
+          bg = " background-color:#fff4f5;";
+        } else if (isHammerCol) {
+          bg = " background-color:#e8f3ff;";
+        }
+
         let cellContent = isTiedPlayer ? (sdScores[i] ?? "") : "–";
 
-        table += `<td class="sudden-death-cell hole-cell-${holeNum}${isActive ? ' active-cell' : ''}${isHazCol ? ' hazard-col' : ''}" style="${baseStyle}${bg}">${cellContent}</td>`;
+        const classList = ["sudden-death-cell", `hole-cell-${holeNum}`];
+        if (isActive) classList.push("active-cell");
+        if (isHazCol) classList.push("hazard-col");
+        if (isHammerCol) classList.push("hammer-col");
+
+        table += `<td class="${classList.join(" ")}" style="${baseStyle}${bg}">${cellContent}</td>`;
       }
 
       table += `</tr>`;
@@ -963,12 +1060,44 @@ function loadGameState() {
 
 // ========== ADVANCED MODE ==========
 function setupHazardHoles() {
-  const set = new Set();
-  while (set.size < 6) {
-    // pick numbers 1 through 18 (golf holes)
-    set.add(Math.floor(Math.random() * 18) + 1);
+  // We want:
+  // - Front nine (1–9): 2 hazard holes + 1 hammer hole
+  // - Back nine  (10–18): 2 hazard holes + 1 hammer hole
+  // Total: 4 hazard holes, 2 hammer holes
+
+  // --- Front nine: pick 3 unique holes from 1–9 ---
+  const front = [];
+  while (front.length < 3) {
+    const h = Math.floor(Math.random() * 9) + 1; // 1..9
+    if (!front.includes(h)) front.push(h);
   }
-  hazardHoles = Array.from(set).sort((a, b) => a - b);
+
+  // --- Back nine: pick 3 unique holes from 10–18 ---
+  const back = [];
+  while (back.length < 3) {
+    const h = Math.floor(Math.random() * 9) + 10; // 10..18
+    if (!back.includes(h)) back.push(h);
+  }
+
+  // --- Choose 1 hammer hole on each side ---
+  const hammerFront = front[Math.floor(Math.random() * front.length)];
+  const hammerBack = back[Math.floor(Math.random() * back.length)];
+
+  // Store hammer holes globally (sorted just for sanity)
+  hammerHoles = [hammerFront, hammerBack].sort((a, b) => a - b);
+
+  // --- Remaining 2 on each side are true hazard holes ---
+  const frontHazards = front.filter(h => h !== hammerFront);
+  const backHazards  = back.filter(h => h !== hammerBack);
+
+  hazardHoles = frontHazards.concat(backHazards).sort((a, b) => a - b);
+}
+
+// For any legacy uses, keep this alias.
+// If something calls selectHazardHoles(), it will now use the same logic
+// (2 hazards + 1 hammer per side).
+function selectHazardHoles() {
+  setupHazardHoles();
 }
 
 function isAdjacent(number1, number2) {
