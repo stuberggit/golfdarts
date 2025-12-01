@@ -270,6 +270,7 @@ function showHole() {
   const isHammerDisplayHole =
     advancedMode &&
     displayHole !== "🎯" &&
+    Array.isArray(hammerHoles) &&
     hammerHoles.includes(displayHole);
 
   if (advancedMode && displayHole !== "🎯") {
@@ -283,7 +284,7 @@ function showHole() {
       const playerGroup = document.createElement('div');
       playerGroup.className = 'input-group hammer-group';
       playerGroup.innerHTML = `
-        <label>${player.name} Hammer darts:</label>
+        <label>${player.name} Hammer</label>
         <div class="hammer-darts-row">
           <div class="hammer-dart">
             <span>Dart 1 (×1)</span>
@@ -313,10 +314,6 @@ function showHole() {
             </select>
           </div>
         </div>
-        <p class="hammer-help">
-          Hammer hole: Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits.
-          Dart 1 ×1, Dart 2 ×2, Dart 3 ×3 (capped at 9 hits).
-        </p>
       `;
       advancedWrapper.appendChild(playerGroup);
     } else {
@@ -355,12 +352,13 @@ function showHole() {
     const isHammerNonAdvanced =
       !advancedMode &&
       displayHole !== "🎯" &&
+      Array.isArray(hammerHoles) &&
       hammerHoles.includes(displayHole);
 
     if (isHammerNonAdvanced) {
       // Hammer hole even when not using Advanced Mode
       singleWrapper.innerHTML = `
-        <label>${player.name} Hammer darts:</label>
+        <label>${player.name} Hammer</label>
         <div class="hammer-darts-row">
           <div class="hammer-dart">
             <span>Dart 1 (×1)</span>
@@ -390,10 +388,6 @@ function showHole() {
             </select>
           </div>
         </div>
-        <p class="hammer-help">
-          Hammer hole: Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits.
-          Dart 1 ×1, Dart 2 ×2, Dart 3 ×3 (capped at 9 hits).
-        </p>
       `;
     } else {
       // Original simple hits dropdown
@@ -415,7 +409,6 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
-
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
