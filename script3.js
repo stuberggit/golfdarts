@@ -267,25 +267,74 @@ function showHole() {
      <option value="bdp">1 - BDP</option>
      ${[...Array(9)].map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join("")}`;
 
+  const isHammerDisplayHole =
+    advancedMode &&
+    displayHole !== "🎯" &&
+    hammerHoles.includes(displayHole);
+
   if (advancedMode && displayHole !== "🎯") {
     const advancedWrapper = document.createElement('div');
     advancedWrapper.className = 'advanced-inputs';
 
-    // Player hits
-    const playerGroup = document.createElement('div');
-    playerGroup.className = 'input-group';
-    playerGroup.innerHTML = `
-      <label>${player.name} hits:</label>
-      <select id="hits">
-        ${hitsOptions}
-      </select>
-    `;
-    advancedWrapper.appendChild(playerGroup);
+    const isHazard = hazardHoles.includes(displayHole);
+
+    if (isHammerDisplayHole) {
+      // Hammer hole: 3 per-dart selects (order matters)
+      const playerGroup = document.createElement('div');
+      playerGroup.className = 'input-group hammer-group';
+      playerGroup.innerHTML = `
+        <label>${player.name} Hammer darts:</label>
+        <div class="hammer-darts-row">
+          <div class="hammer-dart">
+            <span>Dart 1 (×1)</span>
+            <select class="hammer-dart-select" data-dart-index="1">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+          <div class="hammer-dart">
+            <span>Dart 2 (×2)</span>
+            <select class="hammer-dart-select" data-dart-index="2">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+          <div class="hammer-dart">
+            <span>Dart 3 (×3)</span>
+            <select class="hammer-dart-select" data-dart-index="3">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+        </div>
+        <p class="hammer-help">
+          Hammer hole: Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits.
+          Dart 1 ×1, Dart 2 ×2, Dart 3 ×3 (capped at 9 hits).
+        </p>
+      `;
+      advancedWrapper.appendChild(playerGroup);
+    } else {
+      // Normal Advanced hits select
+      const playerGroup = document.createElement('div');
+      playerGroup.className = 'input-group';
+      playerGroup.innerHTML = `
+        <label>${player.name} hits:</label>
+        <select id="hits">
+          ${hitsOptions}
+        </select>
+      `;
+      advancedWrapper.appendChild(playerGroup);
+    }
 
     // Hazard hits (visible always; disabled on non-hazard holes)
     const hazardGroup = document.createElement('div');
     hazardGroup.className = 'input-group';
-    const isHazard = hazardHoles.includes(displayHole);
     hazardGroup.innerHTML = `
       <label>Hazards hit:</label>
       <select class="hazardSelect" ${isHazard ? '' : 'disabled'}>
@@ -299,15 +348,63 @@ function showHole() {
 
     container.appendChild(advancedWrapper);
   } else {
-    // Non-advanced or 🎯: single player hits dropdown centered
+    // Non-advanced or 🎯
     const singleWrapper = document.createElement('div');
     singleWrapper.className = 'single-select';
-    singleWrapper.innerHTML = `
-      <label>${player.name} hits:</label>
-      <select id="hits">
-        ${hitsOptions}
-      </select>
-    `;
+
+    const isHammerNonAdvanced =
+      !advancedMode &&
+      displayHole !== "🎯" &&
+      hammerHoles.includes(displayHole);
+
+    if (isHammerNonAdvanced) {
+      // Hammer hole even when not using Advanced Mode
+      singleWrapper.innerHTML = `
+        <label>${player.name} Hammer darts:</label>
+        <div class="hammer-darts-row">
+          <div class="hammer-dart">
+            <span>Dart 1 (×1)</span>
+            <select class="hammer-dart-select" data-dart-index="1">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+          <div class="hammer-dart">
+            <span>Dart 2 (×2)</span>
+            <select class="hammer-dart-select" data-dart-index="2">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+          <div class="hammer-dart">
+            <span>Dart 3 (×3)</span>
+            <select class="hammer-dart-select" data-dart-index="3">
+              <option value="0">Miss</option>
+              <option value="1">Single</option>
+              <option value="2">Double</option>
+              <option value="3">Triple</option>
+            </select>
+          </div>
+        </div>
+        <p class="hammer-help">
+          Hammer hole: Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits.
+          Dart 1 ×1, Dart 2 ×2, Dart 3 ×3 (capped at 9 hits).
+        </p>
+      `;
+    } else {
+      // Original simple hits dropdown
+      singleWrapper.innerHTML = `
+        <label>${player.name} hits:</label>
+        <select id="hits">
+          ${hitsOptions}
+        </select>
+      `;
+    }
+
     container.appendChild(singleWrapper);
   }
 
@@ -318,6 +415,7 @@ function showHole() {
   document.getElementById("scorecardWrapper").style.display = "block";
   updateScorecard();
 }
+
 
 function highlightHazardHole(hole) {
   // Placeholder for future Advanced Mode UI enhancement
@@ -391,10 +489,69 @@ function computeHoleScore({ hits, hazards, isHazardHole, advancedMode }) {
 }
 
 function submitPlayerScore() {
-  const hitsValue = document.getElementById("hits").value;
-  const isBDPSelected = hitsValue === "bdp";
-  const hits = (hitsValue === "miss") ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
+  // Determine the effective "display hole" for this turn
+  let displayHole;
+  if (randomMode) {
+    displayHole = suddenDeath ? currentHole : holeSequence[currentHoleIndex];
+  } else {
+    displayHole = currentHole;
+  }
 
+  const isHammerHole =
+    displayHole !== "🎯" &&
+    Array.isArray(hammerHoles) &&
+    hammerHoles.includes(displayHole);
+
+  let hits = 0;
+  let isBDPSelected = false;
+  let hammerDartValues = []; // per-dart hits for Hammer holes
+
+  if (isHammerHole) {
+    // Hammer hole: try to read the 3 hammer dart selects
+    const dartSelects = Array.from(document.querySelectorAll(".hammer-dart-select"));
+
+    if (dartSelects.length === 3) {
+      let weightedHits = 0;
+
+      dartSelects.forEach((sel, index) => {
+        const raw = parseInt(sel.value, 10);
+        let perDartHits = isNaN(raw) ? 0 : raw;
+        // Clamp each dart between 0 and 3 (Miss, Single, Double, Triple)
+        if (perDartHits < 0) perDartHits = 0;
+        if (perDartHits > 3) perDartHits = 3;
+
+        hammerDartValues.push(perDartHits);
+
+        const mult = index + 1; // Dart 1 ×1, Dart 2 ×2, Dart 3 ×3
+        weightedHits += perDartHits * mult;
+      });
+
+      // Cap total Hammer hits at 9 for now
+      hits = Math.min(9, weightedHits);
+    } else {
+      // Fallback if Hammer UI is not present for some reason:
+      const hitsElement = document.getElementById("hits");
+      if (!hitsElement) {
+        alert("Enter a valid number of hits.");
+        return;
+      }
+      const hitsValue = hitsElement.value;
+      isBDPSelected = hitsValue === "bdp";
+      hits = (hitsValue === "miss") ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
+    }
+  } else {
+    // Normal (non-Hammer) holes use the existing single hits dropdown
+    const hitsElement = document.getElementById("hits");
+    if (!hitsElement) {
+      alert("Enter a valid number of hits.");
+      return;
+    }
+    const hitsValue = hitsElement.value;
+    isBDPSelected = hitsValue === "bdp";
+    hits = (hitsValue === "miss") ? 0 : (isBDPSelected ? 1 : parseInt(hitsValue, 10));
+  }
+
+  // Validate hits overall (0..9)
   if (isNaN(hits) || hits < 0 || hits > 9) {
     alert("Enter a valid number of hits.");
     return;
@@ -406,11 +563,25 @@ function submitPlayerScore() {
     return;
   }
 
-  // Shanghai prompt (unchanged)
-  if (hits === 6) {
+  // --- Shanghai prompt ---
+  let isPotentialShanghai = false;
+
+  if (isHammerHole && hammerDartValues.length === 3) {
+    // Hammer Shanghai:
+    // At least one Single, one Double, and one Triple (of the target) in the 3 darts.
+    const hasSingle = hammerDartValues.includes(1);
+    const hasDouble = hammerDartValues.includes(2);
+    const hasTriple = hammerDartValues.includes(3);
+    isPotentialShanghai = hasSingle && hasDouble && hasTriple;
+  } else if (hits === 6) {
+    // Classic behavior: 6 hits could be a Shanghai
+    isPotentialShanghai = true;
+  }
+
+  if (isPotentialShanghai) {
     const isShanghai = confirm(
-      `Was this a Shanghai (1x, 2x, and 3x of ${currentHole})? ` +
-      `Cancel to score -2 and return to game. OK to accept humiliating defeat`
+      `Was this a Shanghai (1x, 2x, and 3x of ${displayHole})? ` +
+      `Cancel to score normally and return to game. OK to accept humiliating defeat`
     );
     if (isShanghai) {
       showShanghaiWin(player.name);
@@ -418,9 +589,13 @@ function submitPlayerScore() {
     }
   }
 
-  // Hazards only matter on hazard holes in advanced mode
+  // Hazards only matter on hazard holes in advanced mode (Hammer holes are NOT hazards)
   let hazards = 0;
-  if (advancedMode && hazardHoles.includes(currentHole)) {
+  if (
+    advancedMode &&
+    displayHole !== "🎯" &&
+    hazardHoles.includes(displayHole)
+  ) {
     const hazardSelect = document.querySelector(".hazardSelect");
     hazards = hazardSelect ? (parseInt(hazardSelect.value, 10) || 0) : 0;
   }
@@ -432,8 +607,8 @@ function submitPlayerScore() {
   // Final score: ALWAYS add hazards
   const score = base + hazards;
 
-  // BDP only when user chose it AND it's truly a Par (hits=1 & hazards=0)
-  const wasBDP = isBDPSelected && hits === 1 && hazards === 0;
+  // BDP only when user chose it AND it's truly a Par (hits=1 & hazards=0) AND it's NOT a Hammer hole
+  const wasBDP = !isHammerHole && isBDPSelected && hits === 1 && hazards === 0;
 
   // Persist to both active and allPlayers mirrors
   const mirror = allPlayers.find(p => p.name === player.name);
@@ -553,6 +728,7 @@ function submitPlayerScore() {
 
   showHole();
 }
+
 
 // Random sudden death hole (1–20 or Bullseye)
 function getRandomSuddenDeathHole() {
