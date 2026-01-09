@@ -753,17 +753,29 @@
       const rulesOkBtn = document.getElementById("rules-ok-btn");
       const rulesLink = document.getElementById("ahman-rules-link");
 
-      function updatePlayersHint() {
+            function updatePlayersHint() {
         if (!players.length) {
           playersCountHint.textContent = "No players yet.";
-        } else if (players.length === 1) {
-          playersCountHint.textContent = "1 player added.";
         } else {
-          playersCountHint.textContent = players.length + " players added.";
+          const names = players.map(p => p.name);
+          if (players.length === 1) {
+            playersCountHint.textContent = "Player: " + names[0];
+          } else if (players.length <= 4) {
+            playersCountHint.textContent = "Players: " + names.join(", ");
+          } else {
+            const firstThree = names.slice(0, 3).join(", ");
+            const remaining = players.length - 3;
+            playersCountHint.textContent =
+              "Players (" + players.length + "): " +
+              firstThree +
+              ", +" + remaining + " more";
+          }
         }
+
         startGameBtn.disabled = players.length < 2;
         clearPlayersBtn.disabled = players.length === 0;
       }
+
 
       function addPlayer(name) {
         const clean = name.trim();
