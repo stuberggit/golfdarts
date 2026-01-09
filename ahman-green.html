@@ -545,22 +545,28 @@
     <section class="card" id="setup-card">
       <div class="section-title">Players</div>
       
-      <div class="setup-row">
+           <div class="setup-row">
         <input
           type="text"
           id="player-name-input"
           placeholder="Player name (e.g., Chris)"
           autocomplete="off"
         />
-        <button id="add-player-btn">
+        <button id="add-player-btn" title="Add this player to the game">
           ＋ Add Player
         </button>
       </div>
 
       <div class="hint" id="players-count-hint">No players yet.</div>
       <div class="setup-footer">
-        <button id="clear-players-btn">Clear Players</button>
-        <button id="start-game-btn" disabled>
+        <button id="clear-players-btn" title="Remove all players from the list">
+          Clear Players
+        </button>
+        <button
+          id="start-game-btn"
+          disabled
+          title="Start Ahman Green with the current players"
+        >
           Start Ahman Green ▶
         </button>
       </div>
@@ -581,23 +587,39 @@
           </span>
         </div>
         
-        <div class="controls">
-          <button id="undo-btn">
+                <div class="controls">
+          <button
+            id="undo-btn"
+            title="Undo the last dart or action"
+          >
             ⏪ Undo
           </button>
-          <button id="miss-btn">
+          <button
+            id="miss-btn"
+            title="Record a miss (dart hit nothing useful)"
+          >
             ➖ Miss
           </button>
-          <button id="reset-btn">
+          <button
+            id="reset-btn"
+            title="Missed the board completely – send this player back to Black"
+          >
             🔄 Reset
           </button>
-          <button id="party-btn">
+          <button
+            id="party-btn"
+            title="Tiny rim hit – jump this player straight to needing Red"
+          >
             🎉 Party
           </button>
-          <button id="next-player-btn">
+          <button
+            id="next-player-btn"
+            title="Move to the next player with 3 fresh darts"
+          >
             ⏭ Next Player
           </button>
         </div>        
+    
       </div>
 
       <div class="hint" id="darts-status">
