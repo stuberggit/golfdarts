@@ -98,6 +98,18 @@
       margin-top: 4px;
     }
 
+        /* Make current player name pop a bit more */
+    .current-player strong {
+      font-size: 1.3rem;  /* was 1.1rem */
+    }
+
+    /* Make darts status more prominent than a tiny hint */
+    #darts-status {
+      font-size: 1rem;      /* override .hint 0.78rem */
+      font-weight: 600;
+    }
+
+
     .setup-footer {
       display: flex;
       justify-content: space-between;
@@ -207,13 +219,14 @@
       border-bottom: none;
     }
 
-    .player-name-cell {
+        .player-name-cell {
       padding: 8px 12px;
       display: flex;
       align-items: center;
-      font-size: 0.9rem;
+      font-size: 1.05rem;  /* was 0.9rem */
       color: var(--text);
     }
+
 
     .player-row.current {
       background: linear-gradient(90deg, rgba(63, 211, 123, 0.08), transparent);
