@@ -46,13 +46,35 @@
     <section class="card" id="setup-card">
       <div class="section-title">Players</div>
       
-           <div class="setup-row">
+                 <div class="setup-row">
+        <select
+          id="player-name-select"
+          title="Choose a regular player"
+        >
+          <option value="">Select player…</option>
+          <option value="Brandon">Brandon</option>
+          <option value="Brock">Brock</option>
+          <option value="Dan">Dan</option>
+          <option value="Deanna">Deanna</option>
+          <option value="Derrick">Derrick</option>
+          <option value="Don">Don</option>
+          <option value="Edgar">Edgar</option>
+          <option value="Erin">Erin</option>
+          <option value="Mullins">Mullins</option>
+          <option value="Other">Other</option>
+          <option value="Phillip">Phillip</option>
+          <option value="Pusti">Pusti</option>
+          <option value="Stuberg">Stuberg</option>
+          <option value="Tara">Tara</option>
+        </select>
+
         <input
           type="text"
           id="player-name-input"
-          placeholder="Player name (e.g., Chris)"
+          placeholder="Or type a custom name"
           autocomplete="off"
         />
+
         <button id="add-player-btn" title="Add this player to the game">
           ＋ Add Player
         </button>
@@ -222,11 +244,13 @@
 
       const setupCard = document.getElementById("setup-card");
       const gameCard = document.getElementById("game-card");
+      const playerNameSelect = document.getElementById("player-name-select");
       const playerNameInput = document.getElementById("player-name-input");
       const addPlayerBtn = document.getElementById("add-player-btn");
       const startGameBtn = document.getElementById("start-game-btn");
       const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
+
 
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
@@ -290,8 +314,28 @@
         updatePlayersHint();
       }
 
-      function addPlayerFromUI() {
-        addPlayer(playerNameInput.value);
+            function addPlayerFromUI() {
+        const selected = playerNameSelect.value;
+        const typed = playerNameInput.value.trim();
+
+        let name = "";
+
+        if (selected && selected !== "Other") {
+          // Use the chosen regular player name
+          name = selected;
+        } else {
+          // Either "Other" or nothing selected -> require typed name
+          name = typed;
+        }
+
+        if (!name) return;
+
+        addPlayer(name);
+
+        // Reset UI after adding
+        playerNameSelect.value = "";
+        playerNameInput.value = "";
+        playerNameInput.placeholder = "Or type a custom name";
       }
 
       function startGame() {
@@ -642,6 +686,23 @@
           closeWinModal();
         }
       });
+
+            // Dropdown behavior (including "Other")
+      if (playerNameSelect) {
+        playerNameSelect.addEventListener("change", () => {
+          if (playerNameSelect.value === "Other") {
+            playerNameInput.value = "";
+            playerNameInput.placeholder = "Enter custom player name";
+            playerNameInput.focus();
+          } else if (playerNameSelect.value) {
+            playerNameInput.value = playerNameSelect.value;
+            playerNameInput.placeholder = "Or type a custom name";
+          } else {
+            playerNameInput.placeholder = "Or type a custom name";
+          }
+        });
+      }
+
 
       // Init
       updatePlayersHint();
