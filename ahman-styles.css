@@ -99,18 +99,6 @@ body {
       margin-top: 4px;
     }
 
-        /* Make current player name pop a bit more */
-    .current-player strong {
-      font-size: 1.3rem;  /* was 1.1rem */
-    }
-
-    /* Make darts status more prominent than a tiny hint */
-    #darts-status {
-      font-size: 1rem;      /* override .hint 0.78rem */
-      font-weight: 600;
-    }
-
-
     .setup-footer {
       display: flex;
       justify-content: space-between;
@@ -134,18 +122,18 @@ body {
     }
 
     .current-player {
-      font-size: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .current-player strong {
-      font-size: 1.1rem;
-    }
-    .current-player span.need {
-      font-size: 0.88rem;
-      color: var(--muted);
-    }
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.current-player strong {
+  font-size: 2.2rem;
+}
+
+.current-player span {
+  font-size: 1.2rem;
+}
 
     .need-pill {
       display: inline-flex;
@@ -200,6 +188,28 @@ body {
     }
     /* #next-player-btn intentionally left default (white border) */
 
+/* Bigger core gameplay text */
+.current-player strong {
+  font-size: 2.2rem;
+}
+
+.current-player span {
+  font-size: 1.2rem;
+}
+
+.need-pill {
+  font-size: 1.1rem;
+}
+
+
+.player-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 70px);
+  align-items: center;
+  padding: 14px 0;
+  position: relative;
+}
+
     .players-table {
       margin-top: 4px;
       border-radius: var(--radius-lg);
@@ -208,26 +218,15 @@ body {
       overflow: hidden;
     }
 
-    .player-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) repeat(4, 54px);
-      align-items: stretch;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-      position: relative;
-    }
 
     .player-row:last-child {
       border-bottom: none;
     }
 
-        .player-name-cell {
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      font-size: 1.05rem;  /* was 0.9rem */
-      color: var(--text);
-    }
-
+      .player-name-cell {
+  padding-left: 12px;
+  font-size: 1.8rem;
+}
 
     .player-row.current {
       background: linear-gradient(90deg, rgba(63, 211, 123, 0.08), transparent);
@@ -253,6 +252,7 @@ body {
       border-right: 1px solid rgba(255, 255, 255, 0.05);
       overflow: hidden;
       isolation: isolate;
+      padding: 6px;
     }
 
     .color-cell.clickable {
@@ -317,16 +317,13 @@ body {
     }
 
     .players-table-header {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) repeat(4, 54px);
-      padding: 6px 12px;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 70px);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
 
     .players-table-header span {
       display: flex;
