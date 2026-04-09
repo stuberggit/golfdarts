@@ -113,40 +113,39 @@
                 <div class="controls">
           <button
             id="undo-btn"
-            title="Undo the last dart or action"
-          >
-            ⏪ Undo
+            title="Undo the last dart or action">
+            Undo
           </button>
-          <button
-            id="miss-btn"
-            title="Record a miss (dart hit nothing useful)"
-          >
-            ➖ Miss
-          </button>
+          
           <button
             id="reset-btn"
-            title="Missed the board completely – send this player back to Black"
-          >
-            🔄 Reset
+            title="Missed the board completely – send this player back to Black">
+            ⚡ AC/DC ⚡
           </button>
+                  
           <button
             id="party-btn"
-            title="Outside of rim hit – jump this player straight to needing Red"
-          >
-            🎉 Party
+            title="Outside of rim hit – jump this player straight to needing Red">
+            Party
           </button>
+                  
           <button
             id="next-player-btn"
-            title="Move to the next player with 3 fresh darts"
-          >
-            ⏭ Next Player
+            title="Move to the next player with 3 fresh darts">
+            Next Player
           </button>
-        </div>        
-    
-      </div>
+        </div> 
 
-      <div class="hint" id="darts-status">
-        Darts this turn: ●●●
+        <div class="left-controls">
+    <button id="undo-btn">Undo</button>
+    <button id="reset-btn">AC/DC</button>
+    <button id="party-btn">Party</button>
+  </div>
+
+  <button id="next-player-btn" class="next-player">
+    Next Player
+  </button>
+    
       </div>
 
       <div class="players-table" id="players-table" style="margin-top:10px;">
@@ -251,13 +250,10 @@
       const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
 
-
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
       const needColorDotEl = document.getElementById("need-color-dot");
-      const dartsStatusEl = document.getElementById("darts-status");
-
-      const missBtn = document.getElementById("miss-btn");
+      
       const resetBtn = document.getElementById("reset-btn");
       const partyBtn = document.getElementById("party-btn");
       const undoBtn = document.getElementById("undo-btn");
@@ -379,12 +375,6 @@
         }
       }
 
-      function updateDartsStatus() {
-        const filled = "●".repeat(dartsLeft);
-        const empty = "○".repeat(3 - dartsLeft);
-        dartsStatusEl.textContent = "Darts this turn: " + filled + empty;
-      }
-
       function renderBoard() {
         const rowsFragment = document.createDocumentFragment();
 
@@ -458,11 +448,8 @@
           needColorDotEl.style.cssText = getColorStyle(neededColor);
         }
 
-        missBtn.disabled = gameOver;
         resetBtn.disabled = gameOver;
         partyBtn.disabled = gameOver;
-
-        updateDartsStatus();
       }
 
       function consumeDart() {
@@ -527,12 +514,6 @@
         consumeDart();
       }
 
-      function handleMiss() {
-        if (gameOver) return;
-        pushHistory();
-        consumeDart();
-      }
-
       function handleReset() {
         if (gameOver) return;
         const player = getCurrentPlayer();
@@ -589,7 +570,6 @@
         currentPlayerNameEl.textContent = "–";
         needColorLabelEl.textContent = "Black";
         needColorDotEl.style.cssText = getColorStyle("black");
-        dartsStatusEl.textContent = "Darts this turn: ●●●";
         closeWinModal();
       }
 
@@ -673,7 +653,6 @@
       undoBtn.addEventListener("click", undoLast);
       nextPlayerBtn.addEventListener("click", handleNextPlayer);
 
-      missBtn.addEventListener("click", handleMiss);
       resetBtn.addEventListener("click", handleReset);
       partyBtn.addEventListener("click", handleParty);
 
@@ -707,7 +686,6 @@
       // Init
       updatePlayersHint();
       needColorDotEl.style.cssText = getColorStyle("black");
-      updateDartsStatus();
     })();
   </script>
 </body>
