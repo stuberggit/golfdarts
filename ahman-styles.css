@@ -54,7 +54,7 @@ body {
     }
 
     .card {
-      background: linear-gradient(145deg, #0d1a26, #101b2a);
+      background: linear-gradient(145deg, #13283a, #18364d);
       border-radius: var(--radius-lg);
       border: 1px solid var(--border);
       padding: 16px 18px 18px;
@@ -170,13 +170,20 @@ body {
       font-size: 0.9rem;
     }
 
+.left-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.next-player {
+  font-size: 1.1rem;
+  padding: 10px 16px;
+  border-width: 3px;
+}
+
         /* Fun borders for inline controls */
     #undo-btn {
       border-color: #b00020;       /* hazard red / danger */
-    }
-
-    #miss-btn {
-      border-color: #888888;       /* muted gray for a nothing-throw */
     }
 
     #reset-btn {
