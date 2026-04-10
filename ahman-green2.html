@@ -62,8 +62,30 @@
 
 
     <!-- Game Card -->
-    <section class="card" id="setup-card">
-    <section class="card game-card" id="game-card" style="display:none;">
+    <!-- Setup Card -->
+<section class="card" id="setup-card">
+
+  <div class="section-title">Players</div>
+
+  <div class="setup-row">
+    <select id="player-count-select">
+      <option value="">Select number of players…</option>
+    </select>
+  </div>
+
+  <div id="player-inputs"></div>
+
+  <div class="setup-footer">
+    <button id="start-game-btn" disabled>
+      Start Ahman Green
+    </button>
+  </div>
+
+</section>
+
+<!-- Game Card -->
+<section class="card game-card" id="game-card" style="display:none;">
+
       
       <div class="game-header">
         <div class="current-player">
@@ -190,7 +212,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
       const setupCard = document.getElementById("setup-card");
       const gameCard = document.getElementById("game-card");
-      const playerNameSelect = document.getElementById("player-name-select");
       const startGameBtn = document.getElementById("start-game-btn");
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
@@ -267,12 +288,24 @@ function renderPlayerInputs() {
     const select = document.createElement("select");
     select.className = "player-select";
 
+    // ✅ placeholder
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select player...";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    select.appendChild(placeholder);
+
+    // ✅ names
     PLAYER_OPTIONS.forEach(name => {
       const opt = document.createElement("option");
       opt.value = name;
       opt.textContent = name;
       select.appendChild(opt);
     });
+
+    // force placeholder
+    select.value = "";
 
     const input = document.createElement("input");
     input.placeholder = "Enter custom name";
@@ -301,30 +334,6 @@ function renderPlayerInputs() {
         playerNameInput.value = "";
       }
 
-            function addPlayerFromUI() {
-        const selected = playerNameSelect.value;
-        const typed = playerNameInput.value.trim();
-
-        let name = "";
-
-        if (selected && selected !== "Other") {
-          // Use the chosen regular player name
-          name = selected;
-        } else {
-          // Either "Other" or nothing selected -> require typed name
-          name = typed;
-        }
-
-        if (!name) return;
-
-        addPlayer(name);
-
-        // Reset UI after adding
-        playerNameSelect.value = "";
-        playerNameInput.value = "";
-        playerNameInput.placeholder = "Or type a custom name";
-      }
-
       function startGame() {
   const rows = document.querySelectorAll("#player-inputs .setup-row");
   players = [];
@@ -346,7 +355,10 @@ function renderPlayerInputs() {
     }
   });
 
-  if (players.length < 1) return; // ✅ now allows solo play
+  if (players.length < 1) {
+    alert("Select at least one player");
+    return;
+  }
 
   gameOver = false;
   currentPlayerIndex = 0;
@@ -357,7 +369,6 @@ function renderPlayerInputs() {
 
   renderBoard();
 }
-
 
       function getCurrentPlayer() {
         if (!players.length) return null;
@@ -447,7 +458,6 @@ function renderPlayerInputs() {
           needColorLabelEl.textContent = "—";
           needColorDotEl.style.background = "transparent";
           needColorDotEl.style.borderColor = "transparent";
-          dartsStatusEl.textContent = "Darts this turn: –";
           return;
         }
 
@@ -651,9 +661,6 @@ function renderPlayerInputs() {
       // Event listeners
 
       startGameBtn.addEventListener("click", startGame);
-      {
-        players = [];
-      };
 
       undoBtn.addEventListener("click", undoLast);
       nextPlayerBtn.addEventListener("click", handleNextPlayer);
