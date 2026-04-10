@@ -6,7 +6,8 @@
   <title>Ahman Green – GolfDarts</title>
   <!-- GolfDarts ADE styles -->
   <link rel="stylesheet" href="ahman-styles.css">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+
   
 </head>
   
@@ -42,58 +43,23 @@
       </div>
     </header>
 
-    <!-- Setup Card -->
-    <section class="card" id="setup-card">
-      <div class="section-title">Players</div>
-      
-                 <div class="setup-row">
-        <select
-          id="player-name-select"
-          title="Choose a regular player"
-        >
-          <option value="">Select player…</option>
-          <option value="Brandon">Brandon</option>
-          <option value="Brock">Brock</option>
-          <option value="Dan">Dan</option>
-          <option value="Deanna">Deanna</option>
-          <option value="Derrick">Derrick</option>
-          <option value="Don">Don</option>
-          <option value="Edgar">Edgar</option>
-          <option value="Erin">Erin</option>
-          <option value="Mullins">Mullins</option>
-          <option value="Other">Other</option>
-          <option value="Phillip">Phillip</option>
-          <option value="Pusti">Pusti</option>
-          <option value="Stuberg">Stuberg</option>
-          <option value="Tara">Tara</option>
-        </select>
+   <div class="section-title">Players</div>
 
-        <input
-          type="text"
-          id="player-name-input"
-          placeholder="Or type a custom name"
-          autocomplete="off"
-        />
+<div class="setup-row">
+  <select id="player-count-select">
+    <option value="">Select number of players…</option>
+    ${Array.from({length:20}, (_,i)=>`<option value="${i+1}">${i+1}</option>`).join("")}
+  </select>
+</div>
 
-        <button id="add-player-btn" title="Add this player to the game">
-          ＋ Add Player
-        </button>
-      </div>
+<div id="player-inputs"></div>
 
-      <div class="hint" id="players-count-hint">No players yet.</div>
-      <div class="setup-footer">
-        <button id="clear-players-btn" title="Remove all players from the list">
-          Clear Players
-        </button>
-        <button
-          id="start-game-btn"
-          disabled
-          title="Start Ahman Green with the current players"
-        >
-          Start Ahman Green ▶
-        </button>
-      </div>
-    </section>
+<div class="setup-footer">
+  <button class="btn btn-primary" id="start-game-btn" disabled>
+    Start Ahman Green
+  </button>
+</div>
+
 
     <!-- Game Card -->
     <section class="card game-card" id="game-card" style="display:none;">
@@ -109,20 +75,16 @@
             </span>
           </span>
         </div>
-        
-         
-
+      
+<div class="controls">
     <div class="left-controls">
     <button id="undo-btn"title="Undo the last dart or action">Undo</button>  
     <button id="reset-btn"title="Missed the board completely – send this player back to Black">⚡AC/DC</button>
     <button id="party-btn"title="Outside of rim hit – jump this player straight to Red">Party</button>
   </div>
 
-  <button id="next-player-btn" class="next-player">
-    Next Player
-  </button>
-    
-      </div>
+  <button id="next-player-btn">Next Player</button>
+    </div>
 
       <div class="players-table" id="players-table" style="margin-top:10px;">
         <div class="players-table-header">
@@ -250,6 +212,53 @@
       const rulesOkBtn = document.getElementById("rules-ok-btn");
       const rulesLink = document.getElementById("ahman-rules-link");
 
+      const PLAYER_OPTIONS = [
+  "Brandon","Brock","Dan","Deanna","Derrick","Don","Edgar",
+  "Erin","Mullins","Phillip","Pusti","Stuberg","Tara","Other"
+];
+
+const playerCountSelect = document.getElementById("player-count-select");
+const playerInputsContainer = document.getElementById("player-inputs");
+
+playerCountSelect.addEventListener("change", renderPlayerInputs);
+
+function renderPlayerInputs() {
+  const count = parseInt(playerCountSelect.value);
+  playerInputsContainer.innerHTML = "";
+
+  if (!count) return;
+
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement("div");
+    row.className = "setup-row";
+
+    const select = document.createElement("select");
+    select.className = "player-select";
+
+    PLAYER_OPTIONS.forEach(name => {
+      const opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
+
+    const input = document.createElement("input");
+    input.placeholder = "Enter custom name";
+    input.style.display = "none";
+
+    select.addEventListener("change", () => {
+      input.style.display = select.value === "Other" ? "block" : "none";
+    });
+
+    row.appendChild(select);
+    row.appendChild(input);
+    playerInputsContainer.appendChild(row);
+  }
+
+  startGameBtn.disabled = false;
+}
+
+
             function updatePlayersHint() {
         if (!players.length) {
           playersCountHint.textContent = "No players yet.";
@@ -311,14 +320,38 @@
       }
 
       function startGame() {
-        if (players.length < 2) return;
-        gameOver = false;
-        currentPlayerIndex = 0;
-        dartsLeft = 3;
-        setupCard.style.display = "none";
-        gameCard.style.display = "block";
-        renderBoard();
-      }
+  const rows = document.querySelectorAll("#player-inputs .setup-row");
+  players = [];
+
+  rows.forEach(row => {
+    const select = row.querySelector("select");
+    const input = row.querySelector("input");
+
+    let name = select.value === "Other"
+      ? input.value.trim()
+      : select.value;
+
+    if (name) {
+      players.push({
+        id: Date.now() + Math.random(),
+        name,
+        progressIndex: 0
+      });
+    }
+  });
+
+  if (players.length < 1) return; // ✅ now allows solo play
+
+  gameOver = false;
+  currentPlayerIndex = 0;
+  dartsLeft = 3;
+
+  setupCard.style.display = "none";
+  gameCard.style.display = "block";
+
+  renderBoard();
+}
+
 
       function getCurrentPlayer() {
         if (!players.length) return null;
