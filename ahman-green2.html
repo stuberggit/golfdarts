@@ -182,8 +182,6 @@
       const setupCard = document.getElementById("setup-card");
       const gameCard = document.getElementById("game-card");
       const playerNameSelect = document.getElementById("player-name-select");
-      const playerNameInput = document.getElementById("player-name-input");
-      const addPlayerBtn = document.getElementById("add-player-btn");
       const startGameBtn = document.getElementById("start-game-btn");
       const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
@@ -644,14 +642,6 @@ function renderPlayerInputs() {
       }
 
       // Event listeners
-      addPlayerBtn.addEventListener("click", addPlayerFromUI);
-
-      playerNameInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          addPlayerFromUI();
-        }
-      });
 
       startGameBtn.addEventListener("click", startGame);
       clearPlayersBtn.addEventListener("click", () => {
