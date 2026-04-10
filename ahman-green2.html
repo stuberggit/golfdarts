@@ -170,6 +170,8 @@
   </div>
 
   <script>
+document.addEventListener("DOMContentLoaded", function() {
+    
     (function() {
       const COLORS = ["black", "white", "green", "red"];
 
@@ -217,21 +219,26 @@
       const select = document.createElement("select");
 select.className = "player-select";
 
-// ✅ Add placeholder FIRST
+// ✅ Placeholder (must be first AND selected)
 const placeholder = document.createElement("option");
 placeholder.value = "";
 placeholder.textContent = "Select player...";
 placeholder.disabled = true;
 placeholder.selected = true;
+
 select.appendChild(placeholder);
 
-// Then add real players
+// ✅ Real players
 PLAYER_OPTIONS.forEach(name => {
   const opt = document.createElement("option");
   opt.value = name;
   opt.textContent = name;
   select.appendChild(opt);
 });
+
+// 🔥 Force browser to respect placeholder
+select.value = "";
+
 
 
 const playerCountSelect = document.getElementById("player-count-select");
@@ -684,6 +691,7 @@ function renderPlayerInputs() {
       // Init
       needColorDotEl.style.cssText = getColorStyle("black");
     })();
+  });
   </script>
 </body>
 </html>
