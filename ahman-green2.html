@@ -183,8 +183,6 @@
       const gameCard = document.getElementById("game-card");
       const playerNameSelect = document.getElementById("player-name-select");
       const startGameBtn = document.getElementById("start-game-btn");
-      const playersCountHint = document.getElementById("players-count-hint");
-
       const currentPlayerNameEl = document.getElementById("current-player-name");
       const needColorLabelEl = document.getElementById("need-color-label");
       const needColorDotEl = document.getElementById("need-color-dot");
@@ -255,30 +253,6 @@ function renderPlayerInputs() {
   startGameBtn.disabled = false;
 }
 
-
-            function updatePlayersHint() {
-        if (!players.length) {
-          playersCountHint.textContent = "No players yet.";
-        } else {
-          const names = players.map(p => p.name);
-          if (players.length === 1) {
-            playersCountHint.textContent = "Player: " + names[0];
-          } else if (players.length <= 4) {
-            playersCountHint.textContent = "Players: " + names.join(", ");
-          } else {
-            const firstThree = names.slice(0, 3).join(", ");
-            const remaining = players.length - 3;
-            playersCountHint.textContent =
-              "Players (" + players.length + "): " +
-              firstThree +
-              ", +" + remaining + " more";
-          }
-        }
-
-        startGameBtn.disabled = players.length < 2;
-      }
-
-
       function addPlayer(name) {
         const clean = name.trim();
         if (!clean) return;
@@ -288,7 +262,6 @@ function renderPlayerInputs() {
           progressIndex: 0
         });
         playerNameInput.value = "";
-        updatePlayersHint();
       }
 
             function addPlayerFromUI() {
@@ -570,7 +543,6 @@ function renderPlayerInputs() {
         historyStack = [];
         setupCard.style.display = "block";
         gameCard.style.display = "none";
-        updatePlayersHint();
         playersRowsEl.innerHTML = "";
         currentPlayerNameEl.textContent = "–";
         needColorLabelEl.textContent = "Black";
@@ -644,7 +616,6 @@ function renderPlayerInputs() {
       startGameBtn.addEventListener("click", startGame);
       {
         players = [];
-        updatePlayersHint();
       };
 
       undoBtn.addEventListener("click", undoLast);
@@ -681,7 +652,6 @@ function renderPlayerInputs() {
 
 
       // Init
-      updatePlayersHint();
       needColorDotEl.style.cssText = getColorStyle("black");
     })();
   </script>
