@@ -183,7 +183,6 @@
       const gameCard = document.getElementById("game-card");
       const playerNameSelect = document.getElementById("player-name-select");
       const startGameBtn = document.getElementById("start-game-btn");
-      const clearPlayersBtn = document.getElementById("clear-players-btn");
       const playersCountHint = document.getElementById("players-count-hint");
 
       const currentPlayerNameEl = document.getElementById("current-player-name");
@@ -277,7 +276,6 @@ function renderPlayerInputs() {
         }
 
         startGameBtn.disabled = players.length < 2;
-        clearPlayersBtn.disabled = players.length === 0;
       }
 
 
@@ -644,7 +642,7 @@ function renderPlayerInputs() {
       // Event listeners
 
       startGameBtn.addEventListener("click", startGame);
-      clearPlayersBtn.addEventListener("click", () => {
+      {
         players = [];
         updatePlayersHint();
       });
