@@ -15,7 +15,7 @@
 body {
   background-color: #0c2605;
   color: white;
-  font-family: 'Prata', serif;
+  font-family: 'Bungee', cursive;
   text-align: center;
   padding: 20px;
   margin: 0;
@@ -121,30 +121,21 @@ body {
       margin-bottom: 6px;
     }
 
-    .current-player {
+   .current-player {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .current-player strong {
-  font-size: 2.2rem;
+  font-size: 2.4rem;
 }
 
-.current-player span {
+.need-pill {
   font-size: 1.2rem;
+  padding: 6px 12px;
 }
-
-    .need-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 2px 9px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      border: 1px solid rgba(63, 211, 123, 0.5);
-      font-size: 0.8rem;
-    }
 
     .need-color-dot {
       width: 10px;
@@ -153,33 +144,29 @@ body {
       border: 1px solid rgba(0, 0, 0, 0.5);
     }
 
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: flex-end;
-    }
-
-    /* shrink control buttons so they don't look like giant full-width CTAs */
-    .controls button {
-      display: inline-block;
-      width: auto;
-      max-width: none;
-      margin: 4px;
-      padding: 6px 10px;
-      font-size: 0.9rem;
-    }
-
-.left-controls {
+.controls {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
 }
 
-.next-player {
-  font-size: 1.1rem;
-  padding: 10px 16px;
-  border-width: 3px;
+.controls-left {
+  display: flex;
+  gap: 10px;
 }
+
+.controls-left button {
+  width: auto;
+  padding: 10px 14px;
+  font-size: 1rem;
+}
+
+#next-player-btn {
+  padding: 14px 24px;
+  font-size: 1.3rem;
+}
+
 
         /* Fun borders for inline controls */
     #undo-btn {
@@ -211,11 +198,11 @@ body {
 
 .player-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(4, 70px);
+  grid-template-columns: 1fr repeat(4, 80px);
   align-items: center;
-  padding: 14px 0;
-  position: relative;
+  padding: 18px 0;
 }
+
 
     .players-table {
       margin-top: 4px;
@@ -230,9 +217,9 @@ body {
       border-bottom: none;
     }
 
-      .player-name-cell {
-  padding-left: 12px;
-  font-size: 1.8rem;
+  .player-name-cell {
+  font-size: 2rem;
+  padding-left: 8px;
 }
 
     .player-row.current {
@@ -259,7 +246,7 @@ body {
       border-right: 1px solid rgba(255, 255, 255, 0.05);
       overflow: hidden;
       isolation: isolate;
-      padding: 6px;
+      padding: 4px;
     }
 
     .color-cell.clickable {
