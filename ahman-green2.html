@@ -692,21 +692,7 @@ function renderPlayerInputs() {
         }
       });
 
-            // Dropdown behavior (including "Other")
-      if (playerNameSelect) {
-        playerNameSelect.addEventListener("change", () => {
-          if (playerNameSelect.value === "Other") {
-            playerNameInput.value = "";
-            playerNameInput.placeholder = "Enter custom player name";
-            playerNameInput.focus();
-          } else if (playerNameSelect.value) {
-            playerNameInput.value = playerNameSelect.value;
-            playerNameInput.placeholder = "Or type a custom name";
-          } else {
-            playerNameInput.placeholder = "Or type a custom name";
-          }
-        });
-      }
+           
 
 
       // Init
