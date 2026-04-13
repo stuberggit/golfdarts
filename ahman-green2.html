@@ -91,9 +91,12 @@
         <div class="current-player">
           <span>Current player</span>
           <strong id="current-player-name">–</strong>
-          <span class="need">
-            Needs:
-            <span class="need-pill" id="need-pill">
+          <div class="current-player-line">
+  <strong id="current-player-name">–</strong>
+  <span class="need-inline">
+    needs <span id="need-color-label">Black</span>
+  </span>
+</div>
               <span class="need-color-dot" id="need-color-dot"></span>
               <span id="need-color-label">⬛ Black ⬛</span>
             </span>
@@ -107,7 +110,7 @@
     <button id="party-btn"title="Outside of rim hit – jump this player straight to Red">Party</button>
   </div>
 
-  <button id="next-player-btn">Next Player</button>
+  <button id="next-player-btn">Next</button>
     </div>
 
       <div class="players-table" id="players-table" style="margin-top:10px;">
@@ -401,6 +404,16 @@ function renderPlayerInputs() {
         }
       }
 
+      function getColorTextStyle(color) {
+  switch (color) {
+    case "black": return "color:#000;";
+    case "white": return "color:#ddd;";
+    case "green": return "color:#00c853;";
+    case "red": return "color:#ff5252;";
+    default: return "";
+  }
+}
+
       function renderBoard() {
         const rowsFragment = document.createDocumentFragment();
 
@@ -469,7 +482,9 @@ function renderPlayerInputs() {
           needColorDotEl.style.borderColor = "transparent";
         } else {
           const neededColor = COLORS[currentPlayer.progressIndex];
+          const neededColor = COLORS[currentPlayer.progressIndex];
           needColorLabelEl.textContent = getColorName(currentPlayer.progressIndex);
+          needColorLabelEl.style.cssText = getColorTextStyle(neededColor);
           needColorDotEl.style.cssText = getColorStyle(neededColor);
         }
 
