@@ -86,28 +86,19 @@
 <!-- Game Card -->
 <section class="card game-card" id="game-card" style="display:none;">
 
-      
-      <div class="game-header">
-        <div class="current-player">
-  <span>Current Player:</span>
-  <strong id="current-player-name">–</strong>
-  <span>Needs</span>
-  <span class="need-pill" id="need-pill">
-    <span class="need-color-dot" id="need-color-dot"></span>
-    <span id="need-color-label">Black</span>
-  </span>
-</div>
-        </div>
-      
-<div class="controls">
-    <div class="left-controls">
-    <button id="undo-btn"title="Undo the last dart or action">Undo</button>  
-    <button id="reset-btn"title="Missed the board completely – send this player back to Black">⚡AC/DC</button>
-    <button id="party-btn"title="Outside of rim hit – jump this player straight to Red">Party</button>
-  </div>
+  <div class="game-header">
 
-  <button id="next-player-btn">Next</button>
-    </div>
+    <!-- LEFT SIDE (75%) -->
+    <div class="game-left">
+      <div class="current-player">
+        <span>Current Player:</span>
+        <strong id="current-player-name">–</strong>
+        <span>Needs</span>
+        <span class="need-pill" id="need-pill">
+          <span class="need-color-dot" id="need-color-dot"></span>
+          <span id="need-color-label">Black</span>
+        </span>
+      </div>
 
       <div class="players-table" id="players-table" style="margin-top:10px;">
         <div class="players-table-header">
@@ -119,8 +110,19 @@
         </div>
         <div id="players-rows"></div>
       </div>
-    </section>
+    </div>
+
+    <!-- RIGHT SIDE (25%) -->
+    <div class="controls">
+      <button id="undo-btn" title="Undo the last dart or action">Undo</button>  
+      <button id="reset-btn" title="Missed the board completely – send this player back to Black">AC/DC</button>
+      <button id="party-btn" title="Outside of rim hit – jump this player straight to Red">Party</button>
+      <button id="next-player-btn">Next</button>
+    </div>
+
   </div>
+
+</section>
 
   <!-- Rules Modal -->
   <div class="modal-backdrop" id="rules-backdrop">
