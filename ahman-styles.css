@@ -147,6 +147,7 @@ body {
 .need-pill {
   font-size: 1.2rem;
   padding: 4px 10px;
+  margin-left: 8px; 
 }
 
     .need-color-dot {
@@ -155,6 +156,10 @@ body {
       border-radius: 999px;
       border: 1px solid rgba(0, 0, 0, 0.5);
     }
+
+.needs-label {
+  margin-left: 10px;
+}
 
 .controls {
   display: flex;
