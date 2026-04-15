@@ -147,7 +147,7 @@ body {
 .need-pill {
   font-size: 1.2rem;
   padding: 4px 10px;
-  margin-left: 3px; 
+  margin-left: 2px; 
 }
 
 .need-color-dot {
@@ -156,9 +156,13 @@ body {
   border-radius: 999px;
   border: none;
   box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  margin-right: 4px;
 }
 
-
+.needs-label {
+  margin-left: 10px;
+  margin-right: 2px;  
+}
 
 .controls {
   display: flex;
@@ -198,6 +202,16 @@ body {
   font-size: 1.2rem;
   padding: 16px;
   background-color: #2e7d32;
+}
+
+#start-game-btn {
+  display: block;
+  margin: 20px auto;
+  font-family: 'Bungee', cursive;
+  font-size: 1.3rem;
+  padding: 14px 28px;
+  width: auto;
+  max-width: 300px;
 }
 
 .current-player-line {
@@ -252,7 +266,8 @@ body {
 }
 
     .player-row.current {
-      background: linear-gradient(90deg, rgba(63, 211, 123, 0.08), transparent);
+      background: linear-gradient(90deg, rgba(63, 211, 123, 0.18), transparent);
+      transform: scale(1.01);
     }
 
     .player-row.current::before {
@@ -261,9 +276,10 @@ body {
       left: 0;
       top: 6px;
       bottom: 6px;
-      width: 3px;
       border-radius: 0 4px 4px 0;
-      background: var(--accent);
+      width: 5px;
+      background: #3fd37b;
+      box-shadow: 0 0 10px rgba(63, 211, 123, 0.8);
     }
 
     .color-cell {
@@ -271,11 +287,11 @@ body {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-left: 1px solid rgba(0, 0, 0, 0.8);
-      border-right: 1px solid rgba(255, 255, 255, 0.05);
       overflow: hidden;
       isolation: isolate;
       padding: 4px;
+      border-left: none;
+      border-right: none;
     }
 
     .color-cell.clickable {
@@ -342,8 +358,9 @@ body {
    .players-table-header,
 .player-row {
   display: grid;
-  grid-template-columns: 1.5fr repeat(4, 60px);
   align-items: center;
+  grid-template-columns: 1.5fr repeat(4, 70px);
+  column-gap: 10px; 
 }
 
 .players-table-header span {
