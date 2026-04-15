@@ -1,0 +1,139 @@
+<!-- footdarts.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🏈 FootDarts</title>
+  <link rel="stylesheet" href="footdarts.css">
+</head>
+<body>
+  <h1>🏈 FootDarts</h1>
+
+  <div id="setup">
+    <label>Number of Players:</label>
+    <input type="number" id="numPlayers" min="1" max="8" value="2">
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <div id="game" style="display:none;">
+    <div id="field">
+      <div id="ball"></div>
+    </div>
+
+    <div id="playerInfo"></div>
+
+    <div id="controls">
+      <button onclick="recordThrow('single')">Single</button>
+      <button onclick="recordThrow('double')">Double</button>
+      <button onclick="recordThrow('triple')">Triple</button>
+      <button onclick="recordThrow('outerBull')">Outer Bull</button>
+      <button onclick="recordThrow('innerBull')">Inner Bull</button>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <script src="footdarts.js"></script>
+</body>
+</html>
+
+// footdarts.js
+let players = [];
+let currentPlayer = 0;
+let throws = 0;
+
+function startGame() {
+  const num = document.getElementById('numPlayers').value;
+  players = [];
+
+  for (let i = 0; i < num; i++) {
+    players.push({
+      name: `Player ${i + 1}`,
+      score: 0,
+      fieldPosition: 20,
+      down: 1,
+      yardsToGo: 10,
+      driveStart: 20
+    });
+  }
+
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('game').style.display = 'block';
+
+  updateUI();
+}
+
+function recordThrow(type) {
+  let yards = 0;
+
+  switch(type) {
+    case 'single': yards = 5; break;
+    case 'double': yards = 10; break;
+    case 'triple': yards = 20; break;
+    case 'outerBull': yards = 15; break;
+    case 'innerBull': yards = 25; break;
+  }
+
+  let player = players[currentPlayer];
+  player.fieldPosition += yards;
+
+  log(`${player.name} gains ${yards} yards`);
+
+  throws++;
+
+  if (throws === 3) {
+    endTurn();
+  }
+
+  updateUI();
+}
+
+function endTurn() {
+  let player = players[currentPlayer];
+  let gained = player.fieldPosition - player.driveStart;
+
+  if (player.fieldPosition >= 100) {
+    player.score += 7;
+    log(`${player.name} TOUCHDOWN!`);
+    resetDrive(player);
+  } else if (gained >= 10) {
+    player.down = 1;
+    player.yardsToGo = 10;
+    player.driveStart = player.fieldPosition;
+    log(`${player.name} FIRST DOWN!`);
+  } else {
+    player.down++;
+    player.yardsToGo -= gained;
+
+    if (player.down > 4) {
+      log(`${player.name} TURNOVER`);
+      resetDrive(player);
+    }
+  }
+
+  throws = 0;
+  currentPlayer = (currentPlayer + 1) % players.length;
+}
+
+function resetDrive(player) {
+  player.fieldPosition = 20;
+  player.down = 1;
+  player.yardsToGo = 10;
+  player.driveStart = 20;
+}
+
+function updateUI() {
+  let player = players[currentPlayer];
+
+  document.getElementById('playerInfo').innerText =
+    `${player.name} | Down: ${player.down} | To Go: ${player.yardsToGo} | Ball: ${player.fieldPosition}`;
+
+  let ball = document.getElementById('ball');
+  ball.style.left = `${player.fieldPosition}%`;
+}
+
+function log(msg) {
+  let logDiv = document.getElementById('log');
+  logDiv.innerHTML += `<div>${msg}</div>`;
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
