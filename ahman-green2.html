@@ -43,24 +43,6 @@
       </div>
     </header>
 
-   <!-- 
-   <div class="section-title">Players</div>
-
-<div class="setup-row">
-  <select id="player-count-select">
-  <option value="">Select number of players…</option>
-</select>
-
-</div>
-
-<div id="player-inputs"></div>
-
-<div class="setup-footer">
-  <button class="btn btn-primary" id="start-game-btn" disabled>
-    Start Ahman Green
-  </button>
-</div>
---> 
     
     <!-- Setup Card -->
 <section class="card" id="setup-card">
@@ -183,10 +165,7 @@
       </div>
       <div class="modal-actions">
         <button id="new-game-btn">
-          New Ahman Green Game
-        </button>
-        <button id="continue-view-btn">
-          Just Keep Bragging 😎
+          Play Again
         </button>
       </div>
     </div>
@@ -229,8 +208,6 @@ document.addEventListener("DOMContentLoaded", function() {
       const winnerNameEl = document.getElementById("winner-name");
       const winCloseBtn = document.getElementById("win-close-btn");
       const newGameBtn = document.getElementById("new-game-btn");
-      const continueViewBtn = document.getElementById("continue-view-btn");
-
       const menuButton = document.getElementById("ahman-menu-button");
       const menuPanel = document.getElementById("ahman-menu-panel");
       const rulesBackdrop = document.getElementById("rules-backdrop");
@@ -633,6 +610,27 @@ function renderPlayerInputs() {
         });
       }
 
+function startNewGameWithRotation() {
+  if (!players.length) return;
+
+  // Rotate players (move first to end)
+  const first = players.shift();
+  players.push(first);
+
+  // Reset all player progress
+  players.forEach(p => {
+    p.progressIndex = 0;
+  });
+
+  currentPlayerIndex = 0;
+  dartsLeft = 3;
+  gameOver = false;
+  historyStack = [];
+
+  closeWinModal();
+  renderBoard();
+}
+      
       function openRules() {
         if (!rulesBackdrop) return;
         rulesBackdrop.classList.add("visible");
@@ -681,17 +679,13 @@ function renderPlayerInputs() {
       partyBtn.addEventListener("click", handleParty);
 
       winCloseBtn.addEventListener("click", closeWinModal);
-      continueViewBtn.addEventListener("click", closeWinModal);
-      newGameBtn.addEventListener("click", resetAll);
+      newGameBtn.addEventListener("click", startNewGameWithRotation);
 
       winBackdrop.addEventListener("click", (e) => {
         if (e.target === winBackdrop) {
           closeWinModal();
         }
       });
-
-           
-
 
       // Init
       needColorDotEl.style.cssText = getColorStyle("black");
