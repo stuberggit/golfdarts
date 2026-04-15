@@ -1,0 +1,42 @@
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+#field {
+  position: relative;
+  width: 90%;
+  height: 100px;
+  margin: 20px auto;
+  background: linear-gradient(to right, #2e7d32, #388e3c);
+  border: 2px solid #000;
+}
+
+#ball {
+  position: absolute;
+  top: 35px;
+  width: 30px;
+  height: 30px;
+  background: brown;
+  border-radius: 50%;
+  left: 20%;
+  transition: left 0.3s ease;
+}
+
+#controls button {
+  margin: 5px;
+  padding: 10px;
+}
+
+#playerInfo {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+#log {
+  margin-top: 15px;
+  height: 100px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
