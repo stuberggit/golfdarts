@@ -91,3 +91,9 @@ function updateUI() {
   let ball = document.getElementById('ball');
   ball.style.left = `${player.fieldPosition}%`;
 }
+
+function log(msg) {
+  let logDiv = document.getElementById('log');
+  logDiv.innerHTML += `<div>${msg}</div>`;
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
